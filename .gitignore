@@ -1,0 +1,8 @@
+node_modules/
+dist/
+ios/
+build/
+_site/
+.DS_Store
+*.local
+.claude/

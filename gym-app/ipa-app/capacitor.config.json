@@ -1,0 +1,12 @@
+{
+  "appId": "de.eisenzeit.app",
+  "appName": "Eisenzeit",
+  "webDir": "../webapp/dist",
+  "backgroundColor": "#000000",
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "LocalNotifications": {}
+  }
+}

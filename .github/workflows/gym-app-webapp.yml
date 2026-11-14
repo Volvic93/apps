@@ -1,0 +1,70 @@
+name: Gym-App Web-App (GitHub Pages)
+
+# Baut gym-app/webapp und veröffentlicht sie unter https://volvic93.github.io/apps/gym-app/
+# (dazu eine kleine Startseite unter https://volvic93.github.io/apps/).
+# Läuft bei jeder Änderung an der Web-App auf main und lässt sich von Hand starten.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gym-app/webapp/**'
+      - 'site/**'
+      - '.github/workflows/gym-app-webapp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Web-App bauen
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: gym-app/webapp/package-lock.json
+
+      - name: Abhängigkeiten installieren
+        working-directory: gym-app/webapp
+        run: npm ci
+
+      - name: Tests
+        working-directory: gym-app/webapp
+        run: npm test
+
+      - name: Build
+        working-directory: gym-app/webapp
+        run: npm run build
+
+      - name: Seite zusammenstellen
+        run: |
+          mkdir -p _site/gym-app
+          cp -R gym-app/webapp/dist/. _site/gym-app/
+          cp site/index.html _site/index.html
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Veröffentlichen
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

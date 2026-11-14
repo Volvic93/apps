@@ -1,0 +1,10 @@
+node_modules/
+dist/
+ios/
+build/
+android/
+*.local
+.DS_Store
+.claude/
+
+geraete-fotos/ohne-unkenntlich/

@@ -7,6 +7,7 @@ import { TRACKING_LABEL, type Exercise, type MuscleId, type Tracking } from '../
 import { useCatalog } from '../ui/ExercisePicker';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { Chip, Field, NumberInput, useUi } from '../ui/kit';
+import { MAX_MOTION_FRAMES } from '../ui/MotionImage';
 import { PhotoField } from '../ui/PhotoField';
 
 const lines = (t: string) => t.split('\n').map((s) => s.trim()).filter(Boolean);
@@ -18,6 +19,7 @@ export function ExerciseEdit() {
   const { toast } = useUi();
   const cat = useCatalog();
   const [ex, setEx] = useState<Exercise | undefined>(undefined);
+  const [motionSlots, setMotionSlots] = useState(2);
   const isNew = id === 'neu';
 
   useEffect(() => {
@@ -45,8 +47,24 @@ export function ExerciseEdit() {
     else nav(-1);
   };
 
-  const [motionStart, motionEnd] = ex.motionPhotoIds ?? [];
-  const setMotion = (start: string | undefined, end: string | undefined) => patch({ motionPhotoIds: start || end ? [start ?? '', end ?? ''] : undefined });
+  const motionIds = ex.motionPhotoIds ?? [];
+  const slots = Math.min(MAX_MOTION_FRAMES, Math.max(motionSlots, motionIds.length, 2));
+  const writeMotion = (list: string[]) => {
+    const trimmed = [...list];
+    while (trimmed.length && !trimmed[trimmed.length - 1]) trimmed.pop();
+    patch({ motionPhotoIds: trimmed.some(Boolean) ? trimmed : undefined });
+  };
+  const setFrame = (i: number, id: string | undefined) => {
+    const list = Array.from({ length: slots }, (_, k) => motionIds[k] ?? '');
+    list[i] = id ?? '';
+    writeMotion(list);
+  };
+  const removeFrame = (i: number) => {
+    const list = Array.from({ length: slots }, (_, k) => motionIds[k] ?? '');
+    list.splice(i, 1);
+    setMotionSlots(Math.max(2, slots - 1));
+    writeMotion(list);
+  };
   const equipmentSorted = [...cat.equipment].sort((a, b) => Number(b.inStudio) - Number(a.inStudio) || a.name.localeCompare(b.name, 'de'));
 
   return (
@@ -114,13 +132,27 @@ export function ExerciseEdit() {
       </div>
 
       <div className="section-label">Bewegungsbild (optional)</div>
-      <p className="muted small">Zwei eigene Fotos – Start- und Endposition. Die App zeigt sie im Wechsel bei der Übung und im Training.</p>
-      <Field label="Startposition">
-        <PhotoField photoId={motionStart || undefined} onChange={(id) => setMotion(id, motionEnd || undefined)} label="Startposition" />
-      </Field>
-      <Field label="Endposition">
-        <PhotoField photoId={motionEnd || undefined} onChange={(id) => setMotion(motionStart || undefined, id)} label="Endposition" />
-      </Field>
+      <p className="muted small">
+        Zwei bis sechs eigene Fotos oder Zeichnungen, die den Bewegungsablauf zeigen (Start, Mitte, Ende …). Die App blendet sie der Reihe nach bei der Übung, am Gerät und im Training ein.
+      </p>
+      {Array.from({ length: slots }, (_, i) => {
+        const name = i === 0 ? 'Startposition' : i === slots - 1 ? 'Endposition' : `Position ${i + 1}`;
+        return (
+          <Field key={i} label={slots > 2 ? `${i + 1}. ${name}` : name}>
+            <PhotoField photoId={motionIds[i] || undefined} onChange={(id) => setFrame(i, id)} label={name} />
+            {slots > 2 && (
+              <button type="button" className="btn small ghost" onClick={() => removeFrame(i)}>
+                Position entfernen
+              </button>
+            )}
+          </Field>
+        );
+      })}
+      {slots < MAX_MOTION_FRAMES && (
+        <button type="button" className="btn block" onClick={() => setMotionSlots(slots + 1)}>
+          Weitere Position hinzufügen
+        </button>
+      )}
 
       <div className="section-label">Anleitung</div>
       <Field label="Einstellung">

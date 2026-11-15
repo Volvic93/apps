@@ -10,6 +10,7 @@ import { BackButton, ScreenHeader } from '../ui/Header';
 import { assetUrl, usePhotoUrl } from '../ui/hooks';
 import { IconMinus, IconPlus } from '../ui/Icons';
 import { useUi } from '../ui/kit';
+import { MotionImage, motionFrames } from '../ui/MotionImage';
 import { MuscleFigure } from '../ui/MuscleFigure';
 import type { Adjustment } from '../data/types';
 
@@ -175,6 +176,10 @@ export function EquipmentDetail() {
           <MuscleFigure primary={m.primary} secondary={m.secondary} height={190} />
         </section>
       )}
+
+      {exs.filter((e) => motionFrames(e.motionPhotoIds).length >= 2).map((e) => (
+        <MotionImage key={e.id} ids={e.motionPhotoIds} label={e.name} title={`So geht’s: ${e.name}`} />
+      ))}
 
       <section>
         <div className="section-label">Übungen an diesem Gerät · {exs.length}</div>

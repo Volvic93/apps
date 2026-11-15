@@ -55,3 +55,12 @@ describe('Entlastung: Rückweg zum ursprünglichen Plan', () => {
     expect(late.some((h) => h.key === 'plan_end:dl')).toBe(true);
   });
 });
+
+describe('Bewegungsbild mit mehreren Positionen', () => {
+  it('nimmt nur belegte Positionen, höchstens sechs', async () => {
+    const { motionFrames, MAX_MOTION_FRAMES } = await import('../src/ui/MotionImage');
+    expect(motionFrames(undefined)).toEqual([]);
+    expect(motionFrames(['a', '', 'b'])).toEqual(['a', 'b']);
+    expect(motionFrames(['1', '2', '3', '4', '5', '6', '7'])).toHaveLength(MAX_MOTION_FRAMES);
+  });
+});

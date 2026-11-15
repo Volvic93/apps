@@ -542,3 +542,13 @@ Auf Wunsch des Nutzers ohne Runde 3 der Prüfschleife. Umgesetzt wurden drei Pun
 - **Hinweise wieder einschalten:** Einstellungen → Hinweise → „Ausgeblendete Hinweise wieder zeigen“ (setzt „Nicht mehr zeigen“ und „Später“ zurück).
 
 Weiterhin offen: siehe Abschnitt 19 (ohne die drei Punkte oben).
+
+## 21. Bewegungsbild mit mehreren Positionen (15.11.2026)
+
+Auf Wunsch des Nutzers zeigt die App zu jedem Gerät, wie die Übung richtig ausgeführt wird – mit mehreren Bildern für den Ablauf:
+
+- Das **Bewegungsbild** einer Übung hat jetzt **zwei bis sechs Positionen** (Start, Mitte …, Ende) statt genau zwei. Es können eigene Fotos **oder Zeichnungen** sein (Bilddatei aus Fotos/Dateien, Kamera). Bearbeiten: Übung bearbeiten → „Bewegungsbild“ → „Weitere Position hinzufügen“ / „Position entfernen“.
+- Anzeige: Übungsdetail, **Gerätedetail** (Karte „So geht’s: …“ je Übung mit Bewegungsbild) und Trainingsmodus. Die Positionen blenden der Reihe nach ein („Position 2 von 4“, bei zwei Bildern „Start“/„Ende“); Tippen schaltet weiter und hält an; bei „Bewegung reduzieren“ startet nichts von selbst.
+- Gespeichert wird wie bisher in `motionPhotoIds` (Liste von Foto-Kennungen); alte Bewegungsbilder mit zwei Bildern bleiben gültig. Backup, Aufräumen und Zusammenführen sind unverändert.
+- **Offen:** Mitgelieferte Zeichnungen für die 39 Studio-Geräte gibt es nicht – die Bilder legt der Nutzer selbst an (eigene Fotos oder selbst erstellte/gekaufte Zeichnungen). Ein In-App-Zuschneiden und ein Raster zum Zeichnen fehlen.
+

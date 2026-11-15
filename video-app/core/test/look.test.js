@@ -221,3 +221,19 @@ test('Shorts-Werbung: Einträge mit adClientParams.isAd fliegen raus', () => {
   assert.equal(st.adsBlocked, 3);
   assert.equal(isAdItem({ command: { reelWatchEndpoint: {} } }), false);
 });
+
+test('Smart-Banner-Meta wird bei look entfernt, sonst nicht', () => {
+  const metas = [];
+  const mk = () => ({ gone: false, remove() { this.gone = true; } });
+  const m1 = mk();
+  const { doc } = makeDoc();
+  const orig = doc.querySelectorAll;
+  doc.querySelectorAll = (s) => (s === 'meta[name="apple-itunes-app"]' ? [m1] : orig(s));
+  void metas;
+  const store = createConfigStore({ look: false });
+  const look = installLook(makeWin([]), doc, store, noop);
+  assert.equal(m1.gone, false);
+  store.set({ look: true });
+  assert.equal(m1.gone, true);
+  look.refresh();
+});

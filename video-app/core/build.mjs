@@ -21,7 +21,7 @@ export function userscriptHeader(version) {
     '// @match        https://*.youtube.com/*',
     '// @run-at       document-start',
     '// @grant        none',
-    '// @inject-into  page',
+    '// @inject-into  content',
     '// @noframes',
     '// @downloadURL  ' + UPDATE_URL,
     '// @updateURL    ' + UPDATE_URL,
@@ -71,16 +71,142 @@ export function wrapIife(body) {
   return "(function () {\n'use strict';\n" + body + '\n})();\n';
 }
 
+// Lader des Userscripts. Läuft im Userscript-Kontext vor dem Kern: Er bringt CORE per <script> in die Seite
+// (mit Nonce und Trusted-Types-Richtlinie); gelingt das nicht, läuft CORE im Kontext des Userscripts.
+export const LOADER_SRC = String.raw`
+var MARK = 'data-flimmerfrei';
+var policy = null;
+var done = false;
+var observer = null;
+
+function isYtHost(hostname) {
+  if (typeof hostname !== 'string') return false;
+  var h = hostname.replace(/^\s+|\s+$/g, '').toLowerCase().replace(/\.$/, '');
+  if (!h || h === 'accounts.youtube.com' || h === 'consent.youtube.com') return false;
+  var domains = ['youtube.com', 'youtube-nocookie.com'];
+  for (var i = 0; i < domains.length; i++) {
+    var d = domains[i];
+    if (h === d) return true;
+    if (h.length > d.length && h.slice(-(d.length + 1)) === '.' + d) return true;
+  }
+  return false;
+}
+
+function markSet() {
+  try {
+    return !!document.documentElement && document.documentElement.hasAttribute(MARK);
+  } catch (e) {
+    return false;
+  }
+}
+
+function toPayload(code) {
+  try {
+    var tt = window.trustedTypes;
+    if (tt && typeof tt.createPolicy === 'function') {
+      if (!policy) policy = tt.createPolicy('flimmerfrei-loader', { createScript: function (x) { return x; } });
+      return policy.createScript(code);
+    }
+  } catch (e) {
+    /* ohne Richtlinie: Zeichenkette versuchen */
+  }
+  return code;
+}
+
+function tryPage(nonce) {
+  try {
+    var code = '(' + CORE.toString() + ')();';
+    var s = document.createElement('script');
+    if (nonce) {
+      s.nonce = nonce;
+      s.setAttribute('nonce', nonce);
+    }
+    s.textContent = toPayload(code);
+    var parent = document.head || document.documentElement;
+    parent.appendChild(s);
+    if (s.parentNode) s.parentNode.removeChild(s);
+  } catch (e) {
+    /* Marke entscheidet */
+  }
+  return markSet();
+}
+
+function findNonce() {
+  try {
+    var el = document.querySelector('script[nonce]');
+    if (el) return el.nonce || el.getAttribute('nonce') || '';
+  } catch (e) {
+    /* ignorieren */
+  }
+  return '';
+}
+
+function attempt(nonce) {
+  if (done) return;
+  done = true;
+  try {
+    if (observer) observer.disconnect();
+  } catch (e) {
+    /* ignorieren */
+  }
+  if (!tryPage(nonce)) {
+    // Rückfall: eingeschränkter Modus im Kontext des Userscripts
+    try {
+      CORE();
+    } catch (e) {
+      /* Seite nie brechen */
+    }
+  }
+}
+
+function start() {
+  if (!isYtHost(window.location && window.location.hostname)) return;
+  var nonce = findNonce();
+  if (nonce || document.readyState === 'interactive' || document.readyState === 'complete') {
+    attempt(nonce);
+    return;
+  }
+  // Noch kein Skript mit Nonce da: auf das erste warten, spätestens bis DOMContentLoaded
+  try {
+    if (typeof MutationObserver === 'function') {
+      observer = new MutationObserver(function () {
+        var n = findNonce();
+        if (n) attempt(n);
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    }
+  } catch (e) {
+    /* nur DOMContentLoaded */
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    attempt(findNonce());
+  });
+}
+
+try {
+  start();
+} catch (e) {
+  /* Seite nie brechen */
+}
+`;
+
+// Userscript-Rumpf: Kern als Funktion CORE plus Lader.
+export function wrapUserscript(body) {
+  return "(function () {\n'use strict';\nvar CORE = function () {\n'use strict';\n" + body + '\n};\n' + LOADER_SRC + '\n})();\n';
+}
+
 export function build() {
   const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
   const version = pkg.version;
   const sources = {};
   for (const name of MODULES) sources[name] = readFileSync(join(here, 'src', name + '.js'), 'utf8');
-  const inject = wrapIife(bundleModules(sources, version));
+  const body = bundleModules(sources, version);
+  const inject = wrapIife(body);
+  const userBody = wrapUserscript(body);
   // Syntaxprüfung (ohne Ausführen)
   new vm.Script(inject, { filename: 'flimmerfrei.inject.js' });
   if (/^\s*(import|export)\s/m.test(inject)) throw new Error('import/export im Ergebnis');
-  const user = userscriptHeader(version) + '\n' + inject;
+  const user = userscriptHeader(version) + '\n' + userBody;
   new vm.Script(user, { filename: 'flimmerfrei.user.js' });
   const dist = join(here, 'dist');
   mkdirSync(dist, { recursive: true });

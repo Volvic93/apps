@@ -6,11 +6,33 @@ import { createPipState, installPipGuards, installVideoObserver, pauseActive, sc
 import { collectState, installBridge } from './bridge.js';
 import { installLook } from './look.js';
 
+// Marke im Dokument (für den Lader des Userscripts): zeigt, dass der Kern gestartet ist.
+function setPresenceMark(doc) {
+  const set = function () {
+    try {
+      if (doc.documentElement) {
+        doc.documentElement.setAttribute('data-flimmerfrei', VERSION);
+        return true;
+      }
+    } catch (e) {
+      /* ignorieren */
+    }
+    return false;
+  };
+  if (set()) return;
+  const retry = function () {
+    set();
+  };
+  safeCall(() => doc.addEventListener('readystatechange', retry));
+  safeCall(() => doc.addEventListener('DOMContentLoaded', retry));
+}
+
 export function runFlimmerfrei(win, doc) {
   if (!win || !doc) return null;
   // Allererste Prüfung: nur auf YouTube-Hosts, sonst nichts einhängen (auch kein window.__flimmerfrei)
   if (!isYouTubeHost(safeCall(() => win.location.hostname, ''))) return null;
-  if (win.__flimmerfrei) return win.__flimmerfrei; // schon geladen
+  if (win.__flimmerfrei) return win.__flimmerfrei; // schon geladen (nur dieser Kontext; die Marke allein verhindert nichts)
+  setPresenceMark(doc);
 
   const store = createConfigStore(win.__FLIMMERFREI_CONFIG__);
   const adState = createAdState();

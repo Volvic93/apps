@@ -10,7 +10,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
 test('package.json: Version, Modultyp, Skripte, keine Abhängigkeiten', () => {
-  assert.equal(pkg.version, '0.1.0');
+  assert.equal(pkg.version, '0.1.1');
   assert.equal(pkg.type, 'module');
   assert.ok(pkg.scripts.build && pkg.scripts.test);
   assert.equal(pkg.dependencies, undefined);
@@ -42,16 +42,16 @@ test('setConfig im Betrieb: Teiländerung, Beobachter', () => {
 });
 
 test('Userscript-Kopf laut Konzept 3.1', () => {
-  const h = userscriptHeader('0.1.0');
+  const h = userscriptHeader('0.1.1');
   assert.ok(h.startsWith('// ==UserScript==\n'));
   assert.ok(h.trimEnd().endsWith('// ==/UserScript=='));
   const get = (k) => (h.match(new RegExp('^// @' + k + '\\s+(.*)$', 'm')) || [])[1];
   assert.equal(get('name'), 'Flimmerfrei');
-  assert.equal(get('version'), '0.1.0');
+  assert.equal(get('version'), '0.1.1');
   assert.equal(get('match'), 'https://*.youtube.com/*');
   assert.equal(get('run-at'), 'document-start');
   assert.equal(get('grant'), 'none');
-  assert.equal(get('inject-into'), 'page');
+  assert.equal(get('inject-into'), 'content');
   assert.equal(get('downloadURL'), 'https://volvic93.github.io/apps/video-app/flimmerfrei.user.js');
   assert.equal(get('updateURL'), UPDATE_URL);
 });
@@ -59,9 +59,9 @@ test('Userscript-Kopf laut Konzept 3.1', () => {
 test('Bündelung: doppelte Namen und fehlende Importe werden erkannt', () => {
   const src = {};
   for (const m of MODULES) src[m] = readFileSync(join(root, 'src', m + '.js'), 'utf8');
-  assert.doesNotThrow(() => bundleModules(src, '0.1.0'));
-  assert.throws(() => bundleModules({ ...src, pip: src.pip + '\nfunction hasSource() {}\n' }, '0.1.0'), /Doppelter Name/);
-  assert.throws(() => bundleModules({ ...src, bridge: "import { gibtEsNicht } from './x.js';\n" + src.bridge }, '0.1.0'), /nirgends/);
+  assert.doesNotThrow(() => bundleModules(src, '0.1.1'));
+  assert.throws(() => bundleModules({ ...src, pip: src.pip + '\nfunction hasSource() {}\n' }, '0.1.1'), /Doppelter Name/);
+  assert.throws(() => bundleModules({ ...src, bridge: "import { gibtEsNicht } from './x.js';\n" + src.bridge }, '0.1.1'), /nirgends/);
 });
 
 // ---- Regeldatei ----

@@ -50,7 +50,8 @@ Ein Kern, zwei Hüllen: `core/` ist die einzige Stelle mit YouTube-spezifischer 
 ### 3.1 Dateien aus dem Kern
 
 - `core/dist/flimmerfrei.inject.js` – ein einzelnes, in sich geschlossenes Skript (IIFE, kein `import`/`export`), wird **bei Dokumentbeginn im Seitenkontext, nur im Hauptrahmen** ausgeführt. Muss mehrfaches Laden vertragen (Schutz über `window.__flimmerfrei`).
-- `core/dist/flimmerfrei.user.js` – dasselbe mit Userscript-Kopf (`@match https://*.youtube.com/*`, `@run-at document-start`, `@grant none`, `@inject-into page`, `@version`, `@name Flimmerfrei`, `@downloadURL`/`@updateURL` = `https://volvic93.github.io/apps/video-app/flimmerfrei.user.js`).
+- `core/dist/flimmerfrei.user.js` – dasselbe mit Userscript-Kopf (`@match https://*.youtube.com/*`, `@run-at document-start`, `@grant none`, `@inject-into content`, `@version`, `@name Flimmerfrei`, `@downloadURL`/`@updateURL` = `https://volvic93.github.io/apps/video-app/flimmerfrei.user.js`).
+- **Lader des Userscripts (seit 0.1.1):** m.youtube.com verlangt `require-trusted-types-for 'script'` und Nonce-Skripte; das direkte Einschleusen durch die Erweiterung („`@inject-into page`“) scheitert daran (am iPhone des Nutzers aufgefallen, 15.11.2026). Das Userscript läuft deshalb als Inhalts-Skript und bringt den Kern selbst in die Seite: `<script>` mit der Nonce eines vorhandenen Skripts und einer eigenen Trusted-Types-Richtlinie (`flimmerfrei-loader`). Der Kern setzt als Erfolgszeichen `data-flimmerfrei="<Version>"` am `<html>`-Element. Fehlt das Zeichen, läuft der Kern im Kontext des Userscripts weiter (eingeschränkt: Werbung wird übersprungen statt vorab entfernt). Die App ist nicht betroffen (WKUserScript unterliegt diesen Regeln nicht).
 - `core/rules/content-blocker.json` – WKContentRuleList. Einschränkungen des WebKit-Formats beachten: in `url-filter` **kein** `|` (keine Alternativen), **keine** `{n}`-Wiederholungen, keine `\d`/`\w`-Kürzel, nur ASCII; höchstens ca. 200 Regeln. Nur Werbe-/Mess-Adressen sperren (z. B. `doubleclick.net`, `googlesyndication.com`, `googleadservices.com`, `youtube.com/pagead/`, `youtube.com/api/stats/ads`, `youtube.com/ptracking`, `youtube.com/get_midroll_`), **nichts**, was Wiedergabe, Anmeldung oder Vorschaubilder braucht (`googlevideo.com`, `ytimg.com`, `accounts.google.com`, `youtubei/v1/player` usw. bleiben frei).
 - Bauen: `node build.mjs` im Ordner `core/` (Node ≥ 20, keine `npm install` nötig). Tests: `node --test test/`.
 
@@ -235,6 +236,6 @@ Die mobile Seite hat keine Übertragen-Funktion. Die App baut sie nativ nach, so
 | iPhone-App + Bau-Workflow | fertig, `.ipa` baut auf dem GitHub-Runner |
 | Übertragen (Chromecast/TV-Code) | fertig geschrieben, kompiliert; **nicht an einem Gerät erprobt** |
 | Prüfschleife Runde 1 (15.11.2026) | Kern-Tests, zwei Test-Bauten der `.ipa`, Durchsicht der zentralen Dateien, Sichttest der eingefügten Knöpfe an der echten mobilen YouTube-Seite (obere Leiste und Player-Leiste passen; „App öffnen“ wird ausgeblendet) |
-| Veröffentlichung | Version 0.1.0 |
+| Veröffentlichung | Version 0.1.0 (15.11.2026), 0.1.1 mit neuem Userscript-Lader (15.11.2026) |
 
 **Offen bis zum Test auf dem iPhone** (von Windows aus nicht prüfbar): Google-Anmeldung in der Web-Ansicht, Weiterspielen bei gesperrtem Gerät, Bild-in-Bild und AirPlay, Übersetzung der Sperrliste durch WebKit (Status steht in den Einstellungen), Wirkung des Werbeblockers gegen echte Werbung, Übertragen auf Chromecast/Fernseher (bei Problemen: Übertragungs-Protokoll in den Einstellungen kopieren).

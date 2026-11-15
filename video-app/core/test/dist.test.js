@@ -20,15 +20,19 @@ test('Bau: syntaktisch gültig (node --check), ohne import/export, ein IIFE', ()
   const code = readFileSync(injectPath, 'utf8');
   assert.ok(code.startsWith('(function () {'));
   assert.equal(/^\s*(import|export)\s/m.test(code), false);
-  assert.ok(code.includes("const VERSION = '0.1.0';"));
+  assert.ok(code.includes("const VERSION = '0.1.1';"));
 });
 
 test('Userscript: Kopf plus identischer Kern', () => {
   const user = readFileSync(userPath, 'utf8');
   const inject = readFileSync(injectPath, 'utf8');
   assert.ok(user.startsWith('// ==UserScript=='));
-  assert.ok(user.endsWith(inject));
+  // Der Kern steckt unverändert als Funktion CORE im Userscript
+  const body = inject.slice("(function () {\n'use strict';\n".length, inject.length - '\n})();\n'.length);
+  assert.ok(user.includes(body));
+  assert.ok(user.includes('var CORE = function () {'));
   assert.ok(user.indexOf('// ==/UserScript==') < user.indexOf('(function () {'));
+  assert.ok(user.indexOf('var CORE') < user.indexOf('function tryPage'));
 });
 
 // Minimal nachgebaute Seite
@@ -68,7 +72,7 @@ test('gebautes Skript: Objekt vorhanden, Hooks wirken, doppeltes Laden schadet n
 
   const api = win.__flimmerfrei;
   assert.ok(api);
-  assert.equal(api.version, '0.1.0');
+  assert.equal(api.version, '0.1.1');
   for (const k of ['pip', 'airplay', 'state', 'setConfig', 'pause']) assert.equal(typeof api[k], 'function', k);
 
   const s = api.state();
@@ -125,7 +129,7 @@ test('gebautes Skript: bricht auch in einer kaputten Umgebung nichts (kein docum
   win.document = {};
   assert.doesNotThrow(() => vm.runInContext(code, ctx));
   assert.ok(win.__flimmerfrei);
-  assert.equal(win.__flimmerfrei.version, '0.1.0');
+  assert.equal(win.__flimmerfrei.version, '0.1.1');
   // Nutzung ohne Fehler
   assert.doesNotThrow(() => win.__flimmerfrei.state());
   assert.equal(win.__flimmerfrei.pip(), false);

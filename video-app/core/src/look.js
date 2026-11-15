@@ -186,6 +186,13 @@ export function removePlayerButtons(doc) {
   removeAll(doc, 'flimmerfrei-player-button');
 }
 
+// Safari zeigt wegen dieses Meta-Eintrags das Banner "In der App öffnen".
+export function removeSmartBanner(doc) {
+  safeCall(() => {
+    for (const m of Array.from(doc.querySelectorAll('meta[name="apple-itunes-app"]'))) m.remove();
+  });
+}
+
 export function isMenuButtonPresent(doc) {
   return !!safeCall(() => doc.querySelector('.flimmerfrei-menu-button'), null);
 }
@@ -196,6 +203,7 @@ export function installLook(win, doc, store, actions) {
   let lastMenu = false;
   const refresh = function () {
     const cfg = store.get();
+    if (cfg.look) removeSmartBanner(doc);
     safeCall(() => {
       if (cfg.host === 'ios' && cfg.menuButton) ensureTopbarButtons(win, doc);
       else removeTopbarButtons(doc);

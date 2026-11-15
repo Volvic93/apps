@@ -129,6 +129,9 @@
       <li>youtube.com neu laden.</li>
     </ol>
     <p><strong>Übertragen geht im Userscript nicht.</strong> Chromecast und Fernseher gibt es nur in der iPhone-App; das Userscript bietet Werbeblocker, Hintergrundwiedergabe, Bild-in-Bild und AirPlay, ohne eigene Symbole in der oberen Leiste.</p>
+    <p><strong>Wie das Skript in die Seite kommt.</strong> YouTube und Safari blockieren das direkte Einschleusen von Skripten. Das Userscript bringt seinen Kern deshalb über einen eigenen Lader in die Seite. Gelingt das nicht, läuft es im eingeschränkten Modus: Werbung wird dann nicht vorab aus den Daten entfernt, sondern erst übersprungen, wenn sie läuft; Stil, Knöpfe im Player und die Wiederaufnahme nach einer Pause arbeiten weiter.</p>
+    <p><strong>Nach einem Update</strong> das Skript in der Erweiterung neu laden bzw. aktualisieren und youtube.com neu öffnen.</p>
+    <p><strong>Banner „In der YouTube-App öffnen“:</strong> Es kommt von Safari selbst, nicht von der Seite. Das Skript versucht, den Auslöser zu entfernen; sicher verschwindet das Banner nur, wenn die YouTube-App nicht installiert ist. In der Flimmerfrei-App erscheint es gar nicht.</p>
     <p class="note">Das Skript läuft nur auf <code>youtube.com</code> und aktualisiert sich über dieselbe Adresse, sofern der Skript-Manager Aktualisierungen unterstützt.</p>
   </section>
 

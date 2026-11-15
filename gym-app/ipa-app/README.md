@@ -25,6 +25,8 @@ Der Workflow `.github/workflows/gym-app-ios.yml` läuft auf einem macOS-Runner u
 
 Der Lauf dauert etwa 10 bis 15 Minuten.
 
+**Versionsregel:** Jede neue Version bekommt einen **neuen Tag** und damit ein **neues Release** (`gym-app-v<Version>`); bestehende Tags und Releases werden nie überschrieben oder gelöscht, damit ältere Stände installierbar bleiben. Nach jedem Tag baut der Web-Workflow zusätzlich ein Archiv aller Versionen (`/gym-app-archiv/<Version>/`) und die Übersicht `versionen.html`.
+
 ## Lokal auf einem Mac (optional)
 
 ```bash

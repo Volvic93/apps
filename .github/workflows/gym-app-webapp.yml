@@ -2,7 +2,8 @@ name: Gym-App Web-App (GitHub Pages)
 
 # Baut gym-app/webapp und veröffentlicht sie unter https://volvic93.github.io/apps/gym-app/
 # (dazu eine kleine Startseite unter https://volvic93.github.io/apps/).
-# Läuft bei jeder Änderung an der Web-App auf main und lässt sich von Hand starten.
+# Läuft bei jeder Änderung an der Web-App auf main, nach jedem neuen Versions-Tag (angestoßen vom iOS-Workflow) und lässt sich
+# von Hand starten. Frühere Versionen werden mitgebaut und bleiben unter /gym-app-archiv/<Version>/ erhalten (siehe versionen.html).
 on:
   push:
     branches: [main]
@@ -28,6 +29,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # alle Tags, damit frühere Versionen archiviert werden können
 
       - uses: actions/setup-node@v4
         with:
@@ -53,6 +56,8 @@ jobs:
           cp -R gym-app/webapp/dist/. _site/gym-app/
           cp site/index.html site/icon.png site/favicon.png _site/
           touch _site/.nojekyll
+          # Jede frühere Version bleibt erreichbar (…/gym-app-archiv/<Version>/) und in versionen.html verlinkt
+          bash .github/scripts/archive-versions.sh _site
 
       - uses: actions/upload-pages-artifact@v3
         with:

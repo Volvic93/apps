@@ -16,6 +16,16 @@ Die ausführliche Anleitung mit allen Hinweisen steht in [gym-app/webapp/INSTALL
 
 **Als echte iPhone-App (`.ipa`)** – mit AltStore oder Sideloadly, jeweils Schritt für Schritt: [gym-app/ipa-app/INSTALLATION.md](gym-app/ipa-app/INSTALLATION.md). Die `.ipa` steht unter [Releases](https://github.com/Volvic93/apps/releases).
 
+## Ältere Versionen
+
+Jede Version bleibt erhalten und lässt sich installieren – nichts wird durch eine neuere ersetzt:
+
+- **Alle Versionen auf einen Blick:** <https://volvic93.github.io/apps/versionen.html> (Web-Version und Release jeder Version).
+- **iPhone-App (`.ipa`):** unter [Releases](https://github.com/Volvic93/apps/releases) hat jede Version ihren eigenen Eintrag „Eisenzeit x.y.z“ mit der `.ipa` unter *Assets*.
+- **Web-App:** neueste Version unter <https://volvic93.github.io/apps/gym-app/>, ältere unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/`.
+
+Vor dem Wechsel auf eine ältere Version in der App eine **Sicherung exportieren**: Ältere Web-Versionen teilen sich den Speicher mit der neuesten, und eine ältere `.ipa` lässt sich nach iOS-Regeln eventuell nur nach Löschen der neueren App installieren (dabei gehen die Daten der App verloren).
+
 ## Aufbau des Repositorys
 
 ```

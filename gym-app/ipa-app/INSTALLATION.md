@@ -24,7 +24,9 @@ Du brauchst die Datei **`Eisenzeit-<Version>.ipa`** (bzw. `Eisenzeit.ipa`).
 1. Im Repository auf der Startseite rechts auf **Releases** gehen (<https://github.com/Volvic93/apps/releases>).
 2. Beim neuesten Eintrag **„Eisenzeit &lt;Version&gt;“** unter *Assets* die `.ipa` herunterladen.
 
-Releases entstehen, wenn ein Tag der Form `gym-app-v1.2.3` gesetzt wird (siehe [README](README.md)).
+Releases entstehen, wenn ein Tag der Form `gym-app-v1.2.3` gesetzt wird (siehe [README](README.md)). **Jede Version behält ihr eigenes Release** – auch ältere Stände bleiben herunterladbar (alle Versionen: <https://volvic93.github.io/apps/versionen.html>).
+
+**Ältere Version installieren:** Im Release der gewünschten Version die `.ipa` laden und wie unten installieren. Vorher in der App *Einstellungen → Sicherung exportieren*. Ob iOS das Überschreiben einer neueren App mit einer älteren zulässt, ist ungeprüft; meldet AltStore/Sideloadly einen Fehler, muss die neuere App zuerst gelöscht werden (**dabei gehen ihre Daten verloren**, danach die Sicherung importieren).
 
 **Weg B – Build-Artefakt (mit GitHub-Anmeldung):**
 1. Im Repository **Actions** öffnen → Workflow **„Gym-App iOS (unsignierte IPA)“** → den neuesten grünen Lauf.

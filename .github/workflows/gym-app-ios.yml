@@ -18,7 +18,8 @@ on:
       - 'gym-app-v*'
 
 permissions:
-  contents: write # nur für das Release bei Tags
+  contents: write # Release bei Tags
+  actions: write # danach die Web-Veröffentlichung anstoßen (Archiv der Versionen)
 
 concurrency:
   group: gym-app-ios-${{ github.ref }}
@@ -136,6 +137,12 @@ jobs:
             --title "Eisenzeit ${{ steps.ver.outputs.version }}" \
             --notes "Unsignierte .ipa zum Installieren mit AltStore oder Sideloadly. Anleitung: gym-app/ipa-app/INSTALLATION.md" \
             --verify-tag
+
+      - name: Web-Archiv der Versionen aktualisieren (nur bei Tags)
+        if: startsWith(github.ref, 'refs/tags/gym-app-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run gym-app-webapp.yml --ref main --repo "$GITHUB_REPOSITORY"
 
       - name: Build-Protokoll bei Fehlern sichern
         if: failure()

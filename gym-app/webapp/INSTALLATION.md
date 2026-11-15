@@ -35,6 +35,10 @@ Der Kurzbefehl öffnet die Seite in Safari. Für das Erlebnis ohne Browser-Rahme
 
 Nein, das geht nicht zuverlässig. Die App besteht aus vielen Dateien und braucht für Speicher, Offline-Betrieb und die Home-Bildschirm-Funktion eine HTTPS-Adresse. Eine lokal abgelegte `index.html` öffnet Safari ohne diese Funktionen; ein Kurzbefehl kann sie nicht als App starten. Nimm stattdessen die Web-App über **„Zum Home-Bildschirm“** (Abschnitt 1) oder die `.ipa` ([../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md)).
 
+## Ältere Version der Web-App
+
+Die Hauptadresse zeigt immer die neueste Version. Jede frühere Version bleibt unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/` erreichbar; die Übersicht aller Versionen steht unter <https://volvic93.github.io/apps/versionen.html>. Ältere Versionen teilen sich den Speicher mit der neuesten (gleiche Server-Adresse) – vor dem Wechsel in der App *Einstellungen → Sicherung exportieren*. Als eigenes Symbol auf dem Home-Bildschirm funktioniert eine ältere Version wie in Abschnitt 1 beschrieben, sie sollte aber nicht zusätzlich zur neuesten benutzt werden.
+
 ## 3. Wichtig zu wissen
 
 - **Daten liegen nur auf dem Gerät.** Es gibt kein Konto und keine Cloud. Lege deshalb regelmäßig eine **Sicherung** an: In der App *Heute → Zahnrad → Sicherung*. Die Datei kannst du in der Dateien-App oder iCloud Drive ablegen.

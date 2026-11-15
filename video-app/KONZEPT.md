@@ -231,8 +231,10 @@ Die mobile Seite hat keine Übertragen-Funktion. Die App baut sie nativ nach, so
 | Teil | Stand |
 |---|---|
 | Konzept | fertig (15.11.2026) |
-| Kern + Web | erste Fassung fertig (45 Tests grün); Umbau nach 5b/5c läuft |
-| iPhone-App + Bau-Workflow | erste Fassung fertig, Test-Bau der .ipa auf dem Runner erfolgreich; Umbau nach 5b/5c läuft |
-| Übertragen (Chromecast/TV-Code) | in Arbeit |
-| Prüfschleife | offen |
-| Veröffentlichung | offen |
+| Kern + Web | fertig, 58 Tests grün (Node) |
+| iPhone-App + Bau-Workflow | fertig, `.ipa` baut auf dem GitHub-Runner |
+| Übertragen (Chromecast/TV-Code) | fertig geschrieben, kompiliert; **nicht an einem Gerät erprobt** |
+| Prüfschleife Runde 1 (15.11.2026) | Kern-Tests, zwei Test-Bauten der `.ipa`, Durchsicht der zentralen Dateien, Sichttest der eingefügten Knöpfe an der echten mobilen YouTube-Seite (obere Leiste und Player-Leiste passen; „App öffnen“ wird ausgeblendet) |
+| Veröffentlichung | Version 0.1.0 |
+
+**Offen bis zum Test auf dem iPhone** (von Windows aus nicht prüfbar): Google-Anmeldung in der Web-Ansicht, Weiterspielen bei gesperrtem Gerät, Bild-in-Bild und AirPlay, Übersetzung der Sperrliste durch WebKit (Status steht in den Einstellungen), Wirkung des Werbeblockers gegen echte Werbung, Übertragen auf Chromecast/Fernseher (bei Problemen: Übertragungs-Protokoll in den Einstellungen kopieren).

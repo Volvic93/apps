@@ -1828,7 +1828,7 @@ input[type='checkbox']:checked::after {
 }
 .train-foot {
   flex: none;
-  padding: 10px 16px calc(var(--safe-bottom) + 10px);
+  padding: 10px 16px max(var(--safe-bottom), 12px);
   background: var(--bg-2);
   border-top: 1px solid var(--line);
   display: flex;

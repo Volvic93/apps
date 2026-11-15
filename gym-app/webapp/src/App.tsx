@@ -43,6 +43,7 @@ function Shell() {
   const hideTabs = inTraining || pathname.includes('bearbeiten') || pathname === '/uebungen/studio';
   return (
     <div className="app">
+      <div className="edge-band" aria-hidden="true" />
       <ErrorBoundary key={pathname}>
       <Routes>
         <Route path="/" element={<Navigate to="/heute" replace />} />

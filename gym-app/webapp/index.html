@@ -1,6 +1,12 @@
 <!doctype html>
 <html lang="de" data-theme="dark">
   <head>
+    <script>
+      /* Als Home-Bildschirm-App oder in der iOS-Hülle: oberer Schutzbereich unter der Statusleiste (siehe apple.css) */
+      try {
+        if (window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || location.protocol === 'capacitor:') document.documentElement.classList.add('standalone');
+      } catch (e) {}
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0a" />

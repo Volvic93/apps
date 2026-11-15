@@ -1531,3 +1531,46 @@ textarea.input.mono {
 section {
   scroll-margin-top: calc(var(--safe-top) + 110px);
 }
+
+/* ------------------------------------------------------------------ Oberer Schutzbereich (v0.4.0)
+   iOS (26 und neuer) legt über den oberen Rand von Home-Bildschirm-Web-Apps einen weichen Verlauf mit Unschärfe
+   („Scroll-Edge-Effekt“), der bis weit unter die Statusleiste reicht und Knöpfe und Titel verdunkelt.
+   Gegenmittel nach Berichten aus der Praxis: eine feste, deckende Fläche über dem oberen Rand und alle Bedienelemente erst
+   darunter. Nur als Home-Bildschirm-App bzw. in der iOS-Hülle (`html.standalone`); im Browser bleibt alles wie gehabt. */
+:root {
+  --edge-clear: 0px;
+  --top-inset: calc(var(--safe-top) + var(--edge-clear));
+}
+html.standalone {
+  --edge-clear: 48px;
+}
+.edge-band {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--top-inset);
+  background: var(--bg);
+  z-index: 35;
+  pointer-events: none;
+}
+.screen {
+  padding-top: calc(var(--top-inset) + 14px);
+}
+.screen-header {
+  top: var(--top-inset);
+  margin: -14px -16px 0;
+  padding: 14px 16px 8px;
+}
+.train-top {
+  padding-top: calc(var(--top-inset) + 8px);
+}
+.lb-close {
+  top: calc(var(--top-inset) + 10px);
+}
+/* Zurück-Knopf (deaktiviert): gut lesbar, nur gedämpft */
+.btn:disabled {
+  opacity: 1;
+  color: var(--label-3);
+  background: var(--fill-4);
+}

@@ -31,6 +31,10 @@ Wer die App lieber über einen eigenen Kurzbefehl starten will (z. B. auch in de
 
 Der Kurzbefehl öffnet die Seite in Safari. Für das Erlebnis ohne Browser-Rahmen ist **Abschnitt 1** besser.
 
+## Kann ich die App als Datei auf dem iPhone ablegen und per Shortcut starten?
+
+Nein, das geht nicht zuverlässig. Die App besteht aus vielen Dateien und braucht für Speicher, Offline-Betrieb und die Home-Bildschirm-Funktion eine HTTPS-Adresse. Eine lokal abgelegte `index.html` öffnet Safari ohne diese Funktionen; ein Kurzbefehl kann sie nicht als App starten. Nimm stattdessen die Web-App über **„Zum Home-Bildschirm“** (Abschnitt 1) oder die `.ipa` ([../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md)).
+
 ## 3. Wichtig zu wissen
 
 - **Daten liegen nur auf dem Gerät.** Es gibt kein Konto und keine Cloud. Lege deshalb regelmäßig eine **Sicherung** an: In der App *Heute → Zahnrad → Sicherung*. Die Datei kannst du in der Dateien-App oder iCloud Drive ablegen.

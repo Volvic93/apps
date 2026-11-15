@@ -33,7 +33,7 @@ export function PhotoField({
   const shown = url ?? fallbackUrl;
   return (
     <div className="photofield">
-      <div className="photofield-preview">{shown ? <img src={shown} alt={label} /> : <span className="muted">Kein Foto</span>}</div>
+      <div className="photofield-preview">{shown ? <img src={shown} alt={label} /> : <span className="muted">Kein Bild</span>}</div>
       <div className="photofield-actions">
         <button type="button" className="btn small" onClick={() => pick('camera')}>
           <IconCamera size={18} /> Aufnehmen

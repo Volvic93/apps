@@ -6,7 +6,7 @@ import type { Photo } from '../data/types';
 
 export const BACKUP_FORMAT = 'eisenzeit-sicherung';
 export const BACKUP_FORMAT_VERSION = 1;
-export const APP_VERSION = '0.3.0';
+export const APP_VERSION = '0.3.2';
 
 export interface BackupPhoto {
   id: string;
@@ -261,7 +261,7 @@ export function validateBackup(raw: unknown): ValidationResult {
           errors.push('Ein Foto in der Sicherung ist unvollständig.');
           break;
         }
-        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(p.base64) || p.base64.length % 4 === 1) {
+        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(p.base64) || p.base64.length % 4 === 1 || (p.base64.includes('=') && p.base64.length % 4 !== 0)) {
           errors.push(`Foto "${p.id}" enthält ungültige Daten.`);
           break;
         }

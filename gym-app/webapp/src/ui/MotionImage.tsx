@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePhotoUrl } from './hooks';
 
 /** So viele Positionen kann ein Bewegungsbild höchstens haben. */
@@ -15,6 +16,25 @@ const reducedMotion = (): boolean => {
 /** Nur belegte Positionen, in der gespeicherten Reihenfolge. */
 export function motionFrames(ids: string[] | undefined): string[] {
   return (ids ?? []).filter(Boolean).slice(0, MAX_MOTION_FRAMES);
+}
+
+/** Platzhalter, solange kein Bewegungsbild da ist: sagt, was möglich ist, und führt direkt zum Hinzufügen. */
+export function MotionPlaceholder({ exercises, title }: { exercises: { id: string; name: string }[]; title: string }) {
+  const nav = useNavigate();
+  if (exercises.length === 0) return null;
+  return (
+    <section className="card">
+      <div className="card-title">{title}</div>
+      <p className="muted small">Noch kein Bewegungsbild. Füge zwei bis sechs Fotos oder Zeichnungen hinzu, damit du den richtigen Ablauf hier siehst.</p>
+      <div className="row gap wrap">
+        {exercises.map((e) => (
+          <button key={e.id} className="btn small" onClick={() => nav(`/uebungen/uebung-bearbeiten/${e.id}`)}>
+            {exercises.length > 1 ? `Bilder für „${e.name}“` : 'Bilder hinzufügen'}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function Frame({ id, on }: { id: string; on: boolean }) {

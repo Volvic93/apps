@@ -110,7 +110,7 @@ export function lastPerformance(
   unit: 'kg' | 'platte' = 'kg',
 ): { session: Session; sets: SetEntry[] } | undefined {
   const done = sessions
-    .filter((s) => s.id !== excludeSessionId && s.endedAt !== undefined)
+    .filter((s) => s.id !== excludeSessionId && s.endedAt !== undefined && !s.deload)
     .sort((a, b) => b.startedAt - a.startedAt);
   for (const s of done) {
     const sets = s.entries
@@ -156,8 +156,10 @@ export function prefillSets(
   last: { sets: SetEntry[] } | undefined,
   ex: Pick<Exercise, 'tracking' | 'weightStep'>,
   eq?: Pick<Equipment, 'weightStack'>,
+  /** `preferTarget`: Zielgewicht des Plans statt letztem Mal (Entlastung); `easier`: etwa 70 % der Gewichte, ein Satz weniger (Wiedereinstieg). */
+  opts: { preferTarget?: boolean; easier?: boolean } = {},
 ): SetEntry[] {
-  const count = Math.max(1, item.sets);
+  const count = Math.max(1, opts.easier ? item.sets - 1 : item.sets);
   const sets: SetEntry[] = [];
   const lastWork = last?.sets.filter((s) => s.kind !== 'aufwaermen') ?? [];
   for (let i = 0; i < count; i++) {
@@ -167,7 +169,8 @@ export function prefillSets(
     } else if (ex.tracking === 'zeit') {
       sets.push({ kind: 'normal', durationSec: src?.durationSec ?? 45 });
     } else {
-      let weight = src?.weight ?? item.targetWeight;
+      let weight = opts.preferTarget && item.targetWeight !== undefined ? item.targetWeight : (src?.weight ?? item.targetWeight);
+      if (opts.easier && weight !== undefined && weight > 0) weight = weight * 0.7;
       if (weight !== undefined && eq?.weightStack) weight = snapToStack(weight, eq.weightStack);
       if (weight === undefined && ex.tracking === 'gewicht_wdh') weight = eq?.weightStack ? eq.weightStack.minKg : undefined;
       sets.push({
@@ -186,12 +189,13 @@ export function entryFromItem(
   ex: Exercise,
   eq: Equipment | undefined,
   sessions: Session[],
+  opts: { preferTarget?: boolean; easier?: boolean } = {},
 ): Entry {
   const last = lastPerformance(sessions, item.exerciseId, undefined, weightUnit(eq));
   return {
     exerciseId: item.exerciseId,
     ...(weightUnit(eq) === 'platte' ? { unit: 'platte' as const } : {}),
-    sets: prefillSets(item, last, ex, eq),
+    sets: prefillSets(item, last, ex, eq, opts),
     restSec: item.restSec,
     repMin: item.repMin,
     repMax: item.repMax,

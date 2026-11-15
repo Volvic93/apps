@@ -20,6 +20,7 @@ export function Settings() {
   const { toast, confirm } = useUi();
   const s = useLive(() => getSettings());
   const studioCat = useCatalog();
+  const activeHintCount = (s?.dismissedHints ?? []).filter((k) => !k.startsWith('later:') || Number(k.split(':').pop()) > Date.now()).length;
   const studioCount = studioCat ? studioCat.equipment.filter(isPresent).length : undefined;
   const [withPhotos, setWithPhotos] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -103,15 +104,16 @@ export function Settings() {
         <p className="muted small">
           Die Karten auf „Heute“ geben Empfehlungen. Was du mit „Nicht mehr zeigen“ oder „Später“ weggewischt hast, kannst du hier wieder einschalten.
         </p>
+        {!activeHintCount && <p className="muted small">Im Moment ist nichts ausgeblendet.</p>}
         <button
           className="btn block"
-          disabled={!s?.dismissedHints?.length}
+          disabled={!activeHintCount}
           onClick={async () => {
             await saveSettings({ dismissedHints: [] });
             toast('Hinweise werden wieder gezeigt');
           }}
         >
-          Ausgeblendete Hinweise wieder zeigen{s?.dismissedHints?.length ? ` (${s.dismissedHints.length})` : ''}
+          Ausgeblendete Hinweise wieder zeigen{activeHintCount ? ` (${activeHintCount})` : ''}
         </button>
       </section>
 

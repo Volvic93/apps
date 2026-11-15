@@ -12,7 +12,7 @@ Zwei Wege, beide für **Windows** beschrieben:
 
 > **Stand der Anleitung: November 2026.** Die Oberflächen und Bedingungen von AltStore, Sideloadly und Apple ändern sich gelegentlich. Bei Abweichungen gelten die Anleitungen der Hersteller: <https://altstore.io> und <https://sideloadly.io>.
 
-> **Wenn dir das zu aufwendig ist:** Die [Web-App](../webapp/INSTALLATION.md) läuft ohne all das und lässt sich ebenfalls aufs Home-Bild legen.
+> **Wenn dir das zu aufwendig ist:** Die [Web-App](../webapp/INSTALLATION.md) läuft ohne all das und lässt sich ebenfalls auf den Home-Bildschirm legen.
 
 ---
 

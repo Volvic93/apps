@@ -16,6 +16,9 @@ export async function resizeImage(blob: Blob, maxEdge = 1280, quality = 0.82): P
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Bildbearbeitung nicht verfügbar.');
+    // JPEG kennt keine Transparenz: Zeichnungen als PNG bekämen sonst einen schwarzen Hintergrund
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
     const out = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
     if (!out) throw new Error('Das Bild konnte nicht umgewandelt werden.');

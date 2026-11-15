@@ -292,11 +292,13 @@ export function suggestNext(
   /** „nächstes Mal“ im Verlauf, „heute“ mitten im Training. */
   when = 'nächstes Mal',
   now = Date.now(),
+  /** Aus, wenn die Einheit ohnehin „leichter wieder starten“ ist. */
+  pauseRule = true,
 ): Suggestion | undefined {
   if (exercise.tracking !== 'gewicht_wdh' && exercise.tracking !== 'koerpergewicht_wdh') return undefined;
   const unit = weightUnit(eq);
   const unitLabel = (w: number) => (unit === 'platte' ? `Platte ${fmt(w)}` : `${fmt(w)} kg`);
-  const done = finishedSessions(sessions).filter((s) => s.id !== excludeSessionId);
+  const done = finishedSessions(sessions).filter((s) => s.id !== excludeSessionId && !s.deload);
   const perSession: { sets: SetEntry[]; repMin: number; repMax: number; at: number }[] = [];
   for (const s of done) {
     const entries = s.entries.filter((e) => e.exerciseId === exercise.id && !e.skipped && unitOf(e) === unit);
@@ -315,12 +317,13 @@ export function suggestNext(
 
   // Nach mehr als 14 Tagen Pause: etwa 10 % weniger einsteigen (statt zu steigern)
   const gapDays = Math.floor((now - last.at) / PAUSE_DAY_MS);
-  if (w > 0 && gapDays > PAUSE_DAYS) {
+  if (pauseRule && w > 0 && now - last.at > PAUSE_DAYS * PAUSE_DAY_MS) {
     const stack = eq?.weightStack;
     let target = unit === 'platte' ? stepWeight(w, -1, exercise, eq) : stack ? snapToStack(w * 0.9, stack) : Math.round((w * 0.9) / stepFor(exercise, eq)) * stepFor(exercise, eq);
     if (target >= w) target = stepWeight(w, -1, exercise, eq);
-    if (target < w) {
-      return { kind: 'senken', weight: target, ...base, text: `${gapDays} Tage Pause – steig mit etwa 10 % weniger ein: ${unitLabel(target)} (zuletzt ${unitLabel(w)}).` };
+    if (target > 0 && target < w) {
+      const fine = (w - target) / w <= 0.15; // grobe Gewichtsstufen: lieber ehrlich „eine Stufe“ sagen
+      return { kind: 'senken', weight: target, ...base, text: `${gapDays} Tage Pause – steig ${fine ? 'mit etwa 10 % weniger' : 'eine Stufe leichter'} ein: ${unitLabel(target)} (zuletzt ${unitLabel(w)}).` };
     }
   }
 
@@ -346,7 +349,7 @@ const fmt = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
 
 /** Keine Verbesserung der geschätzten Maximalkraft (bzw. des Höchstgewichts) in den letzten Einheiten. */
 export function isStalled(sessions: Session[], exerciseId: string, unit: Unit = 'kg', excludeSessionId?: string, window = STALL_SESSIONS): boolean {
-  const pts = exerciseSeries(sessions.filter((s) => s.id !== excludeSessionId), exerciseId, unit);
+  const pts = exerciseSeries(sessions.filter((s) => s.id !== excludeSessionId && !s.deload), exerciseId, unit);
   if (pts.length < window + 1) return false;
   // Ohne Zusatzgewicht (Körpergewicht, Hilfsgewicht) zählen die Wiederholungen
   const value = (p: ExercisePoint) => (unit === 'kg' ? p.best1rm || p.maxWeight || p.reps : p.maxWeight || p.reps);

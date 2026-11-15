@@ -133,19 +133,20 @@ export function ExerciseEdit() {
 
       <div className="section-label">Bewegungsbild (optional)</div>
       <p className="muted small">
-        Zwei bis sechs eigene Fotos oder Zeichnungen, die den Bewegungsablauf zeigen (Start, Mitte, Ende …). Die App blendet sie der Reihe nach bei der Übung, am Gerät und im Training ein.
+        Zwei bis sechs eigene Fotos oder Zeichnungen, die den Bewegungsablauf zeigen (Start, Mitte, Ende …). Die App blendet sie der Reihe nach bei der Übung, am Gerät und im Training ein. Angezeigt wird es, sobald mindestens zwei Bilder da sind.
       </p>
       {Array.from({ length: slots }, (_, i) => {
         const name = i === 0 ? 'Startposition' : i === slots - 1 ? 'Endposition' : `Position ${i + 1}`;
         return (
-          <Field key={i} label={slots > 2 ? `${i + 1}. ${name}` : name}>
+          <div key={i} className="field">
+            <span className="field-label">{name}</span>
             <PhotoField photoId={motionIds[i] || undefined} onChange={(id) => setFrame(i, id)} label={name} />
             {slots > 2 && (
               <button type="button" className="btn small ghost" onClick={() => removeFrame(i)}>
-                Position entfernen
+                Feld entfernen
               </button>
             )}
-          </Field>
+          </div>
         );
       })}
       {slots < MAX_MOTION_FRAMES && (

@@ -52,8 +52,8 @@ export function HintCards() {
         const p = data.plans.find((x) => x.id === a.planId);
         const nextId = p ? suggestNextWorkout(p.workouts, data.sessions.filter((s) => s.endedAt !== undefined), p.id) : undefined;
         if (p && nextId) {
-          await startSession(p.id, nextId);
-          toast('Training gestartet – gehe heute etwa 30 % leichter ran');
+          await startSession(p.id, nextId, { easier: true });
+          toast('Training gestartet – Gewichte etwa 30 % leichter, ein Satz weniger');
         }
         nav('/training');
       } finally {

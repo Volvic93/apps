@@ -129,6 +129,8 @@ const fmtN = (n: number) => String(Math.round(n * 10) / 10).replace('.', ',');
 export function computeHints(input: HintInput): Hint[] {
   const { now, settings, plans, sessions, exercises } = input;
   const done = finishedSessions(sessions);
+  // Einheiten der Entlastungswoche zählen nicht für Stagnation
+  const trainingDone = done.filter((s) => !s.deload);
   const hints: Hint[] = [];
   const active = plans.find((p) => p.status === 'aktiv');
 
@@ -153,7 +155,7 @@ export function computeHints(input: HintInput): Hint[] {
         why: `„${active.name}“ lief ${active.plannedWeeks} Wochen (jetzt Woche ${week}). Der Assistent berücksichtigt deinen bisherigen Verlauf.`,
         action: { kind: 'assistant', label: 'Neuen Plan erstellen' },
       });
-    } else if (end - now <= 7 * DAY) {
+    } else if (end - now <= 7 * DAY && !active.returnToPlanId) {
       hints.push({
         key: `plan_soon:${active.id}`,
         priority: 4,
@@ -179,14 +181,14 @@ export function computeHints(input: HintInput): Hint[] {
     // Plattennummern und kg getrennt betrachten – es genügt, wenn eine Einheit stagniert
     for (const unit of ['kg', 'platte'] as const) {
       if (isStalled(done, id, unit, undefined, STALL_HINT_SESSIONS)) {
-        const pts = exerciseSeries(done, id, unit);
+        const pts = exerciseSeries(trainingDone, id, unit);
         const last = pts[pts.length - 1];
         stalled.push({ id, name: ex.name, sessions: STALL_HINT_SESSIONS, value: unit === 'kg' ? last.best1rm || last.maxWeight : last.maxWeight, unit, bodyweight: ex.tracking === 'koerpergewicht_wdh' });
         break;
       }
     }
   }
-  if (stalled.length >= 3 && active) {
+  if (stalled.length >= 3 && active && !active.returnToPlanId) {
     hints.push({
       key: `deload:${active.id}`,
       priority: 2,

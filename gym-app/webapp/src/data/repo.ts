@@ -131,7 +131,7 @@ async function loadMaps() {
  * Startet ein Training aus einer Einheit eines Plans. Läuft schon eines, wird dieses zurückgegeben.
  * Prüfung und Anlegen laufen in einer Transaktion: ein Doppeltipp erzeugt keine zwei offenen Trainings.
  */
-export async function startSession(planId: string, workoutId: string): Promise<Session | undefined> {
+export async function startSession(planId: string, workoutId: string, opts: { easier?: boolean } = {}): Promise<Session | undefined> {
   return db.transaction('rw', [db.sessions, db.plans, db.exercises, db.equipment], async () => {
     const existing = await getActiveSession();
     if (existing) return existing;
@@ -143,7 +143,7 @@ export async function startSession(planId: string, workoutId: string): Promise<S
     for (const item of workout.items) {
       const ex = exMap.get(item.exerciseId);
       if (!ex) continue;
-      entries.push(entryFromItem(item, ex, ex.equipmentId ? eqMap.get(ex.equipmentId) : undefined, sessions));
+      entries.push(entryFromItem(item, ex, ex.equipmentId ? eqMap.get(ex.equipmentId) : undefined, sessions, { preferTarget: !!plan.returnToPlanId, easier: opts.easier }));
     }
     const t = now();
     const s: Session = {
@@ -156,6 +156,8 @@ export async function startSession(planId: string, workoutId: string): Promise<S
       startedAt: t,
       entries,
       currentIndex: 0,
+      deload: plan.returnToPlanId ? true : undefined,
+      easier: opts.easier ? true : undefined,
     };
     await db.sessions.put(s);
     return s;
@@ -507,9 +509,12 @@ export async function createDeloadPlan(planId: string): Promise<Plan | undefined
   const plan: Plan = {
     ...src,
     id: uid(),
-    name: `Entlastung – ${src.name}`.slice(0, 80),
+    name: (() => {
+      const n = `Entlastung – ${src.name}`;
+      return n.length > 80 ? `${n.slice(0, 79).trimEnd()}…` : n;
+    })(),
     plannedWeeks: 1,
-    returnToPlanId: src.id,
+    returnToPlanId: src.returnToPlanId ?? src.id,
     status: 'entwurf',
     origin: 'manuell',
     startedAt: undefined,

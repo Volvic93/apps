@@ -2,7 +2,7 @@
 
 Arbeitstitel: **Eisenzeit** (frei änderbar). Persönliche Trainings-App für ein bestimmtes Fitnessstudio, ein Nutzer, kein Store-Release.
 
-Stand: 14.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufen 1 bis 4 umgesetzt** (Details und Abweichungen in Abschnitt 13, 15, 17; Prüfschleife Stufe 2–4 in Abschnitt 19)
+Stand: 15.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufen 1 bis 4 umgesetzt** (Details und Abweichungen in Abschnitt 13, 15, 17; Prüfschleife Stufe 2–4 in Abschnitt 19; Feinschliff Abschnitt 20; Bewegungsbild mit mehreren Positionen Abschnitt 21)
 
 ---
 
@@ -15,7 +15,7 @@ Stand: 14.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufen 1 bis 4 um
 | Plan-Hilfe | Eingebauter regelbasierter Assistent **und** KI-Export (Text für Claude o. ä.) **mit Rück-Import** des fertigen Plans. |
 | Geräte/Fotos | Start mit allgemeinem Katalog. Fotos können in der App selbst aufgenommen werden. Gelieferte Fotos werden **erkannt** (Hersteller, Modell, Gerätetyp), als Gerät mit Namen, Übungen und **Gerätegrafik** angelegt und fest eingebaut. Fotos kommen nach und nach – siehe Abschnitt 4a. |
 | Umfang | Gerätetraining, Freihanteln & Körpergewicht, Cardio, Körperwerte, Pausentimer. |
-| Hosting Web-Version | Vorerst keins – Web-Version läuft lokal am PC. Aufs iPhone kommt zunächst die Sideloading-Version. Hosting später entscheidbar (Cloudflare Pages oder öffentliches Repo + GitHub Pages). |
+| Hosting Web-Version | (Überholt, siehe Abschnitt 18: GitHub Pages.) Vorerst keins – Web-Version läuft lokal am PC. Aufs iPhone kommt zunächst die Sideloading-Version. Hosting später entscheidbar (Cloudflare Pages oder öffentliches Repo + GitHub Pages). |
 | Ablage | Eigenes Repository `Volvic93/apps` (öffentlich), Ordner `gym-app/` mit den Unterordnern `webapp/` (die App) und `ipa-app/` (iOS-Hülle). Vorher Unterordner im Repo `Volvic93/3d-druckdateien`, Branch `gym-app` (siehe Abschnitt 18). |
 | Sprache | Oberfläche und Übungstexte auf Deutsch, Einheiten kg / km. |
 
@@ -77,7 +77,7 @@ Wird aus „Heute" gestartet und füllt den ganzen Bildschirm.
   - eigene Notizen,
   - Verlauf und Rekorde dieser Übung.
 - Eigene Geräte und Übungen anlegen, Foto direkt mit der iPhone-Kamera aufnehmen oder aus der Mediathek wählen.
-- **Bewegungsbild** (spätere Ausbaustufe): zwei eigene Fotos je Übung (Start- und Endposition), die die App als Wechselbild abspielt. Das ist die realistische Form von „Animation" – gezeichnete Bewegungsanimationen aus Gerätefotos zu erzeugen, wäre aufwendig und qualitativ unsicher.
+- **Bewegungsbild** (spätere Ausbaustufe): (inzwischen 2–6 Positionen, siehe Abschnitt 21) zwei eigene Fotos je Übung (Start- und Endposition), die die App als Wechselbild abspielt. Das ist die realistische Form von „Animation" – gezeichnete Bewegungsanimationen aus Gerätefotos zu erzeugen, wäre aufwendig und qualitativ unsicher.
 
 ### 3.5 Fortschritt
 - **Je Übung**: Kurven für Höchstgewicht, geschätzte Maximalkraft (1RM nach Epley: Gewicht × (1 + Wdh/30)), Volumen je Einheit; Zeitraum wählbar; Rekordliste.
@@ -110,7 +110,7 @@ Exercise       id, name, equipmentId?, primaryMuscles[], secondaryMuscles[],
                tracking (gewicht_wdh | koerpergewicht_wdh | zeit | cardio),
                instructions { setup, steps[], breathing, mistakes[], tip },
                defaultRestSec, weightStep (nur ohne weightStack am Gerät),
-               adjustmentOverrides? { adjustmentId: Wert }, notes?, motionPhotoIds?[2], hidden, builtin
+               adjustmentOverrides? { adjustmentId: Wert }, notes?, motionPhotoIds?[2–6], hidden, builtin
 Plan           id, name, goal, plannedWeeks, startedAt?, endedAt?, status (entwurf | aktiv | archiv),
                origin (manuell | assistent | ki_import), workouts[]
   Workout      id, name, items[]
@@ -288,14 +288,14 @@ Dasselbe Format dient auch dem normalen Plan-Export/-Import.
 
 **iOS-Build ohne Mac**: GitHub Actions auf einem macOS-Runner baut eine **unsignierte `.ipa`**; Sideloadly bzw. AltStore signiert sie beim Aufspielen mit der eigenen Apple-ID.
 - Ablauf: Abhängigkeiten installieren → Web-Build → iOS-Projekt erzeugen/synchronisieren (Capacitor) → `xcodebuild archive` mit abgeschalteter Signierung → `.app` in `Payload/` packen → als `.ipa` zippen → als Download am Workflow-Lauf bereitstellen.
-- Auslöser: **nur von Hand** (und bei Versions-Tags), nicht bei jedem Push. Grund: Das Repo ist privat; macOS-Minuten werden im Freikontingent zehnfach gezählt (grob 20 Builds pro Monat).
+- Auslöser: **nur von Hand** (und bei Versions-Tags), nicht bei jedem Push. Grund (damals; das Repo ist inzwischen öffentlich, siehe Abschnitt 18): Das Repo ist privat; macOS-Minuten werden im Freikontingent zehnfach gezählt (grob 20 Builds pro Monat).
 - Die Workflow-Datei muss im Repo-Stamm unter `.github/workflows/` liegen und arbeitet im Unterordner `gym-app/`.
 - Feste Bundle-Kennung, damit Daten bei Updates und beim Neusignieren erhalten bleiben.
 - Der Umsetzer prüft die aktuellen Capacitor- und Xcode-Befehle gegen die offizielle Dokumentation, statt sie aus dem Gedächtnis zu übernehmen.
 
 **Grenzen, die man kennen sollte**
 - Kostenlose Apple-ID: sideloaded Apps laufen **7 Tage** und müssen dann aufgefrischt werden (AltStore/Sideloadly können das automatisch, wenn PC und iPhone im selben WLAN sind). Die Daten bleiben dabei erhalten, solange die App nicht gelöscht wird.
-- Ohne Hosting ist die Web-Version nur am PC nutzbar; aufs iPhone als PWA kommt sie erst mit einer HTTPS-Adresse.
+- (Überholt, siehe Abschnitt 18.) Ohne Hosting ist die Web-Version nur am PC nutzbar; aufs iPhone als PWA kommt sie erst mit einer HTTPS-Adresse.
 - Die iOS-Ausgabe kann hier nicht auf einem echten iPhone getestet werden. Geprüft wird im Browser in iPhone-Größe und durch den erfolgreichen Build; die erste Installation ist der eigentliche Gerätetest.
 
 **Ordnerstruktur**
@@ -439,7 +439,7 @@ Alles läuft offline und regelbasiert; nichts passiert automatisch – die App s
 - Plan hat seine Laufzeit erreicht → „Neuen Plan erstellen“ (öffnet den Assistenten); eine Woche vorher Vorankündigung.
 - Eine Übung stagniert seit 3 Einheiten (geschätzte Maximalkraft/Höchstgewicht nicht über dem Bisherigen) → Verlauf ansehen, variieren, Entlastung.
 - Mindestens 3 Übungen stagnieren zugleich → Entlastungswoche: legt eine Kopie des Plans mit 1 Woche Laufzeit, 60 % des letzten Gewichts (in den Gerätestufen) und einem Satz weniger als Entwurf an.
-- Eine Muskelgruppe liegt 2 Wochen unter der Hälfte des Mittelwerts der übrigen (Rumpf zählt nicht als Maßstab) → Plan ergänzen. Nur bei mindestens 4 Einheiten in 14 Tagen.
+- Eine Muskelgruppe liegt 2 Wochen unter der Hälfte des Medians der übrigen (Rumpf zählt nicht als Maßstab) → Plan ergänzen. Nur bei mindestens 4 Einheiten in 14 Tagen.
 - Mehr als 10 Tage kein Training → sanfter Wiedereinstieg (ca. 70 % der letzten Gewichte, ein Satz weniger).
 - Länger als 30 Tage keine Sicherung (oder nie, bei Training älter als 30 Tage) → Sicherung anlegen.
 
@@ -483,14 +483,14 @@ Alle zehn Rückfragen zur dritten Fotolieferung sind vom Nutzer beantwortet und 
 **Neu in Stufe 4**
 - **Studio einrichten** (`/uebungen/studio`, `src/screens/StudioSetup.tsx`): alle Geräte des Katalogs in drei Gruppen (Geräte mit Foto aus deinem Studio · weitere Geräte aus dem Katalog · selbst angelegt), je Gerät ein Schalter „bei mir vorhanden“, Suche, „Alle vorhanden / Alle abwählen“ je Gruppe, Zähler. „Fertig“ speichert in einem Zug (`setEquipmentPresent`): vorhanden = im Studio und eingeblendet, nicht vorhanden = nicht im Studio. Die Änderung wird bei mitgelieferten Geräten als „geändert“ gemerkt und überlebt Katalog-Updates. Danach zeigt der Katalog standardmäßig nur vorhandene Geräte (`Settings.studioSetupDone`, abwählbar über „Nur mein Studio“). Einstiege: Empfehlungskarte auf „Heute“ (bis erledigt oder weggewischt), Link im Katalog, Einstellungen. Im Bildschirm ist die Tab-Leiste ausgeblendet.
 - **Foto fehlt:** Maschinen und Kabelzüge eines Plans ohne eigenes oder mitgeliefertes Foto werden im Plan-Editor aufgelistet (Tippen führt zum Gerät-Bearbeiten mit Aufnehmen/Auswählen) und als Empfehlungskarte auf „Heute“ gemeldet (`planEquipmentWithoutPhoto`). Im Katalog gibt es unter „Geräte“ den Filter „Ohne Foto“. Freihanteln, Körpergewicht und Cardio werden nicht angemahnt.
-- **Bewegungsbild:** Je Übung zwei eigene Fotos (Start/Ende) in „Übung bearbeiten“. Die App blendet sie im Wechsel ein (`MotionImage`), Tippen schaltet um und hält an, „Abspielen/Anhalten“; bei „Bewegung reduzieren“ (iOS-Einstellung) wechselt nichts von selbst. Zu sehen bei der Übung und im Trainingsmodus (Anleitung). Gespeichert als `Exercise.motionPhotoIds = [Start, Ende]` (leerer Eintrag = fehlt); beide müssen vorhanden sein, damit etwas angezeigt wird. Bleibt bei Katalog-Updates, Sicherung und Zusammenführen erhalten.
+- **Bewegungsbild:** (Seit Abschnitt 21 2–6 Positionen.) Je Übung zwei eigene Fotos (Start/Ende) in „Übung bearbeiten“. Die App blendet sie im Wechsel ein (`MotionImage`), Tippen schaltet um und hält an, „Abspielen/Anhalten“; bei „Bewegung reduzieren“ (iOS-Einstellung) wechselt nichts von selbst. Zu sehen bei der Übung und im Trainingsmodus (Anleitung). Gespeichert als `Exercise.motionPhotoIds = [Start, Ende]` (leerer Eintrag = fehlt); mindestens zwei belegte Positionen müssen vorhanden sein, damit etwas angezeigt wird. Bleibt bei Katalog-Updates, Sicherung und Zusammenführen erhalten.
 - **Fotos aufräumen (Fehlerbehebung):** Beim Ersetzen oder Entfernen eines Fotos wurde das alte sofort gelöscht, auch wenn man das Bearbeiten danach abbrach – das Gerät zeigte dann kein Bild mehr. Jetzt bleibt das alte Foto, bis gespeichert ist; nicht mehr verwendete Fotos räumt `removeOrphanPhotos` beim Start auf (nur solche, die älter als 10 Minuten sind).
 - **Datenmodell:** nur Erweiterungen (`Settings.studioSetupDone`, `Exercise.motionPhotoIds` war schon im Typ). Die Sicherung prüft beide Felder; Schema-Version bleibt 1.
 
 **Weitere Fotolieferungen:** Der Ablauf aus Abschnitt 4a bleibt bestehen. Offen sind die Fotos `L3_03` bis `L3_09` (der Nutzer macht neue Fotos). Die App selbst braucht dafür nichts Neues; neue Geräte entstehen in der App durch „Neues Gerät“ mit Foto.
 
 **Bewusst offen**
-- Bewegungsbilder sind reine Foto-Paare; es gibt keine mitgelieferten Bewegungsbilder und keine Zeichenanimation (wie in Abschnitt 3.4 vorgesehen).
+- (Überholt, siehe Abschnitt 21: 2–6 Positionen.) Bewegungsbilder sind reine Foto-Paare; es gibt keine mitgelieferten Bewegungsbilder und keine Zeichenanimation (wie in Abschnitt 3.4 vorgesehen).
 - Kein Zuschneiden der eigenen Fotos in der App (die Kamera- und Mediathek-Auswahl liefert das ganze Bild, verkleinert).
 - Mehr als ein Foto je Gerät (außer den mitgelieferten Zusatzbildern und den Skalenfotos) gibt es nicht.
 - Auf einem echten iPhone ungetestet: Kamera, Mediathek, Speicherverbrauch vieler Fotos, Verhalten von „Bewegung reduzieren“.
@@ -551,4 +551,18 @@ Auf Wunsch des Nutzers zeigt die App zu jedem Gerät, wie die Übung richtig aus
 - Anzeige: Übungsdetail, **Gerätedetail** (Karte „So geht’s: …“ je Übung mit Bewegungsbild) und Trainingsmodus. Die Positionen blenden der Reihe nach ein („Position 2 von 4“, bei zwei Bildern „Start“/„Ende“); Tippen schaltet weiter und hält an; bei „Bewegung reduzieren“ startet nichts von selbst.
 - Gespeichert wird wie bisher in `motionPhotoIds` (Liste von Foto-Kennungen); alte Bewegungsbilder mit zwei Bildern bleiben gültig. Backup, Aufräumen und Zusammenführen sind unverändert.
 - **Offen:** Mitgelieferte Zeichnungen für die 39 Studio-Geräte gibt es nicht – die Bilder legt der Nutzer selbst an (eigene Fotos oder selbst erstellte/gekaufte Zeichnungen). Ein In-App-Zuschneiden und ein Raster zum Zeichnen fehlen.
+
+## 22. Abschlussrunde (15.11.2026)
+
+Letzte Prüfrunde mit drei frischen Prüfern (A Code, B Sichttest im Browser in iPhone-Größe – **kein echtes iPhone**, C Konzept und Anleitungen), danach Korrekturen. Keine Befunde, die Daten zerstören; B und A fanden aber zwei echte Mängel an der neuen Entlastung/Pause.
+
+**Behoben (Tests in `tests/schritt5.test.ts`):**
+- Entlastungswoche wirkte im Training nicht (Vorbelegung nahm die alten Gewichte): jetzt Zielgewichte des Entlastungsplans. Einheiten der Entlastung (`Session.deload`) zählen nicht für Vorbelegung, Vorschlag und Stagnation; im Entlastungsplan gibt es keine zweite Entlastungskarte und kein „läuft bald aus“; Ketten aus Entlastungsplänen zeigen auf den Ursprungsplan.
+- „Leichter wieder starten“ (Heute) tat nur einen Toast: jetzt wirklich etwa 70 % der Gewichte und ein Satz weniger (`Session.easier`); die Pausenregel unterdrückt in solchen Einheiten ihren zweiten Vorschlag.
+- Pausenregel: Grenze exakt in Millisekunden (> 14 Tage), nie 0 kg, bei groben Stufen „eine Stufe leichter“ statt „etwa 10 %“.
+- Bewegungsbild: Platzhalter mit Weg zum Hinzufügen bei Übung und Gerät (vorher unsichtbar); transparente PNG-Zeichnungen bekommen weißen statt schwarzen Hintergrund; Beschriftungen im Formular bereinigt, Vorschau zeigt Hochformat vollständig; Tippen auf die Beschriftung öffnet nicht mehr die Kamera.
+- Katalog-Update löscht keine Übung mehr, die eigene Bewegungsbilder oder Einstellwerte hat; Backup-Prüfung für Foto-Daten genauer; Hinweis-Zähler ohne abgelaufene „Später“-Einträge; Katalog-Knopf „Studio anpassen“; Knöpfe mit mehreren Zeilen haben Innenabstand; langer Entlastungsplan-Name wird mit „…“ gekürzt.
+- Dokumentation: Konzept-Stellen zu Bewegungsbild, Hosting, Median aktualisiert; Version in App und `package.json` 0.3.2; Tag-Beispiel in `ipa-app/README.md`; Antwort auf „App als Datei auf dem iPhone“ in `webapp/INSTALLATION.md`.
+
+**Bewusst offen:** keine mitgelieferten Zeichnungen für die Geräte (der Nutzer legt die Bilder selbst an); „Zusammenführen“ kann lokal wieder eingeblendete Geräte erneut ausblenden (Regel „wo lokal nichts steht“); wer den Entlastungsplan archiviert statt zu aktivieren, bekommt keinen Rückweg-Hinweis; „Letztes Mal“ bricht auf kleinen Bildschirmen an Zahl und Einheit um; fehlt eine Bilddatei eines Bewegungsbilds (Sicherung ohne Fotos), bleibt die Beschriftung stehen; Punkte aus Abschnitt 19. **Nicht geprüft:** echtes iPhone (Kamera, Mediathek, Safe-Area, Service Worker), Plan-Assistent/KI-Import/Sicherung in der Oberfläche nach den letzten Änderungen, Querformat, Dynamic Type. Eine weitere Runde nach diesen Korrekturen hat nicht stattgefunden.
 

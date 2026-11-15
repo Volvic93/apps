@@ -13,7 +13,7 @@ import { BackButton, ScreenHeader } from '../ui/Header';
 import { useLive } from '../ui/hooks';
 import { useUi, formatDateShort } from '../ui/kit';
 import { InstructionsView } from '../ui/Instructions';
-import { MotionImage } from '../ui/MotionImage';
+import { MotionImage, MotionPlaceholder, motionFrames } from '../ui/MotionImage';
 import { MuscleFigure } from '../ui/MuscleFigure';
 import { useState } from 'react';
 
@@ -95,7 +95,11 @@ export function ExerciseDetail() {
         </div>
       )}
 
-      <MotionImage ids={ex.motionPhotoIds} label={ex.name} title="Bewegungsbild" />
+      {motionFrames(ex.motionPhotoIds).length >= 2 ? (
+        <MotionImage ids={ex.motionPhotoIds} label={ex.name} title="Bewegungsbild" />
+      ) : (
+        <MotionPlaceholder exercises={[{ id: ex.id, name: ex.name }]} title="Bewegungsbild" />
+      )}
 
       <section className="card">
         <div className="card-title">Beanspruchte Muskeln</div>

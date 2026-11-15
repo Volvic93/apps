@@ -103,7 +103,7 @@ export function Catalog() {
         ))}
       </div>
       <button className="btn small ghost" onClick={() => nav('/uebungen/studio')}>
-        Studio einrichten
+        {settings?.studioSetupDone ? 'Studio anpassen' : 'Studio einrichten'}
       </button>
       {tab === 'geraete' && (
         <div className="chips">

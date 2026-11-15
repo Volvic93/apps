@@ -64,3 +64,65 @@ describe('Bewegungsbild mit mehreren Positionen', () => {
     expect(motionFrames(['1', '2', '3', '4', '5', '6', '7'])).toHaveLength(MAX_MOTION_FRAMES);
   });
 });
+
+describe('Abschlussrunde: Entlastungseinheiten und Pausenvorschlag', () => {
+  const sess = (id: string, daysAgo: number, weight: number, deload = false) =>
+    ({
+      id,
+      startedAt: NOW - daysAgo * DAY,
+      endedAt: NOW - daysAgo * DAY + 3600000,
+      workoutName: 'A',
+      deload,
+      entries: [{ id: `${id}e`, exerciseId: 'x', repMin: 8, repMax: 12, skipped: false, sets: [1, 2, 3].map((n) => ({ id: `${id}${n}`, weight, reps: 10, doneAt: NOW, kind: 'normal' })) }],
+    }) as never;
+
+  it('lastPerformance und Vorschlag ignorieren Entlastungseinheiten', async () => {
+    const { lastPerformance } = await import('../src/logic/progression');
+    const { suggestNext } = await import('../src/logic/progress');
+    const list = [sess('a', 10, 40), sess('d', 2, 25, true)];
+    expect(lastPerformance(list, 'x')?.sets[0].weight).toBe(40);
+    const r = suggestNext(list, { id: 'x', tracking: 'gewicht_wdh', weightStep: 2.5 } as never, undefined, undefined, undefined, NOW)!;
+    expect(r.lastWeight).toBe(40);
+  });
+
+  it('bietet im Entlastungsplan keine zweite Entlastung und kein „läuft bald aus“ an', () => {
+    const ex = new Map(['a', 'b', 'c'].map((id) => [id, { id, name: id, tracking: 'gewicht_wdh', primaryMuscles: ['brust'], secondaryMuscles: [] } as unknown as Exercise]));
+    const sessions = ['a', 'b', 'c'].flatMap((id) => [30, 24, 18, 12, 6].map((d, i) => ({ ...(sess(`${id}${i}`, d, 40) as object), entries: [{ ...(sess('q', 1, 40) as { entries: object[] }).entries[0], exerciseId: id }] }))) as never;
+    const deload = plan({ id: 'dl', status: 'aktiv', plannedWeeks: 1, startedAt: NOW - 1 * DAY, returnToPlanId: 'main', workouts: [{ id: 'w', name: 'A', items: ['a', 'b', 'c'].map((e, i) => ({ id: `i${i}`, exerciseId: e, sets: 2, repMin: 8, repMax: 12, restSec: 90 })) }] as never });
+    const hints = computeHints({ now: NOW, settings, plans: [plan({ id: 'main' }), deload], sessions, exercises: ex });
+    expect(hints.some((h) => h.key.startsWith('deload:'))).toBe(false);
+    expect(hints.some((h) => h.key.startsWith('plan_soon'))).toBe(false);
+  });
+
+  it('Pausengrenze zählt in Millisekunden, grobe Stufen werden ehrlich benannt, nie 0 kg', async () => {
+    const { suggestNext } = await import('../src/logic/progress');
+    const ex = { id: 'x', tracking: 'gewicht_wdh', weightStep: 2.5 } as never;
+    expect(suggestNext([sess('a', 14, 40)], ex, undefined, undefined, undefined, NOW)!.kind).not.toBe('senken');
+    const long = suggestNext([sess('a', 14.5, 40)], ex, undefined, undefined, undefined, NOW)!;
+    expect(long.kind).toBe('senken');
+    expect(long.text).toContain('etwa 10 % weniger');
+    const coarse = suggestNext([sess('a', 20, 5)], ex, undefined, undefined, undefined, NOW)!;
+    expect(coarse.text).toContain('eine Stufe leichter');
+    const tiny = suggestNext([sess('a', 20, 2.5)], ex, undefined, undefined, undefined, NOW)!;
+    expect(tiny.weight ?? 1).toBeGreaterThan(0);
+  });
+});
+
+describe('Abschlussrunde: Vorbelegung bei Entlastung und leichtem Wiedereinstieg', () => {
+  const item = { sets: 3, repMin: 8, repMax: 12, targetWeight: 24 } as never;
+  const ex = { tracking: 'gewicht_wdh', weightStep: 2.5 } as never;
+  const last = { sets: [{ kind: 'normal', weight: 40, reps: 10, doneAt: 1 }] } as never;
+
+  it('Entlastung nimmt das Zielgewicht des Plans statt des letzten Mals', async () => {
+    const { prefillSets } = await import('../src/logic/progression');
+    expect(prefillSets(item, last, ex, undefined, { preferTarget: true }).map((s) => s.weight)).toEqual([24, 24, 24]);
+    expect(prefillSets(item, last, ex).map((s) => s.weight)).toEqual([40, 40, 40]);
+  });
+
+  it('leichter Wiedereinstieg: etwa 70 % und ein Satz weniger', async () => {
+    const { prefillSets } = await import('../src/logic/progression');
+    const sets = prefillSets(item, last, ex, { weightStack: { minKg: 5, maxKg: 100, stepKg: 5 } } as never, { easier: true });
+    expect(sets).toHaveLength(2);
+    expect(sets[0].weight).toBe(30);
+  });
+});

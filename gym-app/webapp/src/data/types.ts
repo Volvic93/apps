@@ -225,6 +225,10 @@ export interface Session extends Record_ {
   restTotalSec?: number;
   /** Index der gerade angezeigten Übung. */
   currentIndex?: number;
+  /** Einheit aus einer Entlastungswoche: zählt nicht für Vorschläge, Vorbelegung und Stagnation. */
+  deload?: boolean;
+  /** „Leichter wieder starten“: Gewichte etwa 70 %, ein Satz weniger. */
+  easier?: boolean;
 }
 
 export interface BodyMetric extends Record_ {

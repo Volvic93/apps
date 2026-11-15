@@ -82,7 +82,8 @@ async function removeObsoleteBuiltins(d: EisenzeitDB, eqBefore: Map<string, Equi
     if (e.substitutedFor) used.add(e.substitutedFor);
   }
   const keptEquipment = new Set<string>();
-  const hasOwnData = (e: { edited?: string[]; notes?: string }) => (e.edited?.length ?? 0) > 0 || !!e.notes;
+  const hasOwnData = (e: { edited?: string[]; notes?: string; motionPhotoIds?: string[]; adjustmentOverrides?: Record<string, unknown> }) =>
+    (e.edited?.length ?? 0) > 0 || !!e.notes || !!e.motionPhotoIds?.some(Boolean) || Object.keys(e.adjustmentOverrides ?? {}).length > 0;
   for (const ex of exBefore.values()) {
     if (!ex.builtin || keepEx.has(ex.id)) continue;
     if (used.has(ex.id) || hasOwnData(ex)) {

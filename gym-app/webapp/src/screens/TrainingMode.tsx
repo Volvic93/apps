@@ -250,7 +250,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
   const ex = entry ? exOf(entry) : undefined;
   const eq = ex?.equipmentId ? cat.eqMap.get(ex.equipmentId) : undefined;
   const last = entry ? lastPerformance(history ?? [], entry.exerciseId, s.id, entry.unit ?? 'kg') : undefined;
-  const suggestion = entry && ex && last ? suggestNext(history ?? [], ex, eq, s.id, 'heute') : undefined;
+  const suggestion = entry && ex && last ? suggestNext(history ?? [], ex, eq, s.id, 'heute', Date.now(), !s.easier) : undefined;
   const entryDone = (e: Entry) => !e.skipped && e.sets.length > 0 && e.sets.every((x) => x.doneAt !== undefined);
   const isLast = idx >= s.entries.length - 1;
   const doneSets = s.entries.reduce((a, e) => a + (e.skipped ? 0 : e.sets.filter((x) => x.doneAt !== undefined).length), 0);

@@ -7,6 +7,14 @@ export function epley1RM(weight: number, reps: number): number {
   return weight * (1 + reps / 30);
 }
 
+/**
+ * Vergleichswert für Rekorde: bei Kilogramm die geschätzte Maximalkraft, bei Plattennummern (keine Einheit zum Rechnen)
+ * die höchste Nummer, bei Gleichstand die höhere Wiederholungszahl. So stimmt er mit der Rekordliste überein.
+ */
+export function recordScore(weight: number, reps: number, unit: 'kg' | 'platte' = 'kg'): number {
+  return unit === 'platte' ? weight + reps / 1000 : epley1RM(weight, reps);
+}
+
 /** Zählt für Statistik und Rekorde: abgehakt und kein Aufwärmsatz. */
 export function isWorkSet(s: SetEntry): boolean {
   return s.doneAt !== undefined && s.kind !== 'aufwaermen';
@@ -50,7 +58,7 @@ export function bestBefore(
       if (e.exerciseId !== exerciseId || e.skipped || (e.unit ?? 'kg') !== unit) continue;
       for (const set of e.sets) {
         if (!isWorkSet(set) || !set.weight || !set.reps) continue;
-        e1rm = Math.max(e1rm, epley1RM(set.weight, set.reps));
+        e1rm = Math.max(e1rm, recordScore(set.weight, set.reps, unit));
         weight = Math.max(weight, set.weight);
       }
     }
@@ -76,9 +84,9 @@ export function isPersonalRecord(
   if (before.e1rm === 0) return false;
   let best = before.e1rm;
   for (const s of earlierInSession) {
-    if (isWorkSet(s) && s.weight && s.reps) best = Math.max(best, epley1RM(s.weight, s.reps));
+    if (isWorkSet(s) && s.weight && s.reps) best = Math.max(best, recordScore(s.weight, s.reps, unit));
   }
-  return epley1RM(set.weight, set.reps) > best + 1e-9;
+  return recordScore(set.weight, set.reps, unit) > best + 1e-9;
 }
 
 /** Rekorde, die in dieser Einheit gesetzt wurden (je Übung höchstens einer). */
@@ -86,13 +94,14 @@ export function sessionRecords(session: Session, history: Session[]): { exercise
   const out: { exerciseId: string; weight: number; reps: number; unit: 'kg' | 'platte' }[] = [];
   for (const e of session.entries) {
     if (e.skipped) continue;
-    const before = bestBefore(history, e.exerciseId, session.id, e.unit ?? 'kg');
+    const unit = e.unit ?? 'kg';
+    const before = bestBefore(history, e.exerciseId, session.id, unit);
     if (before.e1rm === 0) continue;
     let bestSet: SetEntry | undefined;
     let best = before.e1rm;
     for (const s of e.sets) {
       if (!isWorkSet(s) || !s.weight || !s.reps) continue;
-      const v = epley1RM(s.weight, s.reps);
+      const v = recordScore(s.weight, s.reps, unit);
       if (v > best + 1e-9) {
         best = v;
         bestSet = s;
@@ -105,7 +114,7 @@ export function sessionRecords(session: Session, history: Session[]): { exercise
   for (const r of out) {
     const key = `${r.exerciseId}|${r.unit}`;
     const cur = best.get(key);
-    if (!cur || epley1RM(r.weight, r.reps) > epley1RM(cur.weight, cur.reps)) best.set(key, r);
+    if (!cur || recordScore(r.weight, r.reps, r.unit) > recordScore(cur.weight, cur.reps, cur.unit)) best.set(key, r);
   }
   return [...best.values()];
 }

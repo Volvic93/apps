@@ -6,7 +6,7 @@ import type { Photo } from '../data/types';
 
 export const BACKUP_FORMAT = 'eisenzeit-sicherung';
 export const BACKUP_FORMAT_VERSION = 1;
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.3.0';
 
 export interface BackupPhoto {
   id: string;
@@ -261,7 +261,7 @@ export function validateBackup(raw: unknown): ValidationResult {
           errors.push('Ein Foto in der Sicherung ist unvollständig.');
           break;
         }
-        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(p.base64)) {
+        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(p.base64) || p.base64.length % 4 === 1) {
           errors.push(`Foto "${p.id}" enthält ungültige Daten.`);
           break;
         }
@@ -342,6 +342,16 @@ export function carryUserFields<T extends Rec>(cur: T, inc: T): T | undefined {
   if (!a.builtin || !b.builtin) return undefined;
   const out: Record<string, unknown> = { ...a };
   let changed = false;
+  // Vom Nutzer geänderte Felder (edited[]) übernehmen, die lokal noch nicht als geändert gelten – samt Wert,
+  // sonst bliebe nur die Markierung „geändert“ und der Wert (z. B. „Dein Studio“, Umbenennung) ginge verloren.
+  const localEdited = new Set(Array.isArray(a.edited) ? (a.edited as string[]) : []);
+  if (Array.isArray(b.edited)) {
+    for (const k of b.edited as string[]) {
+      if (localEdited.has(k) || k === 'adjustments' || !(k in b)) continue;
+      out[k] = b[k];
+      changed = true;
+    }
+  }
   for (const k of ['notes', 'settingsNote', 'location', 'ownWeightKg', 'photoId', 'adjustmentOverrides', 'motionPhotoIds']) {
     if (a[k] === undefined && b[k] !== undefined) {
       out[k] = b[k];

@@ -9,7 +9,7 @@ import { EquipmentThumb } from '../ui/EquipmentCard';
 import { useCatalog } from '../ui/ExercisePicker';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { IconSearch } from '../ui/Icons';
-import { useUi } from '../ui/kit';
+import { EmptyState, useUi } from '../ui/kit';
 
 /** Studio einrichten: alle Geräte des Katalogs durchgehen und markieren, welche es bei dir gibt. */
 export function StudioSetup() {
@@ -62,6 +62,8 @@ export function StudioSetup() {
       <p className="muted small" aria-live="polite">
         {count} von {total} Geräten vorhanden
       </p>
+
+      {groups.length === 0 && <EmptyState title="Keine Treffer" text="Prüfe die Schreibweise oder suche nach einer Marke oder Geräteart." />}
 
       {groups.map((g) => (
         <section key={g.id}>

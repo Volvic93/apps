@@ -64,7 +64,7 @@ export function ExercisePicker({
       .filter((e) => {
         const eq = e.equipmentId ? cat.eqMap.get(e.equipmentId) : undefined;
         if (eq?.hidden) return false;
-        if (studioOnly && !eq?.inStudio) return false;
+        if (studioOnly && eq && eq.kind !== 'koerpergewicht' && !eq.inStudio) return false;
         if (group && !exerciseGroups(e).includes(group)) return false;
         return matchesQuery(`${e.name} ${eq?.name ?? ''} ${eq?.brand ?? ''}`, q);
       })

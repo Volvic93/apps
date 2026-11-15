@@ -167,7 +167,7 @@ export function ExerciseProgress() {
               <p className={'suggest ' + suggestion.kind}>{suggestion.text}</p>
               {suggestion.stalled && (
                 <p className="muted small">
-                  Seit mehreren Einheiten keine Steigerung. Ein paar Wochen mit etwas weniger Gewicht oder eine Übungsvariante können helfen – ein leichteres Training (Deload) ist keine Schwäche.
+                  Seit mehreren Einheiten keine Steigerung. Ein paar Wochen mit etwas weniger Gewicht oder eine Übungsvariante können helfen – ein leichteres Training (Entlastung) ist keine Schwäche.
                 </p>
               )}
             </section>

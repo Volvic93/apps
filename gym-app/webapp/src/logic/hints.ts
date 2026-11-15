@@ -162,7 +162,7 @@ export function computeHints(input: HintInput): Hint[] {
     if (s.startedAt < now - 56 * DAY) continue;
     for (const e of s.entries) if (!e.skipped && e.sets.some(isWorkSet) && (!active || inPlan.has(e.exerciseId))) trained.add(e.exerciseId);
   }
-  const stalled: { id: string; name: string; sessions: number; value: number }[] = [];
+  const stalled: { id: string; name: string; sessions: number; value: number; unit: 'kg' | 'platte'; bodyweight: boolean }[] = [];
   for (const id of trained) {
     const ex = exercises.get(id);
     if (!ex || (ex.tracking !== 'gewicht_wdh' && ex.tracking !== 'koerpergewicht_wdh')) continue;
@@ -171,7 +171,7 @@ export function computeHints(input: HintInput): Hint[] {
       if (isStalled(done, id, unit, undefined, STALL_HINT_SESSIONS)) {
         const pts = exerciseSeries(done, id, unit);
         const last = pts[pts.length - 1];
-        stalled.push({ id, name: ex.name, sessions: STALL_HINT_SESSIONS, value: unit === 'kg' ? last.best1rm || last.maxWeight : last.maxWeight });
+        stalled.push({ id, name: ex.name, sessions: STALL_HINT_SESSIONS, value: unit === 'kg' ? last.best1rm || last.maxWeight : last.maxWeight, unit, bodyweight: ex.tracking === 'koerpergewicht_wdh' });
         break;
       }
     }
@@ -190,7 +190,7 @@ export function computeHints(input: HintInput): Hint[] {
       key: `stall:${s.id}`,
       priority: 3,
       title: `„${s.name}“ stagnierte zuletzt`,
-      why: `Seit ${s.sessions} Einheiten keine Steigerung der geschätzten Maximalkraft (zuletzt ${fmtN(s.value)}). Variiere die Übung, ändere den Wiederholungsbereich oder plane eine Entlastungswoche.`,
+      why: `Seit ${s.sessions} Einheiten keine Steigerung${s.unit === 'platte' ? ` der Plattennummer (zuletzt Platte ${fmtN(s.value)})` : s.value > 0 ? ` der geschätzten Maximalkraft (zuletzt ${fmtN(s.value)} kg)` : ''}. Variiere die Übung, ändere den Wiederholungsbereich oder plane eine Entlastungswoche.`,
       action: { kind: 'exercise', label: 'Verlauf ansehen', exerciseId: s.id },
     });
   }
@@ -239,7 +239,7 @@ export function computeHints(input: HintInput): Hint[] {
   if (active && input.equipment) {
     const missing = planEquipmentWithoutPhoto(active, exercises, input.equipment);
     if (missing.length) {
-      const names = missing.slice(0, 3).map((e) => e.name).join(', ') + (missing.length > 3 ? ' …' : '');
+      const names = missing.slice(0, 3).map((e) => e.name).join(', ') + (missing.length > 3 ? ' und weitere' : '');
       hints.push({
         key: `photos:${active.id}`,
         priority: 5,

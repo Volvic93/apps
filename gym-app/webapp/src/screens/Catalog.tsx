@@ -24,6 +24,7 @@ export function Catalog() {
   const [studioPick, setStudioPick] = useState<boolean | undefined>(undefined);
   // Nach „Dein Studio einrichten“ zeigt der Katalog standardmäßig nur vorhandene Geräte
   const studioOnly = studioPick ?? !!settings?.studioSetupDone;
+  const settingsLoaded = settings !== undefined;
   const setStudioOnly = (fn: (v: boolean) => boolean) => setStudioPick(fn(studioOnly));
   const [noPhoto, setNoPhoto] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
@@ -41,7 +42,8 @@ export function Catalog() {
       .filter((e) => {
         const eq = e.equipmentId ? cat.eqMap.get(e.equipmentId) : undefined;
         if (!showHidden && eq?.hidden) return false;
-        if (studioOnly && !eq?.inStudio) return false;
+        // Übungen ohne Gerät und Körpergewichtsübungen brauchen nichts im Studio und bleiben immer sichtbar.
+        if (studioOnly && eq && eq.kind !== 'koerpergewicht' && !eq.inStudio) return false;
         if (group && !exerciseGroups(e).includes(group)) return false;
         return matchesQuery(`${e.name} ${eq?.name ?? ''} ${eq?.brand ?? ''}`, q);
       })
@@ -105,14 +107,14 @@ export function Catalog() {
       </button>
       {tab === 'geraete' && (
         <div className="chips">
+          <Chip on={noPhoto} onClick={() => setNoPhoto((v) => !v)}>
+            Ohne Foto
+          </Chip>
           {(Object.keys(KIND_LABEL) as EquipmentKind[]).map((k) => (
             <Chip key={k} on={kind === k} onClick={() => setKind(kind === k ? null : k)}>
               {KIND_LABEL[k]}
             </Chip>
           ))}
-          <Chip on={noPhoto} onClick={() => setNoPhoto((v) => !v)}>
-            Ohne Foto
-          </Chip>
         </div>
       )}
 
@@ -141,7 +143,7 @@ export function Catalog() {
               </button>
             );
           })}
-          {cat && exercises.length === 0 && <EmptyState title="Nichts gefunden" text="Suche oder Filter anpassen." />}
+          {cat && settingsLoaded && exercises.length === 0 && <EmptyState title="Nichts gefunden" text="Suche oder Filter anpassen." />}
         </div>
       )}
 
@@ -178,7 +180,13 @@ export function Catalog() {
               </div>
             </>
           )}
-          {cat && equipment.length === 0 && <EmptyState title="Nichts gefunden" text="Suche oder Filter anpassen." />}
+          {cat && settingsLoaded && equipment.length === 0 && (
+            noPhoto && studioOnly && !q && !kind && !group ? (
+              <EmptyState title="Alle Geräte haben ein Foto" text="Für jedes Gerät deines Studios ist ein Foto hinterlegt." />
+            ) : (
+              <EmptyState title="Nichts gefunden" text="Suche oder Filter anpassen." />
+            )
+          )}
         </>
       )}
 

@@ -333,7 +333,7 @@ export function offeredExercises(exercises: Exercise[], equipment: Map<string, E
       const eq = e.equipmentId ? equipment.get(e.equipmentId) : undefined;
       if (eq?.hidden) return false;
       if (includeGeneral) return true;
-      return !eq || eq.inStudio || !eq.builtin || eq.kind === 'koerpergewicht';
+      return !eq || eq.inStudio || eq.kind === 'koerpergewicht';
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 }

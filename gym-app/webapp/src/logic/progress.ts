@@ -286,6 +286,8 @@ export function suggestNext(
   exercise: Pick<Exercise, 'id' | 'tracking' | 'weightStep'>,
   eq: Pick<Equipment, 'weightStack'> | undefined,
   excludeSessionId?: string,
+  /** „nächstes Mal“ im Verlauf, „heute“ mitten im Training. */
+  when = 'nächstes Mal',
 ): Suggestion | undefined {
   if (exercise.tracking !== 'gewicht_wdh' && exercise.tracking !== 'koerpergewicht_wdh') return undefined;
   const unit = weightUnit(eq);
@@ -309,7 +311,7 @@ export function suggestNext(
 
   if (w > 0 && minReps >= last.repMax) {
     const next = stepWeight(w, 1, exercise, eq);
-    if (next > w) return { kind: 'erhoehen', weight: next, ...base, text: `Alle Sätze mit ${unitLabel(w)} bis ${last.repMax} Wdh. geschafft – nächstes Mal ${unitLabel(next)}.` };
+    if (next > w) return { kind: 'erhoehen', weight: next, ...base, text: `Alle Sätze mit ${unitLabel(w)} bis ${last.repMax} Wdh. geschafft – ${when} ${unitLabel(next)}.` };
     return { kind: 'halten', weight: w, ...base, text: `Höchste Stufe erreicht – ${unitLabel(w)} halten und die Ausführung verfeinern.` };
   }
   if (w > 0 && minReps < last.repMin) {

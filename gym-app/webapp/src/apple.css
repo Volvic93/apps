@@ -1169,6 +1169,16 @@ textarea.input.mono {
 .studio-row .row-title,
 .studio-row .row-sub {
   white-space: normal;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   hyphens: auto;
+}
+/* Lange Namen (z. B. Plannamen) dürfen in Chips umbrechen statt aus der Karte zu laufen */
+.chips.wrap .chip {
+  white-space: normal;
+  text-align: left;
+  max-width: 100%;
+  height: auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  overflow-wrap: anywhere;
 }

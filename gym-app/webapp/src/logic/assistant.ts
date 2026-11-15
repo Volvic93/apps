@@ -146,8 +146,8 @@ export function generatePlan(input: AssistantInput): AssistantResult {
     const eq = ex.equipmentId ? equipment.get(ex.equipmentId) : undefined;
     if (eq?.hidden) return undefined;
     if (!eq) return ex; // freie Übung ohne Gerät
-    if (eq.inStudio || !eq.builtin) return ex;
     if (eq.kind === 'koerpergewicht') return ex;
+    if (eq.inStudio) return ex; // auch eigene Geräte: wer sie in „Mein Studio“ abwählt, will sie nicht im Vorschlag
     return allowGeneral ? ex : undefined;
   };
 

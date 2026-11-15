@@ -2,7 +2,7 @@
 
 Arbeitstitel: **Eisenzeit** (frei änderbar). Persönliche Trainings-App für ein bestimmtes Fitnessstudio, ein Nutzer, kein Store-Release.
 
-Stand: 14.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufe 1 umgesetzt** (Details und Abweichungen in Abschnitt 13)
+Stand: 14.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufen 1 bis 4 umgesetzt** (Details und Abweichungen in Abschnitt 13, 15, 17; Prüfschleife Stufe 2–4 in Abschnitt 19)
 
 ---
 
@@ -222,7 +222,7 @@ Jede Empfehlung ist eine Karte mit Begründung, „Jetzt angehen" und „Später
 5. Laufzeit in Wochen
 
 **Erzeugung**:
-- Aufteilung nach Tagen: 2–3 → Ganzkörper (A/B) · 4 → Oberkörper/Unterkörper · 5–6 → Push/Pull/Beine.
+- Aufteilung nach Tagen: 2–3 → Ganzkörper (A/B) · 4 → Oberkörper/Unterkörper · 5 → Push/Pull/Beine + Oberkörper + Unterkörper · 6 → Push/Pull/Beine zweimal.
 - Jede Einheit besteht aus **Rollen** (z. B. „Drücken waagerecht – Grundübung", „Ziehen senkrecht", „Kniedominant", „Isolation Bizeps"). Je Rolle wählt die App eine passende Übung aus den Geräten, die im Studio vorhanden sind.
 - Satz- und Wiederholungsschema nach Ziel (Kraft 4–6, Muskelaufbau 8–12, Fitness 12–15), Anzahl der Übungen nach verfügbarer Zeit.
 - **Bezug auf den Verlauf**: stagnierende Übungen werden durch eine Variante derselben Rolle ersetzt, gut laufende Grundübungen bleiben; bei jedem neuen Plan wird ein Teil der Nebenübungen gewechselt; Startgewichte werden aus der geschätzten Maximalkraft abgeleitet.
@@ -300,7 +300,7 @@ Dasselbe Format dient auch dem normalen Plan-Export/-Import.
 
 **Ordnerstruktur**
 ```
-3d-druckdateien/
+3d-druckdateien/   (überholt – seit Abschnitt 18 liegt alles in `apps/gym-app/`)
 ├─ .github/workflows/gym-app-ios.yml      (einzige Datei außerhalb des Unterordners)
 └─ gym-app/
    ├─ KONZEPT.md, README.md
@@ -336,7 +336,7 @@ Beide Ausgaben entstehen von Stufe 1 an gemeinsam; jede Stufe endet mit einem la
 
 - Name und App-Symbol endgültig festlegen.
 - Hosting der Web-Version.
-- Gerätefotos und Geräteliste des Studios (für Stufe 4).
+- Gerätefotos und Geräteliste des Studios (in Stufe 4 umgesetzt, siehe Abschnitt 16 und 17).
 - Denkbare Erweiterungen: Apple-Health-Anbindung, Scheibenrechner für die Langhantel, Trainingspartner-Modus – bewusst nicht im ersten Umfang.
 
 ---
@@ -364,7 +364,7 @@ Lücken im Konzept, die bei der Umsetzung mit der naheliegenden Lösung geschlos
 - **Rekord:** höhere geschätzte Maximalkraft (Epley) als je zuvor bei dieser Übung; die allererste Einheit mit einer Übung löst keinen Rekord aus. Aufwärmsätze zählen nicht.
 - **Supersatz:** Übungen mit gleicher Supersatz-Gruppe stehen im Plan hintereinander; nach einem Satz mit Partnerübung startet keine Pause, sondern es kommt ein Hinweis auf die Partnerübung.
 - **Pausen:** Aufwärmsätze höchstens 45 s; Timer-Ende gibt Ton und Vibration (Einstellungen), auf iOS zusätzlich eine lokale Mitteilung; −15 s/+30 s/Überspringen.
-- **Pläne:** Genau ein aktiver Plan; ein neu aktivierter ersetzt den bisherigen (der wird „Weiterer Plan“). Einheiten und Übungen lassen sich per Pfeiltasten umordnen (statt Ziehen – zuverlässiger auf dem Handy); Einheit aus anderem Plan kopieren, Einheit/Plan duplizieren, Übung in andere Einheit verschieben sind drin. Zusammenführen zweier Pläne, Assistent und KI-Import folgen in Stufe 3.
+- **Pläne:** Genau ein aktiver Plan; ein neu aktivierter ersetzt den bisherigen (der wird „Weiterer Plan“). Einheiten und Übungen lassen sich per Pfeiltasten umordnen (statt Ziehen – zuverlässiger auf dem Handy); Einheit aus anderem Plan kopieren, Einheit/Plan duplizieren, Übung in andere Einheit verschieben sind drin. Zusammenführen zweier Pläne, Assistent und KI-Import sind in Stufe 3 umgesetzt (Abschnitt 15).
 - **Sicherung:** „Ersetzen“ leert Pläne/Trainings/Geräte/Übungen; Fotos nur, wenn die Sicherung Fotos enthält. „Zusammenführen“ nimmt bei gleicher Kennung den Datensatz mit dem neueren Änderungsdatum. Vor dem Schreiben wird die Datei vollständig geprüft; bei Fehlern bleibt alles unverändert. Der eingebaute Katalog wird danach abgeglichen.
 
 ### Geräte aus der ersten Lieferung (Ergänzung zu 4a)
@@ -427,7 +427,7 @@ Der Reiter „Fortschritt“ hat vier Bereiche (Segment oben; die Auswahl bleibt
 
 **Fehlerbehebung aus dem Test:** In Version 0.1.1 (Tag `gym-app-v0.1.1`) stürzte der Trainingsbildschirm ab („Rendered more hooks …“), weil ein `useRef` aus der Prüfrunde 2 hinter einem frühen `return` stand. Behoben; ein Test prüft jetzt die Reihenfolge der Hooks in den Hauptbildschirmen.
 
-**Nicht geprüft:** echtes iPhone (Berührungsbedienung der Diagramme, Datumsfeld), Cardio-Auswertung mit echten Daten über Wochen, Verhalten bei sehr langer Historie (Hunderte Einheiten), Prüfschleife mit frischen Prüfern für Stufe 2 (Nutzungslimit; bisher nur eigene Tests und Sichtprüfung in iPhone-Größe, Dunkel und Hell).
+**Nicht geprüft:** echtes iPhone (Berührungsbedienung der Diagramme, Datumsfeld), Cardio-Auswertung mit echten Daten über Wochen, Verhalten bei sehr langer Historie (Hunderte Einheiten), Prüfschleife mit frischen Prüfern für Stufe 2 (damals Nutzungslimit; inzwischen als Runde 2 für Stufe 2–4 durchgeführt, siehe Abschnitt 19).
 
 ---
 
@@ -443,13 +443,13 @@ Alles läuft offline und regelbasiert; nichts passiert automatisch – die App s
 - Mehr als 10 Tage kein Training → sanfter Wiedereinstieg (ca. 70 % der letzten Gewichte, ein Satz weniger).
 - Länger als 30 Tage keine Sicherung (oder nie, bei Training älter als 30 Tage) → Sicherung anlegen.
 
-**Plan-Assistent** (`/plaene/assistent`, `src/logic/assistant.ts`): fünf Schritte (Ziel · Tage 2–6 · Zeit 45/60/90 · Schwerpunkte und Ausschlüsse · Laufzeit), vorbelegt aus dem Profil. Aufteilung: 2–3 Tage Ganzkörper A/B(/C), 4 Oberkörper/Unterkörper (je zweimal, B mit Varianten), 5 Push/Pull/Beine + Oberkörper + Unterkörper, 6 Push/Pull/Beine zweimal. Jede Einheit besteht aus Rollen (z. B. „Drücken waagerecht“, „Kniedominant“) mit einer Rangliste von Übungen; verwendet werden Studio-Geräte, Körpergewichtsübungen und eigene Übungen (optional auch allgemeine Geräte). Schema nach Ziel (Kraft 4–6 Wdh., 3–5 Min. Pause; Muskelaufbau 8–12; Fitness 12–15 plus Ausdauerabschluss), Übungszahl nach Zeit (5/6/8). Bezug auf den Verlauf: stagnierende Übungen werden durch eine Variante derselben Rolle ersetzt, gut laufende Grundübungen bleiben, Nebenübungen wechseln gegenüber dem letzten Plan, Startgewichte = 95 % des Gewichts für die mittlere Wiederholungszahl aus der geschätzten Maximalkraft (in Gerätestufen). Geräte mit „noch zu bestätigen“ werden nachrangig gewählt. Ergebnis: Vorschau mit Begründung je Übung („Warum?“), jede Übung austauschbar oder entfernbar, dann als Entwurf speichern oder aktivieren.
+**Plan-Assistent** (`/plaene/assistent`, `src/logic/assistant.ts`): fünf Schritte (Ziel · Tage 2–6 · Zeit 45/60/90 · Schwerpunkte und Ausschlüsse · Laufzeit), vorbelegt aus dem Profil. Aufteilung: 2–3 Tage Ganzkörper A/B(/C), 4 Oberkörper/Unterkörper (je zweimal, B mit Varianten), 5 Push/Pull/Beine + Oberkörper + Unterkörper, 6 Push/Pull/Beine zweimal. Jede Einheit besteht aus Rollen (z. B. „Drücken waagerecht“, „Kniedominant“) mit einer Rangliste von Übungen; verwendet werden Studio-Geräte und Körpergewichtsübungen (optional auch allgemeine Geräte); selbst angelegte Übungen wählt der Assistent nicht von selbst, der KI-Export bietet sie dagegen an. Schema nach Ziel (Kraft 4–6 Wdh., 3–5 Min. Pause; Muskelaufbau 8–12; Fitness 12–15 plus Ausdauerabschluss), Übungszahl nach Zeit (45 Min. → 5, 60 Min. → 6, 90 Min. → bis zu 7, je nach Vorlage). Bezug auf den Verlauf: stagnierende Übungen werden durch eine Variante derselben Rolle ersetzt, gut laufende Grundübungen bleiben, Nebenübungen wechseln gegenüber dem letzten Plan, Startgewichte = 95 % des Gewichts für die mittlere Wiederholungszahl aus der geschätzten Maximalkraft (in Gerätestufen). Geräte mit „noch zu bestätigen“ werden nachrangig gewählt. Ergebnis: Vorschau mit Begründung je Übung („Warum?“), jede Übung austauschbar oder entfernbar, dann als Entwurf speichern oder aktivieren.
 
 **Pläne kombinieren:** Einheit aus anderem Plan kopieren, Plan duplizieren, Übung verschieben (Stufe 1) und neu **Pläne zusammenführen** (`/plaene/zusammenfuehren`): Einheiten aus beliebigen Plänen wählen, Reihenfolge festlegen, als neuer Entwurf speichern; Originale bleiben unverändert.
 
 **KI-Export/-Import** (`/plaene/ki`, `/plaene/importieren`, `src/logic/planio.ts`): „Mit KI planen“ erzeugt einen Text (Aufgabe, Profil, Wünsche, Liste der verfügbaren Übungen mit Kennungen, bisheriger Plan, Verlaufszusammenfassung, Antwortformat) zum Kopieren oder Teilen – ohne Namen oder Kontaktdaten und ohne Übertragung. Antwortformat `eisenzeit-plan` Version 1 (JSON). Import: der JSON-Block wird auch in umgebendem Text oder Codeblöcken gefunden, streng geprüft (Zahlenbereiche, repMin ≤ repMax, höchstens 14 Einheiten/20 Übungen; fehlende Angaben bekommen Standardwerte mit Hinweis; verständliche Fehlermeldungen), Übungen werden zugeordnet (Kennung → genauer Name, auch bei anderer Wortfolge oder Klammern → ähnlicher Name mit Rückfrage und Alternativen → „neu anlegen“ oder „andere wählen“), Vorschau mit Begründung; gespeichert wird erst nach Bestätigung, als Entwurf, in einer Transaktion (Plan und neu angelegte Übungen zusammen oder gar nicht). Derselbe Weg dient dem normalen Plan-Export („Als Datei exportieren“ im Plan-Menü) und -Import.
 
-**Nicht geprüft:** echtes iPhone (Teilen-Dialog, Dateiauswahl, Zwischenablage), Qualität der Pläne mit sehr langem Verlauf oder mit Übungen ohne Gerät, Verhalten der KI-Antworten echter KI-Dienste (getestet mit selbst erzeugten Antworten), Prüfschleife mit frischen Prüfern für Stufe 2 und 3 (folgt auf ausdrücklichen Wunsch als nächster Schritt).
+**Nicht geprüft:** echtes iPhone (Teilen-Dialog, Dateiauswahl, Zwischenablage), Qualität der Pläne mit sehr langem Verlauf oder mit Übungen ohne Gerät, Verhalten der KI-Antworten echter KI-Dienste (getestet mit selbst erzeugten Antworten), Prüfschleife mit frischen Prüfern für Stufe 2 und 3 (inzwischen als Runde 2 durchgeführt, siehe Abschnitt 19).
 
 ### Prüfschleife Stufe 2/3, Runde 1 (14.11.2026) – eingearbeitet
 Drei frische Prüfer (Korrektheit, Sichttest, Konzepttreue) fanden keine kritischen, aber mehrere wichtige Befunde. Behoben:
@@ -460,7 +460,7 @@ Drei frische Prüfer (Korrektheit, Sichttest, Konzepttreue) fanden keine kritisc
 - **Statistik:** Hilfsgewichte (negativ) zählen nicht als Rekord und nicht als negatives Volumen; Wochenschnitt ohne die laufende unvollständige Woche; Körperwerte: Duplikate am selben Tag werden zusammengeführt, unplausible Werte abgelehnt; Entlastungsplan lässt Ein-Satz-Einträge bei einem Satz.
 - **Oberfläche:** Geräte-Raster bis zu vier Namenszeilen (kein Abschneiden mehr), Großtitel ohne Abschneiden, Hell-Modus mit kräftigerem Sekundärgrau und Apples Text-Varianten für Orange/Grün/Rot (≥ 4,5 : 1), Tippflächen 44 pt (Warum?, kleine Chips, Kalendertage), Muskelbalken in einer Farbe mit grünem Orientierungsbereich 10–20, „Letztes Mal“ als „40 kg × 10 · 35 kg × 8“ (Datum bricht nicht mehr um), veralteter Profil-Text ersetzt.
 
-**Bewusst offen:** Pause über 14 Tage → ca. 10 % weniger Gewicht (Abschnitt 5) ist nicht umgesetzt; Geräte (statt einzelner Übungen) ausschließen fehlt im Assistenten; die Stagnationskarte bietet nur „Verlauf ansehen“ (die anderen Wege stehen im Text); die „Sätze je Woche“ der Empfehlung zählen nur Hauptmuskeln, die Anzeige im Überblick gewichtet Nebenmuskeln mit 0,5; die Schwelle der Muskel-Empfehlung ist „unter der Hälfte des Medians der übrigen Gruppen (Median ≥ 6)“, Rumpf zählt nicht; Segment-Schalter sind 40 pt hoch (Apples Standard-Segment), Toasts liegen oben und überdecken kurz die Kopfzeile, „Später“/Entfernen im Assistenten ohne Rückgängig, ein Import kann viele neue Übungen anlegen, Zeitüberschreitung bei absichtlich verschachtelten Klammern nur bis 300.000 Zeichen abgesichert. **Nicht erneut geprüft:** die Korrekturen selbst (Runde 2 der Schleife wäre der nächste Schritt).
+**Bewusst offen:** Pause über 14 Tage → ca. 10 % weniger Gewicht (Abschnitt 5) ist nicht umgesetzt; Geräte (statt einzelner Übungen) ausschließen fehlt im Assistenten; die Stagnationskarte bietet nur „Verlauf ansehen“ (die anderen Wege stehen im Text); die „Sätze je Woche“ der Empfehlung zählen nur Hauptmuskeln, die Anzeige im Überblick gewichtet Nebenmuskeln mit 0,5; die Schwelle der Muskel-Empfehlung ist „unter der Hälfte des Medians der übrigen Gruppen (Median ≥ 6)“, Rumpf zählt nicht; Segment-Schalter sind 40 pt hoch (Apples Standard-Segment), Toasts liegen oben und überdecken kurz die Kopfzeile, „Später“/Entfernen im Assistenten ohne Rückgängig, ein Import kann viele neue Übungen anlegen, Zeitüberschreitung bei absichtlich verschachtelten Klammern nur bis 300.000 Zeichen abgesichert. **Nicht erneut geprüft:** die Korrekturen aus Runde 1 – die Runde 2 (Abschnitt 19) hat sie nur indirekt mitgeprüft.
 
 ## 16. Antworten auf die Geräte-Rückfragen (14.11.2026, Katalogversion 6)
 
@@ -505,3 +505,31 @@ Auf Wunsch des Nutzers liegt die App jetzt in einem **eigenen, öffentlichen Rep
 - **Veröffentlichung:** `.github/workflows/gym-app-webapp.yml` baut die Web-App bei Änderungen auf `main` und stellt sie über GitHub Pages bereit (`https://volvic93.github.io/apps/gym-app/`, dazu eine Startseite unter `/apps/`). `.github/workflows/gym-app-ios.yml` baut die `.ipa` (von Hand oder bei Tags `gym-app-v…`; bei Tags zusätzlich ein Release mit der `.ipa`).
 - **Frischer Verlauf:** Das neue Repository beginnt mit einem ersten Stand. Die Originalfotos mit Personen im Hintergrund (`geraete-fotos/`) gehören nicht dazu; veröffentlicht sind nur die zugeschnittenen Bilder in `webapp/public/geraete/` (drei davon verpixelt). Die alten Commits und Tags (`gym-app-v0.1.0` bis `v0.3.0`) bleiben im Repository `3d-druckdateien`.
 - Ab hier gilt für alle Pfade in diesem Dokument: `src/…`, `tests/…`, `public/…`, `scripts/…` liegen unter `gym-app/webapp/`; `scripts/ios-prepare.sh` und `capacitor.config.json` unter `gym-app/ipa-app/`.
+
+## 19. Prüfschleife Stufe 2–4, Runde 2 (15.11.2026)
+
+Drei frische Prüfer (A Korrektheit im Code, B Sichttest im Browser in iPhone-Größe, C Konzepttreue), danach Korrekturen. **Browser in iPhone-Größe, kein echtes iPhone.** Gesehen: Prüfer B in 375×812 dunkel und hell, 768×1024 hell, Desktop-Breite dunkel (Heute, Pläne, Planeditor, Assistent, Import, Training, Fortschritt, Katalog, Dein Studio, Geräte-/Übung bearbeiten, Einstellungen); Konsole ohne Fehler. Ergebnis: keine Befunde mit Schweregrad „hoch“.
+
+**Behoben (mit Tests in `tests/runde2.test.ts`):**
+- Rekorde bei Plattennummern rechneten mit Epley (Platte 6 × 15 schlug Platte 7 × 6); jetzt höchste Nummer, bei Gleichstand mehr Wiederholungen – wie Rekordliste und Verlauf (`recordScore`).
+- „Zusammenführen“ übernahm bei mitgelieferten Geräten/Übungen nur die Markierung `edited`, nicht den Wert („Dein Studio“, Umbenennung): jetzt wird der Wert mit übernommen, wo lokal nichts als geändert gilt (Gewichtsstufen/Einstellpunkte-Struktur `adjustments` ausgenommen).
+- Katalog und Übungsauswahl blendeten mit „Nur mein Studio“ Übungen ohne Gerät und Körpergewichtsübungen aus; sie bleiben jetzt sichtbar (wie im Assistenten).
+- Assistent und KI-Export boten abgewählte eigene Geräte weiter an.
+- Stagnationskarte: Text je nach Einheit („Plattennummer“, „Maximalkraft … kg“, bei Wiederholungsübungen ohne Wert).
+- Trainingsvorschlag sagt im Training „heute“ statt „nächstes Mal“.
+- Assistent-Hinweis „90 Min. → 8 Übungen“ stimmte nicht (Vorlagen haben höchstens 7 Rollen): Text auf „bis zu 7“.
+- Backup-Prüfung lehnt Foto-Base64 mit unmöglicher Länge verständlich ab.
+- Versionsnummer in `package.json` (webapp, ipa-app) und Info-Anzeige auf 0.3.0.
+- Oberfläche: langer Planname im Planvergleich läuft nicht mehr aus der Karte; lange Gerätenamen in „Dein Studio“ berühren den Schalter nicht mehr; Leerzustand „Keine Treffer“ in „Dein Studio“; Katalog flackert nach „Studio einrichten“ nicht mehr; „Ohne Foto“ steht vorn in der Chip-Reihe, bei „alle Geräte haben ein Foto“ erscheint ein passender Text; Tippfehler „… .“ in der Foto-Karte; Einstellungen zeigen Anzahl vorhandener Geräte und „Studio anpassen“; „Deload“ → „Entlastung“.
+
+**Bewusst offen (neu):**
+- Entlastungsplan führt nicht zum ursprünglichen Plan zurück (kein Hinweis „alten Plan wieder aktivieren“; Planwoche startet beim Reaktivieren bei 1).
+- „Nicht mehr zeigen“ bei Hinweisen lässt sich nicht rückgängig machen (keine Liste in den Einstellungen).
+- „Dein Studio“ verwirft Änderungen bei Zurück ohne Rückfrage; „Alle vorhanden“ blendet bewusst ausgeblendete Geräte wieder ein.
+- Der Assistent wählt nie selbst angelegte Übungen/Geräte; KI-Export: Trainingstage nur aus dem Profil.
+- Begriffe uneinheitlich („Nur mein Studio“, „Mein Studio“, „bei mir vorhanden“; „SS1“ vs. „Supersatz“; „Entwurf“ vs. „Weitere Pläne“).
+- Sicherung ohne Fotos: Geräte behalten eine Foto-Kennung ohne Datei, die Karte „Foto fehlt“ erscheint dafür nicht; Zeitraum der Sicherung als UTC-Datum (kosmetisch); `usePhotoUrl` kann in einem engen Zeitfenster eine Bild-Adresse zu früh freigeben; Plan-Editor schreibt den ganzen Plan aus dem zuletzt gezeichneten Stand.
+- Darstellung: Titel brechen ohne deutsche Silbentrennung mitten im Wort (auf dem iPhone ungeprüft); Volumen wechselt bei 10.000 kg von „kg“ zu „t“; Zusammenfassung nach einem Satz zeigt „−89,4 %“; Planname im Import bei 80 Zeichen stumm gekürzt; Button „Vorschlag erstellen“ bricht um; „Stepper“ hat das Fahrrad-Piktogramm; Namensfeld bei Übung bearbeiten einzeilig, leere Bewegungsbild-Platzhalter sehr hoch.
+- Nicht geprüft: echtes iPhone (Safe-Area, Kamera, Teilen, Service Worker), Bewegungsbild-Animation, Sicherung Export/Import in der Oberfläche, Querformat, Dynamic Type, 320 pt Breite, Training/Assistent in hell und auf dem Tablet.
+- Die Korrekturen aus dieser Runde wurden nur durch Tests und eine kurze Sichtprüfung der Studio-Liste kontrolliert; eine Runde 3 mit frischen Prüfern hat nicht stattgefunden.
+

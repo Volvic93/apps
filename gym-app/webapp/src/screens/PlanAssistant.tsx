@@ -226,7 +226,7 @@ export function PlanAssistant() {
               </Chip>
             ))}
           </div>
-          <p className="muted small">Das bestimmt die Zahl der Übungen: 45 Min. → 5, 60 Min. → 6, 90 Min. → 8 Übungen.</p>
+          <p className="muted small">Das bestimmt die Zahl der Übungen: 45 Min. → 5, 60 Min. → 6, 90 Min. → bis zu 7 Übungen (je nach Vorlage).</p>
         </section>
       )}
       {step === 3 && (

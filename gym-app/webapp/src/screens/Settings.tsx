@@ -8,6 +8,8 @@ import { applyAppearance } from '../ui/appearance';
 import { APP_VERSION, backupFileName, buildBackup, importBackup, markBackupDone, parseBackupText, type BackupSummary, type BackupFile, type ImportMode } from '../logic/backup';
 import { platform } from '../platform';
 import { BackButton, ScreenHeader } from '../ui/Header';
+import { useCatalog } from '../ui/ExercisePicker';
+import { isPresent } from '../logic/catalog';
 import { useLive } from '../ui/hooks';
 import { IconDownload, IconUpload } from '../ui/Icons';
 import { Chip, Field, NumberInput, Segmented, Sheet, useUi } from '../ui/kit';
@@ -17,6 +19,8 @@ export function Settings() {
   const nav = useNavigate();
   const { toast, confirm } = useUi();
   const s = useLive(() => getSettings());
+  const studioCat = useCatalog();
+  const studioCount = studioCat ? studioCat.equipment.filter(isPresent).length : undefined;
   const [withPhotos, setWithPhotos] = useState(true);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<{ backup: BackupFile; summary: BackupSummary; warnings: string[]; name: string } | null>(null);
@@ -85,9 +89,12 @@ export function Settings() {
 
       <div className="section-label">Dein Studio</div>
       <section className="card">
-        <p className="muted small">Markiere, welche Geräte es bei dir gibt. Katalog und Plan-Assistent richten sich danach.</p>
+        <p className="muted small">
+          Markiere, welche Geräte es bei dir gibt. Katalog und Plan-Assistent richten sich danach.
+          {s?.studioSetupDone && studioCat && <> Aktuell: <b>{studioCount} von {studioCat.equipment.length} Geräten</b> vorhanden.</>}
+        </p>
         <button className="btn block" onClick={() => nav('/uebungen/studio')}>
-          Studio einrichten
+          {s?.studioSetupDone ? 'Studio anpassen' : 'Studio einrichten'}
         </button>
       </section>
 

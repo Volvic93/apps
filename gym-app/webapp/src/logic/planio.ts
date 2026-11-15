@@ -300,6 +300,8 @@ export interface AiExportInput {
   wishes: string;
   weeks: number;
   includeGeneral: boolean;
+  /** `chat`: Auftrag für das Gespräch mit Claude (Plan kommt über ein Werkzeug) statt Text zum Einfügen. */
+  mode?: 'text' | 'chat';
   exercises: Exercise[];
   equipment: Map<string, Equipment>;
   plans: Plan[];
@@ -376,7 +378,11 @@ export function buildAiExportText(input: AiExportInput): string {
   const offered = offeredExercises(exercises, equipment, input.includeGeneral);
   const out: string[] = [];
   out.push('# Aufgabe');
-  out.push(
+  if (input.mode === 'chat') {
+    out.push(
+      'Du bist ein erfahrener Krafttrainer und berätst mich im Gespräch für meine Gym-App „Eisenzeit“. Antworte kurz und auf Deutsch. Frage nach, wenn etwas Wichtiges fehlt. Sobald ein Plan steht (oder ich ihn ausdrücklich möchte), rufe das Werkzeug submit_plan auf – gib den Plan nicht zusätzlich als Text aus. Verwende ausschließlich Übungen aus der Liste unten und gib die Kennung (z. B. "ex-brustpresse-maschine") im Feld "exercise" an. Berücksichtige Ziel, Erfahrung, Trainingstage, bisherigen Plan und Verlauf. Ersetze stagnierende Übungen durch Varianten derselben Muskelgruppe, behalte gut laufende Grundübungen und wechsle einen Teil der Nebenübungen. Die Begründung gehört in das Feld "explanation".',
+    );
+  } else out.push(
     'Du bist ein erfahrener Krafttrainer. Erstelle mir einen neuen Trainingsplan für meine Gym-App „Eisenzeit“. Verwende ausschließlich Übungen aus der Liste unten und gib die Kennung (z. B. "ex-brustpresse-maschine") im Feld "exercise" an. Berücksichtige Ziel, Erfahrung, Trainingstage, bisherigen Plan und Verlauf. Ersetze stagnierende Übungen durch Varianten derselben Muskelgruppe, behalte gut laufende Grundübungen und wechsle einen Teil der Nebenübungen. Gib als Antwort NUR den JSON-Block im Format unten aus (in einem ```json-Block), danach nichts weiter – die Begründung gehört in das Feld "explanation".',
   );
   out.push('', '# Profil');
@@ -403,8 +409,8 @@ export function buildAiExportText(input: AiExportInput): string {
     }
   } else out.push('Es gibt noch keinen Plan.');
   out.push('', '# Verlauf', ...historySummary(input));
-  out.push('', '# Antwortformat (JSON, Version 1)');
+  out.push('', input.mode === 'chat' ? '# Regeln für den Plan' : '# Antwortformat (JSON, Version 1)');
   out.push('Regeln: "exercise" ist die Kennung aus der Liste; "sets" 1–10; "repMin"/"repMax" ganze Zahlen (repMin ≤ repMax); "restSec" in Sekunden; "targetWeight" in kg ist optional (nur wenn aus dem Verlauf sinnvoll ableitbar); Cardio-Übungen mit sets 1, repMin 1, repMax 1. Einheiten in Trainingsreihenfolge, höchstens 14 Einheiten mit je höchstens 20 Übungen.');
-  out.push('```json', offered[0] ? PLAN_FORMAT_EXAMPLE.replace('ex-brustpresse-maschine', offered.find((e) => e.tracking === 'gewicht_wdh')?.id ?? offered[0].id) : PLAN_FORMAT_EXAMPLE, '```');
+  if (input.mode !== 'chat') out.push('```json', offered[0] ? PLAN_FORMAT_EXAMPLE.replace('ex-brustpresse-maschine', offered.find((e) => e.tracking === 'gewicht_wdh')?.id ?? offered[0].id) : PLAN_FORMAT_EXAMPLE, '```');
   return out.join('\n');
 }

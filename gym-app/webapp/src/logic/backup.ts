@@ -6,7 +6,7 @@ import type { Photo } from '../data/types';
 
 export const BACKUP_FORMAT = 'eisenzeit-sicherung';
 export const BACKUP_FORMAT_VERSION = 1;
-export const APP_VERSION = '0.3.2';
+export const APP_VERSION = '0.4.0';
 
 export interface BackupPhoto {
   id: string;

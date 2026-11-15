@@ -14,7 +14,7 @@ const NEW = '__neu__';
  * Plan einfügen (Text oder Datei), prüfen, Übungen zuordnen, Vorschau mit Begründung – gespeichert wird erst nach Bestätigung.
  * Wird vom Plan-Import und von „Mit KI planen“ verwendet.
  */
-export function ImportPanel({ placeholder }: { placeholder?: string }) {
+export function ImportPanel({ placeholder, prefill }: { placeholder?: string; prefill?: { text: string; key: number } }) {
   const nav = useNavigate();
   const { toast } = useUi();
   const cat = useCatalog();
@@ -44,6 +44,15 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
     setChoice(new Map([...m.entries()].map(([ref, mm]) => [ref, mm.exerciseId ?? NEW])));
     setConfirmed(new Set());
   };
+
+  // Plan von außen übergeben (z. B. aus dem Gespräch mit Claude): wie eingefügt analysieren
+  useEffect(() => {
+    if (prefill && cat) {
+      setText(prefill.text);
+      analyze(prefill.text);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill?.key, !!cat]);
 
   // Ergebnis bzw. Fehlermeldung in den Blick holen (liegt sonst unter dem Bildschirmrand)
   useEffect(() => {

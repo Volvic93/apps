@@ -933,11 +933,13 @@ textarea {
 }
 
 /* ------------------------------------------------------------------ Stufe 3: Planung */
+/* Empfehlungen: schlichte Karte ohne farbigen Randstreifen (Apple-Stil), Überschrift neutral */
 .hint-card {
-  border-left: 4px solid var(--sys-orange);
+  border-left: 0;
+  gap: 10px;
 }
 .hint-card .eyebrow {
-  color: var(--sys-orange);
+  color: var(--label-2);
 }
 .hint-why {
   margin: 0;
@@ -1056,7 +1058,6 @@ textarea.input.mono {
     --label-2: rgba(10, 10, 10, 0.72);
   }
 }
-.hint-card .eyebrow,
 .match.ask,
 .suggest.senken,
 .delta.down,

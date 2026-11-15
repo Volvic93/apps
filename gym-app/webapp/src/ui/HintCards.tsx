@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { db, getSettings, saveSettings } from '../data/db';
 import { useRef } from 'react';
-import { createDeloadPlan, startSession } from '../data/repo';
+import { activatePlan, createDeloadPlan, startSession } from '../data/repo';
 import { suggestNextWorkout } from '../logic/stats';
 import { computeHints, dismissHint, visibleHints, type Hint } from '../logic/hints';
 import { useCatalog } from './ExercisePicker';
@@ -37,6 +37,11 @@ export function HintCards() {
       if (a.note) toast(a.note);
       nav(`/plaene/${a.planId}`);
     }
+    else if (a.kind === 'activate') {
+      await activatePlan(a.planId);
+      toast('Plan wieder aktiv');
+      nav('/heute');
+    }
     else if (a.kind === 'backup') nav('/einstellungen');
     else if (a.kind === 'studio') nav('/uebungen/studio');
     else if (a.kind === 'equipment') nav(`/uebungen/geraet-bearbeiten/${a.equipmentId}`);
@@ -61,7 +66,7 @@ export function HintCards() {
       try {
         const p = await createDeloadPlan(a.planId);
         if (p) {
-          toast('Entlastungsplan als Entwurf angelegt – aktiviere ihn für eine Woche');
+          toast('Entlastungsplan als Entwurf angelegt – aktiviere ihn für eine Woche, danach führt dich Heute zurück');
           nav(`/plaene/${p.id}`);
         }
       } finally {

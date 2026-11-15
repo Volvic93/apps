@@ -98,6 +98,23 @@ export function Settings() {
         </button>
       </section>
 
+      <div className="section-label">Hinweise</div>
+      <section className="card">
+        <p className="muted small">
+          Die Karten auf „Heute“ geben Empfehlungen. Was du mit „Nicht mehr zeigen“ oder „Später“ weggewischt hast, kannst du hier wieder einschalten.
+        </p>
+        <button
+          className="btn block"
+          disabled={!s?.dismissedHints?.length}
+          onClick={async () => {
+            await saveSettings({ dismissedHints: [] });
+            toast('Hinweise werden wieder gezeigt');
+          }}
+        >
+          Ausgeblendete Hinweise wieder zeigen{s?.dismissedHints?.length ? ` (${s.dismissedHints.length})` : ''}
+        </button>
+      </section>
+
       <div className="section-label">Sicherung</div>
       <section className="card">
         <p className="muted small">

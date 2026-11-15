@@ -13,6 +13,7 @@ export type HintAction =
   | { kind: 'exercise'; label: string; exerciseId: string }
   | { kind: 'deload'; label: string; planId: string }
   | { kind: 'plan'; label: string; planId: string; note?: string }
+  | { kind: 'activate'; label: string; planId: string }
   | { kind: 'backup'; label: string }
   | { kind: 'studio'; label: string }
   | { kind: 'equipment'; label: string; equipmentId: string }
@@ -135,7 +136,16 @@ export function computeHints(input: HintInput): Hint[] {
   if (active?.startedAt) {
     const end = active.startedAt + active.plannedWeeks * 7 * DAY;
     const week = planWeek(active.startedAt, now);
-    if (now >= end) {
+    const returnTo = active.returnToPlanId ? plans.find((p) => p.id === active.returnToPlanId && p.status !== 'aktiv') : undefined;
+    if (returnTo && now >= end) {
+      hints.push({
+        key: `deload_back:${active.id}`,
+        priority: 1,
+        title: 'Entlastungswoche geschafft',
+        why: `„${active.name}“ ist vorbei. Mach mit „${returnTo.name}“ weiter – die Gewichte sind nach der leichten Woche wieder frisch.`,
+        action: { kind: 'activate', label: `Zu „${returnTo.name}“ zurückkehren`, planId: returnTo.id },
+      });
+    } else if (now >= end) {
       hints.push({
         key: `plan_end:${active.id}`,
         priority: 1,

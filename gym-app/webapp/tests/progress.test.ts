@@ -11,12 +11,16 @@ import {
   planComparison,
   rangeStart,
   recordList,
-  suggestNext,
+  suggestNext as suggestNextAt,
   trainedExercises,
   weeklyStats,
 } from '../src/logic/progress';
 
 const DAY = 24 * 3600 * 1000;
+
+/** Die Beispiel-Einheiten haben feste, kleine Zeitstempel: „jetzt“ liegt hier einen Tag nach der letzten Einheit. */
+const suggestNext = (sessions: Session[], ex: Parameters<typeof suggestNextAt>[1], eq: Parameters<typeof suggestNextAt>[2], excl?: string) =>
+  suggestNextAt(sessions, ex, eq, excl, undefined, Math.max(0, ...sessions.map((x) => x.startedAt)) + DAY);
 const done = (weight: number, reps: number, kind: SetEntry['kind'] = 'normal'): SetEntry => ({ kind, weight, reps, doneAt: 1 });
 function entry(exerciseId: string, sets: SetEntry[], extra: Partial<Entry> = {}): Entry {
   return { exerciseId, sets, restSec: 90, repMin: 8, repMax: 12, ...extra };
@@ -193,5 +197,30 @@ describe('Körperwerte', () => {
     expect(w.map((x) => x.value)).toEqual([83.5, 82]);
     expect(bodySeries(m, 'waist').length).toBe(1);
     expect(bodySeries(m, 'chest')).toEqual([]);
+  });
+});
+
+describe('Steigerungsvorschlag nach langer Pause', () => {
+  const ex = { id: 'ex', tracking: 'gewicht_wdh', weightStep: 2.5 } as never;
+  const mk = (w: number) => [session('a', 10 * DAY, [entry('ex', [done(w, 12), done(w, 12), done(w, 12)])])];
+
+  it('schlägt nach mehr als 14 Tagen etwa 10 % weniger vor', () => {
+    const r = suggestNextAt(mk(60), ex, undefined, undefined, undefined, 10 * DAY + 20 * DAY)!;
+    expect(r.kind).toBe('senken');
+    expect(r.weight).toBe(55);
+    expect(r.text).toContain('20 Tage Pause');
+  });
+
+  it('bleibt bei der normalen Regel, wenn die Pause höchstens 14 Tage dauert', () => {
+    const r = suggestNextAt(mk(60), ex, undefined, undefined, undefined, 10 * DAY + 14 * DAY)!;
+    expect(r.kind).toBe('erhoehen');
+  });
+
+  it('nutzt bei Plattennummern eine Stufe weniger und bei Gewichtsstufen die nächste Stufe', () => {
+    const pl = { weightStack: { minKg: 2, maxKg: 28, stepKg: 1, unit: 'platte' } } as never;
+    const sPl = [session('a', 10 * DAY, [{ ...entry('ex', [done(12, 12), done(12, 12), done(12, 12)]), unit: 'platte' } as Entry])];
+    expect(suggestNextAt(sPl, ex, pl, undefined, undefined, 40 * DAY)!.weight).toBe(11);
+    const kg = { weightStack: { minKg: 5, maxKg: 100, stepKg: 5 } } as never;
+    expect(suggestNextAt(mk(60), ex, kg, undefined, undefined, 40 * DAY)!.weight).toBe(55);
   });
 });

@@ -178,6 +178,8 @@ export interface Plan extends Record_ {
   endedAt?: number;
   status: PlanStatus;
   origin: PlanOrigin;
+  /** Nur bei Entlastungsplänen: der Plan, zu dem nach der Entlastungswoche zurückgekehrt wird. */
+  returnToPlanId?: string;
   workouts: Workout[];
 }
 

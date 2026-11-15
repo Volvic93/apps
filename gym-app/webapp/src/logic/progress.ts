@@ -1,5 +1,5 @@
 import type { BodyMetric, Entry, Equipment, Exercise, MuscleId, Plan, Session, SetEntry } from '../data/types';
-import { stepWeight, weightUnit } from './progression';
+import { snapToStack, stepFor, stepWeight, weightUnit } from './progression';
 import { epley1RM, isWorkSet, sessionDurationMin, sessionWorkSets, setVolume, startOfWeek } from './stats';
 
 type Unit = 'kg' | 'platte';
@@ -275,6 +275,9 @@ export interface Suggestion {
 }
 
 const STALL_SESSIONS = 3;
+/** Nach so vielen Tagen ohne diese Übung schlägt die App einen vorsichtigeren Einstieg vor. */
+export const PAUSE_DAYS = 14;
+const PAUSE_DAY_MS = 24 * 3600 * 1000;
 
 /**
  * Einfache Doppelprogression: Schafft man in allen Arbeitssätzen mit dem letzten Gewicht die obere Wiederholungsgrenze,
@@ -288,17 +291,18 @@ export function suggestNext(
   excludeSessionId?: string,
   /** „nächstes Mal“ im Verlauf, „heute“ mitten im Training. */
   when = 'nächstes Mal',
+  now = Date.now(),
 ): Suggestion | undefined {
   if (exercise.tracking !== 'gewicht_wdh' && exercise.tracking !== 'koerpergewicht_wdh') return undefined;
   const unit = weightUnit(eq);
   const unitLabel = (w: number) => (unit === 'platte' ? `Platte ${fmt(w)}` : `${fmt(w)} kg`);
   const done = finishedSessions(sessions).filter((s) => s.id !== excludeSessionId);
-  const perSession: { sets: SetEntry[]; repMin: number; repMax: number }[] = [];
+  const perSession: { sets: SetEntry[]; repMin: number; repMax: number; at: number }[] = [];
   for (const s of done) {
     const entries = s.entries.filter((e) => e.exerciseId === exercise.id && !e.skipped && unitOf(e) === unit);
     const sets = entries.flatMap((e) => e.sets.filter(isWorkSet));
     if (!sets.length) continue;
-    perSession.push({ sets, repMin: entries[entries.length - 1].repMin || 8, repMax: entries[entries.length - 1].repMax || 12 });
+    perSession.push({ sets, repMin: entries[entries.length - 1].repMin || 8, repMax: entries[entries.length - 1].repMax || 12, at: s.startedAt });
   }
   if (!perSession.length) return { kind: 'start', text: 'Noch keine Werte – wähle ein Gewicht, mit dem du die Wiederholungen sauber schaffst.', stalled: false };
 
@@ -308,6 +312,17 @@ export function suggestNext(
   const minReps = Math.min(...atW.map((x) => x.reps ?? 0));
   const stalled = isStalled(sessions, exercise.id, unit, excludeSessionId);
   const base = { lastWeight: w, stalled };
+
+  // Nach mehr als 14 Tagen Pause: etwa 10 % weniger einsteigen (statt zu steigern)
+  const gapDays = Math.floor((now - last.at) / PAUSE_DAY_MS);
+  if (w > 0 && gapDays > PAUSE_DAYS) {
+    const stack = eq?.weightStack;
+    let target = unit === 'platte' ? stepWeight(w, -1, exercise, eq) : stack ? snapToStack(w * 0.9, stack) : Math.round((w * 0.9) / stepFor(exercise, eq)) * stepFor(exercise, eq);
+    if (target >= w) target = stepWeight(w, -1, exercise, eq);
+    if (target < w) {
+      return { kind: 'senken', weight: target, ...base, text: `${gapDays} Tage Pause – steig mit etwa 10 % weniger ein: ${unitLabel(target)} (zuletzt ${unitLabel(w)}).` };
+    }
+  }
 
   if (w > 0 && minReps >= last.repMax) {
     const next = stepWeight(w, 1, exercise, eq);

@@ -8,6 +8,8 @@ import { useCatalog } from '../ui/ExercisePicker';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { Chip, Field, NumberInput, useUi } from '../ui/kit';
 import { MAX_MOTION_FRAMES } from '../ui/MotionImage';
+import { MOTION_PATTERNS, motionIdFor } from '../data/motions';
+import { ExerciseSketch } from '../ui/MotionSketch';
 import { PhotoField } from '../ui/PhotoField';
 
 const lines = (t: string) => t.split('\n').map((s) => s.trim()).filter(Boolean);
@@ -130,6 +132,19 @@ export function ExerciseEdit() {
           <NumberInput value={ex.weightStep} onChange={(v) => patch({ weightStep: v ?? 2.5 })} />
         </Field>
       </div>
+
+      <div className="section-label">Bewegungsskizze</div>
+      <Field label="Muster" hint="Die gezeichnete Skizze zeigt, wie die Übung ausgeführt wird. „Automatisch“ wählt nach dem Namen.">
+        <select className="input" value={ex.motionId ?? ''} onChange={(e) => patch({ motionId: e.target.value || undefined })}>
+          <option value="">Automatisch{motionIdFor({ id: ex.id, name: ex.name }) ? ` (${MOTION_PATTERNS.find((p) => p.id === motionIdFor({ id: ex.id, name: ex.name }))?.name})` : ' (keine passende)'}</option>
+          {MOTION_PATTERNS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <ExerciseSketch ex={ex} compact />
 
       <div className="section-label">Bewegungsbild (optional)</div>
       <p className="muted small">

@@ -10,6 +10,9 @@ import { BackButton, ScreenHeader } from '../ui/Header';
 import { assetUrl, usePhotoUrl } from '../ui/hooks';
 import { IconMinus, IconPlus } from '../ui/Icons';
 import { useUi } from '../ui/kit';
+import { Lightbox, type LightboxImage } from '../ui/Lightbox';
+import { MotionSketch } from '../ui/MotionSketch';
+import { motionFor } from '../data/motions';
 import { MotionImage, MotionPlaceholder, motionFrames } from '../ui/MotionImage';
 import { MuscleFigure } from '../ui/MuscleFigure';
 import type { Adjustment } from '../data/types';
@@ -68,6 +71,11 @@ export function EquipmentDetail() {
   const exs = cat.exercises.filter((e) => e.equipmentId === eq.id && !e.hidden).sort((a, b) => a.name.localeCompare(b.name, 'de'));
   // Allgemeine Mehrzweck-Geräte (Langhantel, Kurzhanteln …) haben keine eindeutige Hauptmuskulatur.
   const generic = !eq.inStudio && exs.length > 3;
+  const galleryImages: LightboxImage[] = [
+    ...(photo ? [{ src: photo, caption: eq.name }] : []),
+    ...(eq.builtinPhotos ?? []).map((p) => ({ src: assetUrl(p.src), caption: p.caption })).filter((i) => i.src !== photo),
+  ];
+  const galleryStart = Math.max(0, galleryImages.findIndex((i) => i.src === gallery));
   const m = generic ? { primary: [], secondary: [] } : equipmentMuscles(eq.id, cat.exercises);
   const stack = eq.weightStack;
   const stackCount = stack ? stackWeights(stack).length : 0;
@@ -177,6 +185,9 @@ export function EquipmentDetail() {
         </section>
       )}
 
+      {[...new Map(exs.map((e) => [motionFor(e)?.id, e] as const).filter(([k]) => !!k)).values()].map((e) => (
+        <MotionSketch key={`sk-${e.id}`} pattern={motionFor(e)!} title={`So geht’s: ${e.name}`} />
+      ))}
       {exs.filter((e) => motionFrames(e.motionPhotoIds).length >= 2).map((e) => (
         <MotionImage key={e.id} ids={e.motionPhotoIds} label={e.name} title={`So geht’s: ${e.name}`} />
       ))}
@@ -224,11 +235,7 @@ export function EquipmentDetail() {
         )}
       </div>
 
-      {gallery && (
-        <div className="lightbox" onClick={() => setGallery(undefined)} role="dialog" aria-label="Bild">
-          <img src={gallery} alt="" />
-        </div>
-      )}
+      {gallery !== undefined && <Lightbox images={galleryImages} start={galleryStart} onClose={() => setGallery(undefined)} />}
     </div>
   );
 }

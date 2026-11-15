@@ -14,6 +14,7 @@ import { useLive } from '../ui/hooks';
 import { useUi, formatDateShort } from '../ui/kit';
 import { InstructionsView } from '../ui/Instructions';
 import { MotionImage, MotionPlaceholder, motionFrames } from '../ui/MotionImage';
+import { ExerciseSketch } from '../ui/MotionSketch';
 import { MuscleFigure } from '../ui/MuscleFigure';
 import { useState } from 'react';
 
@@ -95,6 +96,7 @@ export function ExerciseDetail() {
         </div>
       )}
 
+      <ExerciseSketch ex={ex} title="So geht’s (Skizze)" />
       {motionFrames(ex.motionPhotoIds).length >= 2 ? (
         <MotionImage ids={ex.motionPhotoIds} label={ex.name} title="Bewegungsbild" />
       ) : (

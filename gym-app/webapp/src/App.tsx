@@ -15,6 +15,7 @@ import { PlanImport } from './screens/PlanImport';
 import { PlanMerge } from './screens/PlanMerge';
 import { Plans } from './screens/Plans';
 import { SessionDetail } from './screens/SessionDetail';
+import { Sketches } from './screens/Sketches';
 import { Settings } from './screens/Settings';
 import { StudioSetup } from './screens/StudioSetup';
 import { Today } from './screens/Today';
@@ -63,6 +64,7 @@ function Shell() {
         <Route path="/fortschritt/uebung/:id" element={<ExerciseProgress />} />
         <Route path="/fortschritt/:id" element={<SessionDetail />} />
         <Route path="/einstellungen" element={<Settings />} />
+        <Route path="/skizzen" element={<Sketches />} />
         <Route path="*" element={<Navigate to="/heute" replace />} />
       </Routes>
       </ErrorBoundary>

@@ -189,6 +189,7 @@ export function validateBackup(raw: unknown): ValidationResult {
     }
     if (!isNum(r.defaultRestSec) || !isNum(r.weightStep)) errors.push(`${who}: Pausen- oder Schrittweite fehlt.`);
     if (r.motionPhotoIds !== undefined && !strArr(r.motionPhotoIds)) errors.push(`${who}: das Bewegungsbild ist ungültig.`);
+    if (r.motionId !== undefined && typeof r.motionId !== 'string') errors.push(`${who}: die Bewegungsskizze ist ungültig.`);
   });
   checkIds('Pläne', data.plans as unknown[], (r, i) => {
     if (typeof r.name !== 'string') errors.push(`Plan #${i + 1}: Name fehlt.`);
@@ -352,7 +353,7 @@ export function carryUserFields<T extends Rec>(cur: T, inc: T): T | undefined {
       changed = true;
     }
   }
-  for (const k of ['notes', 'settingsNote', 'location', 'ownWeightKg', 'photoId', 'adjustmentOverrides', 'motionPhotoIds']) {
+  for (const k of ['notes', 'settingsNote', 'location', 'ownWeightKg', 'photoId', 'adjustmentOverrides', 'motionPhotoIds', 'motionId']) {
     if (a[k] === undefined && b[k] !== undefined) {
       out[k] = b[k];
       changed = true;

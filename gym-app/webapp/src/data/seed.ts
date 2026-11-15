@@ -6,7 +6,7 @@ import { STUDIO_GERAETE, STUDIO_UEBUNGEN } from './studio-geraete';
 
 /** Katalogeintrag: wie das Datenmodell, aber ohne Verwaltungsfelder, die die App selbst führt. */
 export type CatalogEquipment = Omit<Equipment, 'createdAt' | 'updatedAt' | 'builtin' | 'hidden' | 'edited' | 'photoId'>;
-export type CatalogExercise = Omit<Exercise, 'createdAt' | 'updatedAt' | 'builtin' | 'hidden' | 'edited' | 'notes' | 'adjustmentOverrides' | 'motionPhotoIds'>;
+export type CatalogExercise = Omit<Exercise, 'createdAt' | 'updatedAt' | 'builtin' | 'hidden' | 'edited' | 'notes' | 'adjustmentOverrides' | 'motionPhotoIds' | 'motionId'>;
 
 function applyEdited<T extends { edited?: string[] }>(result: T, existing: T): T {
   const edited = existing.edited ?? [];
@@ -57,6 +57,7 @@ export function mergeBuiltinExercise(existing: Exercise | undefined, incoming: C
     notes: existing.notes,
     adjustmentOverrides: existing.adjustmentOverrides,
     motionPhotoIds: existing.motionPhotoIds,
+    motionId: existing.motionId,
     createdAt: existing.createdAt,
     updatedAt: existing.updatedAt,
     edited: existing.edited,

@@ -144,6 +144,8 @@ export interface Exercise extends Record_ {
   adjustmentOverrides?: Record<string, number>;
   notes?: string;
   motionPhotoIds?: string[];
+  /** Bewegungsmuster der mitgelieferten Skizze (sonst nach Name zugeordnet); für eigene Übungen frei wählbar. */
+  motionId?: string;
   hidden: boolean;
   builtin: boolean;
   edited?: string[];

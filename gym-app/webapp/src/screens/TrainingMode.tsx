@@ -8,8 +8,11 @@ import { suggestNext } from '../logic/progress';
 import { isPersonalRecord, isWorkSet } from '../logic/stats';
 import { platform } from '../platform';
 import { useEquipmentPhoto } from '../ui/EquipmentCard';
+import { Lightbox, type LightboxImage } from '../ui/Lightbox';
+import { ExerciseSketch, MotionSketch } from '../ui/MotionSketch';
+import { motionFor } from '../data/motions';
 import { ExercisePicker, useCatalog, type Catalog } from '../ui/ExercisePicker';
-import { useLive, useNow } from '../ui/hooks';
+import { assetUrl, useLive, useNow } from '../ui/hooks';
 import { InstructionsView } from '../ui/Instructions';
 import { MotionImage } from '../ui/MotionImage';
 import { IconArrowDown, IconArrowUp, IconCheck, IconDots, IconInfo, IconNote, IconPlus, IconSkip, IconSwap, IconTrash } from '../ui/Icons';
@@ -39,16 +42,68 @@ function useSessionState(initial: Session) {
   return { s, update, flush, ref, close };
 }
 
-function EntryHero({ ex, cat }: { ex: Exercise; cat: Catalog }) {
+/** Name der Übung und – getrennt davon – das Gerät: „Drücken an der Multipresse“ / „Panatta Power Smith“. */
+function splitName(name: string): { title: string; extra?: string } {
+  const m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(name);
+  return m && m[1] ? { title: m[1], extra: m[2] } : { title: name };
+}
+
+/**
+ * Gerätefoto im Training: das ganze Bild (nicht beschnitten), Tippen vergrößert zur Vollbildansicht.
+ * Nach dem ersten eingetragenen Satz klappt es zu einer kompakten Zeile zusammen, damit die Sätze Platz haben.
+ */
+function EntryHero({ ex, cat, started }: { ex: Exercise; cat: Catalog; started: boolean }) {
   const eq = ex.equipmentId ? cat.eqMap.get(ex.equipmentId) : undefined;
   const photo = useEquipmentPhoto(eq);
+  const [open, setOpen] = useState(!started);
+  const [zoom, setZoom] = useState(false);
+  const [sketchOpen, setSketchOpen] = useState(false);
+  const pattern = motionFor(ex);
+  const touched = useRef(false);
+  useEffect(() => {
+    if (started && !touched.current) setOpen(false);
+  }, [started]);
+  const images: LightboxImage[] = photo ? [{ src: photo, caption: eq?.name ?? ex.name }] : [];
+  for (const p of eq?.builtinPhotos ?? []) {
+    const src = assetUrl(p.src);
+    if (src !== photo) images.push({ src, caption: p.caption });
+  }
+  const { title, extra } = splitName(ex.name);
+  const sub = [eq ? [eq.brand, eq.name].filter(Boolean).join(' · ') : 'Freie Übung', extra].filter(Boolean).join(' · ');
+  const toggle = () => {
+    touched.current = true;
+    setOpen((v) => !v);
+  };
   return (
-    <div className="hero">
-      {photo ? <img src={photo} alt={eq?.name ?? ex.name} decoding="async" /> : <Pictogram id={eq?.pictogram ?? 'koerpergewicht'} size={72} className="hero-picto" />}
-      <div className="hero-band">
-        <div className="hero-name">{ex.name}</div>
-        <div className="hero-sub">{eq ? [eq.brand, eq.name].filter(Boolean).join(' · ') : 'Freie Übung'}</div>
-      </div>
+    <div className={'hero2' + (open ? ' open' : ' closed')}>
+      {open && (
+        <div className={'hero2-tiles' + (pattern ? ' two' : '')}>
+          <button type="button" className="hero2-photo" onClick={() => photo && setZoom(true)} aria-label={photo ? 'Gerätefoto vergrößern' : 'Gerät'} disabled={!photo}>
+            {photo ? <img src={photo} alt={eq?.name ?? ex.name} decoding="async" /> : <Pictogram id={eq?.pictogram ?? 'koerpergewicht'} size={96} className="hero-picto" />}
+            {images.length > 1 && <span className="hero2-more">{images.length} Bilder</span>}
+          </button>
+          {pattern && (
+            <button type="button" className="hero2-sketch" onClick={() => setSketchOpen(true)} aria-label="Bewegungsskizze vergrößern">
+              <ExerciseSketch ex={ex} compact />
+              <span className="hero2-more">Skizze</span>
+            </button>
+          )}
+        </div>
+      )}
+      <button type="button" className="hero2-row" onClick={toggle} aria-expanded={open}>
+        {!open && (
+          <span className="hero2-thumb">{photo ? <img src={photo} alt="" decoding="async" /> : <Pictogram id={eq?.pictogram ?? 'koerpergewicht'} size={40} />}</span>
+        )}
+        <span className="hero2-text">
+          <span className="hero2-name">{title}</span>
+          <span className="hero2-sub">{sub}</span>
+        </span>
+        <span className="hero2-chev" aria-hidden="true">{open ? '▴' : '▾'}</span>
+      </button>
+      {zoom && images.length > 0 && <Lightbox images={images} onClose={() => setZoom(false)} />}
+      <Sheet open={sketchOpen} onClose={() => setSketchOpen(false)} title={pattern?.name ?? 'Bewegung'} tall>
+        {pattern && <MotionSketch pattern={pattern} />}
+      </Sheet>
     </div>
   );
 }
@@ -298,7 +353,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
 
         {entry && ex && (
           <>
-            <EntryHeroWrap ex={ex} cat={cat} />
+            <EntryHeroWrap ex={ex} cat={cat} started={entry.sets.some((x) => x.doneAt !== undefined)} />
             <div className="entry-info">
               {entry.substitutedFor && (
                 <div className="notice small">
@@ -473,6 +528,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
 
       {/* Anleitung */}
       <Sheet open={infoOpen} onClose={() => setInfoOpen(false)} title={ex?.name ?? 'Anleitung'} tall>
+        {ex && <ExerciseSketch ex={ex} title="Bewegungsskizze" />}
         {ex && <MotionImage ids={ex.motionPhotoIds} label={ex.name} />}
         {ex && <InstructionsView i={ex.instructions} />}
       </Sheet>
@@ -522,6 +578,6 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
   );
 }
 
-function EntryHeroWrap({ ex, cat }: { ex: Exercise; cat: Catalog }) {
-  return <EntryHero ex={ex} cat={cat} />;
+function EntryHeroWrap({ ex, cat, started }: { ex: Exercise; cat: Catalog; started: boolean }) {
+  return <EntryHero key={ex.id} ex={ex} cat={cat} started={started} />;
 }

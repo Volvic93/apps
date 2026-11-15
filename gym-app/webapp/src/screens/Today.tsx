@@ -27,6 +27,8 @@ export function Today() {
   const nextId = plan ? suggestNextWorkout(plan.workouts, finished, plan.id) : undefined;
   const next = plan?.workouts.find((w) => w.id === nextId);
   const week = weekDays(new Date());
+  const planned = new Set(data.settings.trainingDays ?? []);
+  const todayIdx = (new Date().getDay() + 6) % 7; // 0 = Montag
   const today = new Date();
   const thisWeek = finished.filter((s) => week.some((d) => sameDay(d, new Date(s.startedAt))));
 
@@ -35,6 +37,8 @@ export function Today() {
     const s = await startSession(plan.id, workoutId);
     if (s) nav('/training');
   };
+
+  const isTrainingDay = planned.has(todayIdx) && !finished.some((x) => sameDay(new Date(x.startedAt), today));
 
   return (
     <div className="screen">
@@ -141,13 +145,14 @@ export function Today() {
           {week.map((d, i) => {
             const trained = finished.some((s) => sameDay(d, new Date(s.startedAt)));
             return (
-              <div key={i} className={'week-day' + (trained ? ' on' : '') + (sameDay(d, today) ? ' today' : '')}>
-                <div className="week-dot" aria-label={trained ? 'trainiert' : 'kein Training'} />
+              <div key={i} className={'week-day' + (trained ? ' on' : '') + (sameDay(d, today) ? ' today' : '') + (planned.has(i) && !trained ? ' planned' : '')}>
+                <div className="week-dot" aria-label={trained ? 'trainiert' : planned.has(i) ? 'Trainingstag geplant' : 'kein Training'} />
                 <div className="week-label">{DAY_LABELS[i]}</div>
               </div>
             );
           })}
         </div>
+        {isTrainingDay && <div className="train-today">Heute ist Trainingstag{next ? `: ${next.name}` : ''}</div>}
         <div className="row-sub">
           {thisWeek.length === 0 ? 'Noch keine Einheit diese Woche.' : `${thisWeek.length} ${thisWeek.length === 1 ? 'Einheit' : 'Einheiten'} diese Woche`}
         </div>

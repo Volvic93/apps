@@ -9,19 +9,30 @@ export function RestTimer({
   onAdjust,
   onSkip,
   onFinished,
+  onWarn,
 }: {
   endsAt: number;
   totalSec: number;
   onAdjust: (deltaSec: number) => void;
   onSkip: () => void;
   onFinished: () => void;
+  /** 10 Sekunden vor dem Ende (nur wenn die Pause länger ist). */
+  onWarn?: () => void;
 }) {
   const now = useNow(true, 250);
   const remaining = Math.max(0, Math.ceil((endsAt - now) / 1000));
   const fired = useRef(false);
+  const warned = useRef(false);
   useEffect(() => {
     fired.current = false;
+    warned.current = false;
   }, [endsAt]);
+  useEffect(() => {
+    if (remaining <= 10 && remaining > 0 && totalSec > 12 && !warned.current) {
+      warned.current = true;
+      onWarn?.();
+    }
+  }, [remaining, totalSec, onWarn]);
   useEffect(() => {
     if (remaining <= 0 && !fired.current) {
       fired.current = true;

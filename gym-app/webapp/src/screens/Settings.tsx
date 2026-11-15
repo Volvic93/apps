@@ -7,6 +7,8 @@ import { EXPERIENCE_LABEL, GOAL_LABEL, type Appearance, type Experience, type Go
 import { applyAppearance } from '../ui/appearance';
 import { APP_VERSION, backupFileName, buildBackup, importBackup, markBackupDone, parseBackupText, type BackupSummary, type BackupFile, type ImportMode } from '../logic/backup';
 import { platform } from '../platform';
+import { csvFileName, trainingCsv } from '../logic/csv';
+import { DEFAULT_PLATES } from '../logic/plates';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { useCatalog } from '../ui/ExercisePicker';
 import { isPresent } from '../logic/catalog';
@@ -26,9 +28,34 @@ export function Settings() {
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<{ backup: BackupFile; summary: BackupSummary; warnings: string[]; name: string } | null>(null);
   const [importErrors, setImportErrors] = useState<string[] | null>(null);
+  const [reminderNote, setReminderNote] = useState('');
 
   if (!s) return <div className="screen" />;
   const set = (p: Parameters<typeof saveSettings>[0]) => saveSettings(p);
+  type SignalMode = 'aus' | 'ton' | 'vibration' | 'beides';
+  const signalMode: SignalMode = s.restSignal && s.vibration ? 'beides' : s.restSignal ? 'ton' : s.vibration ? 'vibration' : 'aus';
+  const plates = s.plates ?? DEFAULT_PLATES;
+  const PLATE_CHOICES = [0.5, 1.25, 2.5, 5, 10, 15, 20, 25, 30];
+  const days = s.trainingDays ?? [];
+  const time = s.trainingTime ?? '18:00';
+  const DAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const applyReminders = async (next: { days?: number[]; time?: string; on?: boolean }) => {
+    const d = next.days ?? days;
+    const t = next.time ?? time;
+    const on = next.on ?? !!s.reminderOn;
+    await set({ trainingDays: d, trainingTime: t, reminderOn: on });
+    const r = await platform.setWeeklyReminders(on ? d : null, t, 'Eisenzeit', 'Heute ist Trainingstag – viel Erfolg!');
+    setReminderNote(r === 'verweigert' ? 'Mitteilungen sind für Eisenzeit ausgeschaltet (iPhone: Einstellungen → Mitteilungen).' : r === 'nicht verfuegbar' && on ? 'Erinnerungen gibt es nur in der iPhone-App. In der Web-Version zeigt „Heute“ den Trainingstag an.' : '');
+  };
+  const doCsv = async () => {
+    try {
+      const [sessions, exercises, equipment] = await Promise.all([db.sessions.toArray(), db.exercises.toArray(), db.equipment.toArray()]);
+      const res = await platform.saveFile({ filename: csvFileName(), mime: 'text/csv', text: trainingCsv(sessions, exercises, equipment) });
+      if (res !== 'abgebrochen') toast(res === 'heruntergeladen' ? 'CSV heruntergeladen' : 'CSV bereitgestellt');
+    } catch (e) {
+      toast(`Export fehlgeschlagen: ${(e as Error).message}`, 'error');
+    }
+  };
 
   const doExport = async () => {
     setBusy(true);
@@ -143,6 +170,24 @@ export function Settings() {
           <span>An regelmäßige Sicherung erinnern</span>
           <input type="checkbox" checked={s.backupReminder} onChange={(e) => set({ backupReminder: e.target.checked })} />
         </label>
+        {platform.name === 'ios' ? (
+          <>
+            <label className="switch-row">
+              <span>Nach jedem Training automatisch sichern</span>
+              <input type="checkbox" checked={s.autoBackup !== false} onChange={(e) => set({ autoBackup: e.target.checked })} />
+            </label>
+            <label className="switch-row">
+              <span>Fotos in die automatische Sicherung</span>
+              <input type="checkbox" checked={!!s.autoBackupPhotos} onChange={(e) => set({ autoBackupPhotos: e.target.checked })} />
+            </label>
+            <p className="muted small">Die Dateien liegen in der Dateien-App unter „Auf meinem iPhone“ → Eisenzeit → Sicherungen. Es bleiben die letzten fünf.</p>
+          </>
+        ) : (
+          <p className="muted small">Automatisch im Hintergrund sichern kann nur die iPhone-App. In der Web-Version gibt es nach dem Training den Knopf „Sicherung teilen“.</p>
+        )}
+        <button className="btn block" onClick={doCsv}>
+          <IconDownload size={18} /> Trainingsdaten als CSV (Excel)
+        </button>
       </section>
 
       <div className="section-label">Darstellung</div>
@@ -176,14 +221,65 @@ export function Settings() {
           <span className="field-label">Planlaufzeit</span>
           <Stepper compact label="Planlaufzeit" decimals={false} value={s.planWeeksDefault} unit="Wo." onStep={(d) => set({ planWeeksDefault: Math.min(16, Math.max(4, s.planWeeksDefault + d)) })} onSet={(v) => v && set({ planWeeksDefault: Math.min(16, Math.max(4, Math.round(v))) })} />
         </div>
+        <div className="field-label">Signal am Pausenende</div>
+        <Segmented<SignalMode>
+          value={signalMode}
+          options={[
+            { value: 'aus', label: 'Aus' },
+            { value: 'ton', label: 'Ton' },
+            { value: 'vibration', label: 'Vibration' },
+            { value: 'beides', label: 'Beides' },
+          ]}
+          onChange={(v) => set({ restSignal: v === 'ton' || v === 'beides', vibration: v === 'vibration' || v === 'beides' })}
+        />
+        {!platform.canVibrate && (
+          <p className="muted small">Vibration gibt es auf dem iPhone nur in der iPhone-App. In der Web-Version bleiben Ton und der Hinweis „Pause vorbei“ auf dem Bildschirm.</p>
+        )}
+        {platform.name === 'ios' && <p className="muted small">Bei gesperrtem Bildschirm kommt zum Pausenende eine Mitteilung (Ton/Vibration nach deiner iPhone-Einstellung).</p>}
         <label className="switch-row">
-          <span>Signalton am Pausenende</span>
-          <input type="checkbox" checked={s.restSignal} onChange={(e) => set({ restSignal: e.target.checked })} />
+          <span>10 Sekunden vorher ankündigen</span>
+          <input type="checkbox" checked={!!s.restWarn} onChange={(e) => set({ restWarn: e.target.checked })} />
         </label>
         <label className="switch-row">
-          <span>Vibration</span>
-          <input type="checkbox" checked={s.vibration} onChange={(e) => set({ vibration: e.target.checked })} />
+          <span>Aufwärmsätze vorschlagen</span>
+          <input type="checkbox" checked={s.warmupSuggest !== false} onChange={(e) => set({ warmupSuggest: e.target.checked })} />
         </label>
+        <label className="switch-row">
+          <span>Anstrengung je Satz abfragen („Noch möglich“)</span>
+          <input type="checkbox" checked={s.rirEnabled !== false} onChange={(e) => set({ rirEnabled: e.target.checked })} />
+        </label>
+      </section>
+
+      <div className="section-label">Scheiben (Scheibenrechner)</div>
+      <section className="card">
+        <p className="muted small">Welche Scheiben gibt es bei dir? Auf scheibenbeladenen Geräten steht unter dem Gewicht, welche Scheiben je Seite aufgelegt werden. Nicht darstellbare Gewichte werden auf das nächste mögliche gerundet.</p>
+        <div className="chips wrap">
+          {PLATE_CHOICES.map((p) => (
+            <Chip key={p} on={plates.includes(p)} onClick={() => set({ plates: plates.includes(p) ? plates.filter((x) => x !== p) : [...plates, p].sort((a, b) => a - b) })}>
+              {String(p).replace('.', ',')} kg
+            </Chip>
+          ))}
+        </div>
+      </section>
+
+      <div className="section-label">Trainingstage</div>
+      <section className="card">
+        <div className="chips wrap day-chips">
+          {DAY_LABELS.map((l, i) => (
+            <Chip key={l} on={days.includes(i)} onClick={() => void applyReminders({ days: days.includes(i) ? days.filter((x) => x !== i) : [...days, i].sort() })}>
+              {l}
+            </Chip>
+          ))}
+        </div>
+        <Field label="Uhrzeit der Erinnerung">
+          <input className="input" type="time" value={time} onChange={(e) => e.target.value && void applyReminders({ time: e.target.value })} />
+        </Field>
+        <label className="switch-row">
+          <span>Erinnerung am Trainingstag (iPhone-App)</span>
+          <input type="checkbox" checked={!!s.reminderOn} onChange={(e) => void applyReminders({ on: e.target.checked })} />
+        </label>
+        <p className="muted small">„Heute“ zeigt „Heute ist Trainingstag“, und die Wochenübersicht markiert die geplanten Tage. Die Erinnerung als Mitteilung gibt es nur in der iPhone-App; die Erlaubnis dafür fragt iOS beim Einschalten.</p>
+        {reminderNote && <div className="notice warn">{reminderNote}</div>}
       </section>
 
       <div className="section-label">Profil</div>

@@ -25,7 +25,7 @@ let audioCtx: AudioContext | undefined;
 let wakeLock: WakeLockSentinel | null = null;
 let wantAwake = false;
 
-function beep() {
+function beep(kind: 'end' | 'warn' = 'end') {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return;
@@ -33,7 +33,7 @@ function beep() {
     const ctx = audioCtx;
     void ctx.resume();
     const t0 = ctx.currentTime;
-    [0, 0.22, 0.44].forEach((offset, i) => {
+    (kind === 'warn' ? [0] : [0, 0.22, 0.44]).forEach((offset, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -77,8 +77,8 @@ export const webPlatform: Platform = {
     return file;
   },
 
-  async saveFile({ filename, mime, text }): Promise<SaveResult> {
-    const blob = new Blob([text], { type: mime });
+  async saveFile({ filename, mime, text, blob: given }): Promise<SaveResult> {
+    const blob = given ?? new Blob([text ?? ''], { type: mime });
     const file = new File([blob], filename, { type: mime });
     // Auf Mobilgeräten bietet der Teilen-Dialog das Ablegen in "Dateien" an.
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
@@ -106,6 +106,23 @@ export const webPlatform: Platform = {
     return pickViaInput(accept);
   },
 
+  canVibrate: typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function',
+
+  liveActivity: {
+    async start() {
+      return false;
+    },
+    async update() {},
+    async end() {},
+  },
+
+  async autoBackup() {
+    return false; // im Browser ohne Zutun nicht möglich – dort „Sicherung teilen“
+  },
+  async setWeeklyReminders() {
+    return 'nicht verfuegbar';
+  },
+
   vibrate(kind) {
     if (!('vibrate' in navigator)) return;
     // Chrome blockiert Vibration vor der ersten Berührung der Seite (und meldet das als Fehler).
@@ -114,7 +131,7 @@ export const webPlatform: Platform = {
     navigator.vibrate(pattern);
   },
 
-  playSignal: beep,
+  playSignal: (kind) => beep(kind),
 
   async scheduleRestNotification() {
     /* Im Browser gibt es keine verlässliche Mitteilung bei gesperrtem Bildschirm – Ton und Vibration im Vordergrund genügen. */

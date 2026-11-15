@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { SETKIND_LABEL, type Equipment, type Exercise, type SetEntry, type SetKind } from '../data/types';
+import { DEFAULT_PLATES, formatPlates, platesPerSide } from '../logic/plates';
+import { PlateSheet } from '../ui/PlateSheet';
 import { formatNumber, stepReps, stepWeight, weightUnit } from '../logic/progression';
 import { IconCheck, IconTrash } from '../ui/Icons';
 import { Stepper } from '../ui/Stepper';
@@ -14,6 +17,8 @@ export function SetRow({
   onToggleDone,
   onRemove,
   workIndex,
+  rirEnabled = true,
+  plates,
 }: {
   index: number;
   set: SetEntry;
@@ -23,7 +28,12 @@ export function SetRow({
   onToggleDone: () => void;
   onRemove: () => void;
   workIndex: number | undefined;
+  rirEnabled?: boolean;
+  plates?: number[];
 }) {
+  const [platesOpen, setPlatesOpen] = useState(false);
+  const weighted = ex.tracking === 'gewicht_wdh' || ex.tracking === 'koerpergewicht_wdh';
+  const platePlan = eq?.perSideInput && set.weight !== undefined && weighted ? platesPerSide(set.weight, eq.ownWeightKg ?? 0, eq.plateSlots ?? 2, plates ?? DEFAULT_PLATES) : undefined;
   const done = set.doneAt !== undefined;
   const cycleKind = () => onChange({ kind: KIND_CYCLE[(KIND_CYCLE.indexOf(set.kind) + 1) % KIND_CYCLE.length] });
   const label = set.kind === 'normal' ? `Satz ${workIndex ?? index + 1}` : SETKIND_LABEL[set.kind];
@@ -62,10 +72,23 @@ export function SetRow({
           </div>
         </div>
       )}
-      {eq?.perSideInput && set.weight !== undefined && (ex.tracking === 'gewicht_wdh' || ex.tracking === 'koerpergewicht_wdh') && (
-        <div className="set-hint">
-          Je Seite: {formatNumber(Math.max(0, (set.weight - (eq.ownWeightKg ?? 0)) / 2))} kg
-          {eq.ownWeightKg ? ` (Gesamt abzüglich ${formatNumber(eq.ownWeightKg)} kg Eigengewicht, geteilt durch 2)` : ' (Gesamtgewicht ÷ 2)'}
+      {eq && platePlan && set.weight !== undefined && (
+        <>
+          <button type="button" className="set-hint plate-hint" onClick={() => setPlatesOpen(true)} aria-label="Scheiben ansehen">
+            Je Seite: <b>{formatPlates(platePlan.perSide)}</b>
+            {!platePlan.exact ? ` (gerundet auf ${formatNumber(platePlan.totalKg)} kg)` : ''} · Scheiben ansehen
+          </button>
+          <PlateSheet open={platesOpen} onClose={() => setPlatesOpen(false)} totalKg={set.weight} ownKg={eq.ownWeightKg ?? 0} slots={eq.plateSlots ?? 2} plates={plates ?? DEFAULT_PLATES} name={eq.name} />
+        </>
+      )}
+      {done && rirEnabled && weighted && set.kind !== 'aufwaermen' && (
+        <div className="rir-row" role="group" aria-label="Wie viele Wiederholungen wären noch möglich gewesen?">
+          <span className="rir-label">Noch möglich:</span>
+          {[0, 1, 2, 3].map((v) => (
+            <button key={v} type="button" className={'chip small' + (set.rir === v ? ' on' : '')} aria-pressed={set.rir === v} onClick={() => onChange({ rir: set.rir === v ? undefined : v })}>
+              {v === 3 ? '3+' : v}
+            </button>
+          ))}
         </div>
       )}
 

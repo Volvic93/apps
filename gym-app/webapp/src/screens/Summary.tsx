@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../data/db';
+import { db, getSettings } from '../data/db';
+import { backupFileName, buildBackup, markBackupDone } from '../logic/backup';
+import { renderSummaryImage } from '../logic/summaryImage';
+import { platform } from '../platform';
+import { useUi } from '../ui/kit';
 import { formatNumber, summarizeSets } from '../logic/progression';
 import { previousSameWorkout, sessionDurationMin, sessionRecords, sessionVolume, sessionWorkSets } from '../logic/stats';
 import { useCatalog } from '../ui/ExercisePicker';
@@ -22,6 +26,7 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
     return { session, all };
   }, [sessionId]);
   const [note, setNote] = useState<string | undefined>(undefined);
+  const { toast } = useUi();
   if (!data?.session || !cat) return <div className="screen" />;
   const s = data.session;
   const vol = sessionVolume(s);
@@ -29,6 +34,37 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
   const prevVol = prev ? sessionVolume(prev) : undefined;
   const delta = prevVol && prevVol > 0 ? ((vol - prevVol) / prevVol) * 100 : undefined;
   const records = sessionRecords(s, data.all);
+
+  const shareImage = async () => {
+    const st = await getSettings();
+    const blob = await renderSummaryImage({
+      title: s.workoutName,
+      date: new Date(s.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }),
+      studio: st.studio?.name,
+      stats: [
+        { label: 'Dauer', value: `${sessionDurationMin(s)} Min.` },
+        { label: 'Sätze', value: String(sessionWorkSets(s)) },
+        { label: 'Volumen', value: formatVolume(vol) },
+      ],
+      records: records.map((r) => `${cat.exMap.get(r.exerciseId)?.name ?? ''}: ${r.unit === 'platte' ? 'Platte ' : ''}${formatNumber(r.weight)}${r.unit === 'platte' ? '' : ' kg'} × ${r.reps}`),
+    });
+    if (!blob) return toast('Das Bild konnte nicht erzeugt werden.', 'error');
+    const res = await platform.saveFile({ filename: `eisenzeit-${s.workoutName.replace(/\W+/g, '-').toLowerCase()}.png`, mime: 'image/png', blob });
+    if (res !== 'abgebrochen') toast('Bild bereitgestellt');
+  };
+
+  const shareBackup = async () => {
+    try {
+      const backup = await buildBackup(db, false);
+      const res = await platform.saveFile({ filename: backupFileName(), mime: 'application/json', text: JSON.stringify(backup) });
+      if (res !== 'abgebrochen') {
+        await markBackupDone();
+        toast('Sicherung bereitgestellt');
+      }
+    } catch (e) {
+      toast(`Sicherung fehlgeschlagen: ${(e as Error).message}`, 'error');
+    }
+  };
 
   return (
     <div className="screen summary">
@@ -112,6 +148,12 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
       <div className="stack">
         <button className="btn primary block" onClick={onClose}>
           Fertig
+        </button>
+        <button className="btn block" onClick={shareImage}>
+          Zusammenfassung als Bild teilen
+        </button>
+        <button className="btn block" onClick={shareBackup}>
+          Sicherung teilen
         </button>
         <button className="btn block ghost" onClick={() => nav(`/fortschritt/${s.id}`)}>
           Im Verlauf ansehen

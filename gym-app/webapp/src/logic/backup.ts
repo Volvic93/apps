@@ -6,7 +6,7 @@ import type { Photo } from '../data/types';
 
 export const BACKUP_FORMAT = 'eisenzeit-sicherung';
 export const BACKUP_FORMAT_VERSION = 1;
-export const APP_VERSION = '0.4.0';
+export const APP_VERSION = '0.6.0';
 
 export interface BackupPhoto {
   id: string;
@@ -250,6 +250,9 @@ export function validateBackup(raw: unknown): ValidationResult {
   if ((data.settings as unknown[]).length > 1) errors.push('Es darf höchstens einen Einstellungs-Datensatz geben.');
   for (const st of data.settings as unknown[]) {
     if (!isObj(st)) continue;
+    if (st.plates !== undefined && (!Array.isArray(st.plates) || !st.plates.every((x) => typeof x === 'number' && x > 0 && x < 1000))) errors.push('Einstellungen: die Liste der Scheiben ist ungültig.');
+    if (st.trainingDays !== undefined && (!Array.isArray(st.trainingDays) || !st.trainingDays.every((x) => Number.isInteger(x) && x >= 0 && x <= 6))) errors.push('Einstellungen: die Trainingstage sind ungültig.');
+    if (st.trainingTime !== undefined && !(typeof st.trainingTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(st.trainingTime))) errors.push('Einstellungen: die Uhrzeit der Erinnerung ist ungültig.');
     if (st.dismissedHints !== undefined && !strArr(st.dismissedHints)) errors.push('Einstellungen: die Liste der ausgeblendeten Hinweise ist ungültig.');
     if (st.studioSetupDone !== undefined && typeof st.studioSetupDone !== 'boolean') errors.push('Einstellungen: „Studio eingerichtet“ ist ungültig.');
     if (st.profile !== undefined && (!isObj(st.profile) || !['muskelaufbau', 'kraft', 'fitness'].includes(st.profile.goal as string))) errors.push('Einstellungen: das Profil ist ungültig.');

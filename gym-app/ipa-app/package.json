@@ -1,7 +1,7 @@
 {
   "name": "eisenzeit-ios",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.6.0",
   "description": "Eisenzeit – iOS-Hülle (Capacitor) für die Web-App in ../webapp",
   "scripts": {
     "ios:prepare": "bash scripts/ios-prepare.sh"

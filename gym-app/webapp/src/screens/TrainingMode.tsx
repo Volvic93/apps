@@ -7,6 +7,9 @@ import { formatNumber, lastPerformance, summarizeSets } from '../logic/progressi
 import { suggestNext } from '../logic/progress';
 import { isPersonalRecord, isWorkSet } from '../logic/stats';
 import { platform } from '../platform';
+import { runAutoBackup } from '../logic/autobackup';
+import { LiveActivitySync } from '../ui/LiveActivitySync';
+import { warmupOffer } from '../logic/warmup';
 import { useEquipmentPhoto } from '../ui/EquipmentCard';
 import { Lightbox, type LightboxImage } from '../ui/Lightbox';
 import { ExerciseSketch, MotionSketch } from '../ui/MotionSketch';
@@ -122,6 +125,8 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
   const [menuOpen, setMenuOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const swapping = useRef(false);
+  const settings = useLive(() => getSettings());
+  const [restFlash, setRestFlash] = useState(false);
   const currentIdx = s.currentIndex ?? 0;
   useEffect(() => {
     // neue Übung: wieder nach oben (Foto, Name, „Letztes Mal“ sichtbar)
@@ -204,7 +209,16 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
       if (st.restSignal) platform.playSignal();
     });
     toast('Pause vorbei – weiter geht’s');
+    setRestFlash(true);
+    setTimeout(() => setRestFlash(false), 6000);
     update((c) => ({ ...c, restEndsAt: undefined, restTotalSec: undefined }));
+  };
+  const onRestWarn = () => {
+    void getSettings().then((st) => {
+      if (!st.restWarn) return;
+      if (st.vibration) platform.vibrate('tap');
+      if (st.restSignal) platform.playSignal('warn');
+    });
   };
 
   const addSet = () => entry && setEntry(idx, (e) => ({ ...e, sets: [...e.sets, newSet(e.sets[e.sets.length - 1])] }));
@@ -292,6 +306,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
     await flush();
     close();
     const done = await finishSession(s.id);
+    void runAutoBackup(); // iPhone-App: Sicherung in „Dateien“ ablegen (still, im Hintergrund)
     onEnd(done?.id ?? null);
   };
 
@@ -320,6 +335,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
 
   return (
     <div className="train">
+      <LiveActivitySync session={s} cat={cat} />
       <header className="train-top">
         <button className="icon-btn" onClick={() => setMenuOpen(true)} aria-label="Trainingsmenü">
           <IconDots size={24} />
@@ -398,6 +414,20 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
                   Vorschlag: {suggestion.text}
                 </div>
               )}
+              {(() => {
+                const offer = warmupOffer(s.entries, idx, cat.exMap, cat.eqMap, settings?.profile.goal ?? 'muskelaufbau', settings?.warmupSuggest !== false);
+                if (!offer) return null;
+                return (
+                  <button
+                    className="btn small"
+                    onClick={() =>
+                      setEntry(idx, (e) => ({ ...e, sets: [...offer.sets.map((w) => ({ kind: 'aufwaermen' as const, weight: w.weight, reps: w.reps })), ...e.sets] }))
+                    }
+                  >
+                    Aufwärmsätze anlegen ({offer.sets.map((w) => `${formatNumber(w.weight)} × ${w.reps}`).join(', ')})
+                  </button>
+                );
+              })()}
               {entry.supersetGroup && <div className="badge accent">Supersatz {entry.supersetGroup}</div>}
               {entry.note && <div className="entry-note">{entry.note}</div>}
             </div>
@@ -414,7 +444,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
                 <div className="sets">
                   {entry.sets.map((set, si) => {
                     if (set.kind !== 'aufwaermen') workCounter++;
-                    return <SetRow key={si} index={si} workIndex={set.kind === 'aufwaermen' ? undefined : workCounter} set={set} ex={ex} eq={eq} onChange={(p) => patchSet(si, p)} onToggleDone={() => toggleDone(si)} onRemove={() => removeSet(si)} />;
+                    return <SetRow key={si} index={si} workIndex={set.kind === 'aufwaermen' ? undefined : workCounter} set={set} ex={ex} eq={eq} onChange={(p) => patchSet(si, p)} onToggleDone={() => toggleDone(si)} onRemove={() => removeSet(si)} rirEnabled={settings?.rirEnabled !== false} plates={settings?.plates} />;
                   })}
                 </div>
                 <div className="entry-actions">
@@ -455,7 +485,13 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
             }}
             onSkip={clearRest}
             onFinished={onRestFinished}
+            onWarn={onRestWarn}
           />
+        )}
+        {restFlash && !restActive && (
+          <div className="rest-done" role="status">
+            Pause vorbei – weiter geht’s
+          </div>
         )}
         <div className="nav-row">
           <button className="btn" disabled={idx === 0} onClick={() => goTo(idx - 1)}>

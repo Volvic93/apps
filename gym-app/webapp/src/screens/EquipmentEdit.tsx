@@ -176,6 +176,9 @@ export function EquipmentEdit() {
             <span>Eingabehilfe „Scheiben je Seite“</span>
             <input type="checkbox" checked={!!eq.perSideInput} onChange={(e) => patch({ perSideInput: e.target.checked || undefined })} />
           </label>
+          <Field label="Zahl der Aufnahmen für Scheiben" hint="Normalerweise 2 (links und rechts); bei einer Aufnahme 1.">
+            <NumberInput value={eq.plateSlots} onChange={(v) => patch({ plateSlots: v === undefined ? undefined : Math.min(8, Math.max(1, Math.round(v))) })} placeholder="2" />
+          </Field>
           <Field label="Eigengewicht von Hebelarm/Schlitten (kg, optional)">
             <NumberInput value={eq.ownWeightKg} onChange={(v) => patch({ ownWeightKg: v })} placeholder="–" />
           </Field>

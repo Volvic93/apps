@@ -79,6 +79,16 @@ Für Sideloadly und AltStore am Windows-PC reicht der Download am PC. Für AltSt
 
 ---
 
+## 3a. Optional: Live-Aktivität (Sperrbildschirm und Dynamic Island) – experimentell
+
+Die Live-Aktivität zeigt das laufende Training (Übung, Satz, Fortschritt, Pause) auf dem Sperrbildschirm. Sie braucht eine **Widget-Erweiterung** in der `.ipa` und ist deshalb nur in einem eigens gebauten Artefakt enthalten:
+
+1. GitHub → **Actions** → „Gym-App iOS (unsignierte IPA)“ → **Run workflow** → Haken bei **„Live-Aktivität (Widget-Erweiterung) einbauen“** → starten. Das Artefakt am Lauf heißt `…-live-aktivitaet` (Download mit GitHub-Anmeldung, ZIP entpacken).
+2. Wie oben mit AltStore oder Sideloadly installieren. Die Erweiterung hat eine eigene Kennung (`de.eisenzeit.app.LiveActivity`); mit einer **kostenlosen Apple-ID** zählt sie nach Angaben der Anbieter möglicherweise gegen die Grenzen für aktive Apps und neue Kennungen pro Woche. Scheitert die Installation, nimm die normale `.ipa` aus dem Release.
+3. Auf dem iPhone: *Einstellungen → Eisenzeit → Live-Aktivitäten* einschalten.
+
+Dieser Weg wurde bisher auf keinem Gerät ausprobiert. Wenn der Bau scheitert oder die Kachel nicht erscheint, bitte das Protokoll des Laufs bzw. ein Bildschirmfoto schicken.
+
 ## 4. Nach der Installation und bei Updates
 
 - **Daten:** Alles liegt nur auf dem iPhone. Lege vor jedem Update und regelmäßig eine **Sicherung** an: *Heute → Zahnrad → Sicherung*. Die Datei in der Dateien-App oder iCloud Drive speichern.

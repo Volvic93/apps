@@ -102,6 +102,8 @@ export interface Equipment extends Record_ {
   perSideInput?: boolean;
   /** Optionales Eigengewicht von Hebelarm/Schlitten in kg. */
   ownWeightKg?: number;
+  /** Scheibenbeladene Geräte: Zahl der Aufnahmen (Standard 2: links und rechts). */
+  plateSlots?: number;
   adjustments: Adjustment[];
   photoId?: string;
   builtinPhoto?: string;
@@ -208,6 +210,8 @@ export interface SetEntry {
   level?: number;
   /** Zeitpunkt des Abhakens; ohne Wert ist der Satz nur vorgesehen, aber noch nicht gemacht. */
   doneAt?: number;
+  /** Anstrengung: wie viele Wiederholungen wären noch möglich gewesen (0, 1, 2, 3 = „3 oder mehr“). Optional. */
+  rir?: number;
 }
 
 export interface Entry {
@@ -284,6 +288,21 @@ export interface Settings {
   catalogVersion?: number;
   /** Das Studio, in dem trainiert wird (nur Text, erscheint auf „Heute“ und im KI-Kontext). */
   studio?: { name: string; city: string };
+  /** Pausenende 10 Sekunden vorher ankündigen. */
+  restWarn?: boolean;
+  /** „Noch möglich“-Auswahl nach jedem Satz (Standard an). */
+  rirEnabled?: boolean;
+  /** Aufwärmsätze vorschlagen (Standard an). */
+  warmupSuggest?: boolean;
+  /** Vorhandene Scheiben in kg (Standard 1,25 bis 25). */
+  plates?: number[];
+  /** iPhone-App: nach jedem Training automatisch eine Sicherung in „Dateien“ ablegen (Standard an). */
+  autoBackup?: boolean;
+  autoBackupPhotos?: boolean;
+  /** Feste Trainingstage (0 = Montag … 6 = Sonntag), Uhrzeit „HH:MM“ und Erinnerung (nur iPhone-App). */
+  trainingDays?: number[];
+  trainingTime?: string;
+  reminderOn?: boolean;
 }
 
 export const GOAL_LABEL: Record<Goal, string> = {

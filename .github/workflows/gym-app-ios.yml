@@ -8,6 +8,11 @@ name: Gym-App iOS (unsignierte IPA)
 #     (Download ohne Anmeldung, auch direkt auf dem iPhone möglich).
 on:
   workflow_dispatch:
+    inputs:
+      live_activity:
+        description: 'Live-Aktivität (Widget-Erweiterung) einbauen – experimentell'
+        type: boolean
+        default: false
   push:
     tags:
       - 'gym-app-v*'
@@ -66,6 +71,8 @@ jobs:
 
       - name: iOS-Projekt erzeugen (Capacitor) und anpassen
         working-directory: gym-app/ipa-app
+        env:
+          LIVE_ACTIVITY: ${{ inputs.live_activity == true && '1' || '0' }}
         run: bash scripts/ios-prepare.sh
 
       - name: Version festlegen
@@ -113,7 +120,7 @@ jobs:
       - name: IPA als Artefakt bereitstellen
         uses: actions/upload-artifact@v4
         with:
-          name: eisenzeit-ios-ipa-${{ steps.ver.outputs.version }}-${{ github.run_number }}
+          name: eisenzeit-ios-ipa-${{ steps.ver.outputs.version }}-${{ github.run_number }}${{ inputs.live_activity == true && '-live-aktivitaet' || '' }}
           path: gym-app/ipa-app/build/Eisenzeit.ipa
           if-no-files-found: error
           retention-days: 30

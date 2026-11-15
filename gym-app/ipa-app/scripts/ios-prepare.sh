@@ -23,6 +23,9 @@ PB=/usr/libexec/PlistBuddy
 $PB -c "Add :NSCameraUsageDescription string Eisenzeit nutzt die Kamera, um Fotos von Geräten in deinem Studio aufzunehmen." "$PLIST"
 $PB -c "Add :NSPhotoLibraryUsageDescription string Eisenzeit greift auf deine Fotos zu, damit du ein Gerätefoto aus der Mediathek wählen kannst." "$PLIST"
 $PB -c "Add :NSPhotoLibraryAddUsageDescription string Eisenzeit kann Fotos in deiner Mediathek ablegen." "$PLIST"
+# Dokumentenordner der App in „Dateien“ sichtbar (automatische Sicherungen)
+$PB -c "Add :UIFileSharingEnabled bool true" "$PLIST"
+$PB -c "Add :LSSupportsOpeningDocumentsInPlace bool true" "$PLIST"
 # Keine eigene Verschlüsselung -> keine Exportnachweise nötig
 $PB -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
 # Nur Hochformat (die Oberfläche ist für Hochformat gebaut)
@@ -37,6 +40,13 @@ $PB -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientati
 ICON_DIR="ios/App/App/Assets.xcassets/AppIcon.appiconset"
 ICON_FILE="$(ls "$ICON_DIR"/*.png | head -1)"
 cp ../webapp/assets/icon-1024.png "$ICON_FILE"
+
+# Live-Aktivität (Widget-Erweiterung) – nur auf Wunsch: LIVE_ACTIVITY=1 (Workflow-Eingabe „Live-Aktivität“)
+if [ "${LIVE_ACTIVITY:-0}" = "1" ]; then
+  echo "Live-Aktivität wird eingebaut …"
+  ruby scripts/add-live-activity.rb
+  xcodebuild -list -project ios/App/App.xcodeproj
+fi
 
 # Kontrolle: Bundle-Kennung im erzeugten Projekt
 if ! grep -q "PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE_ID;" ios/App/App.xcodeproj/project.pbxproj; then

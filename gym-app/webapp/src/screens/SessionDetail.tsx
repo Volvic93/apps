@@ -78,6 +78,7 @@ export function SessionDetail() {
                     <NumberInput className="input mini" ariaLabel="Wiederholungen" decimals={false} value={set.reps} onChange={(v) => patchSet(ei, si, { reps: v === undefined ? undefined : Math.round(v) })} />
                   </>
                 )}
+                {weighted && set.rir !== undefined && set.doneAt !== undefined && <span className="badge" title="Wie viele Wiederholungen wären noch möglich gewesen">noch {set.rir >= 3 ? '3+' : set.rir}</span>}
                 {ex?.tracking === 'zeit' && (
                   <>
                     <NumberInput className="input mini" ariaLabel="Dauer in Sekunden" decimals={false} value={set.durationSec} onChange={(v) => patchSet(ei, si, { durationSec: v })} />

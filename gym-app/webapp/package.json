@@ -1,7 +1,7 @@
 {
   "name": "eisenzeit",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "Eisenzeit – persönliche Trainings-App (PWA + iOS über Capacitor)",
   "scripts": {

@@ -312,6 +312,8 @@ export function suggestNext(
   const w = Math.max(...last.sets.map((x) => x.weight ?? 0));
   const atW = last.sets.filter((x) => (x.weight ?? 0) === w);
   const minReps = Math.min(...atW.map((x) => x.reps ?? 0));
+  const rirs = atW.map((x) => x.rir).filter((r): r is number => r !== undefined);
+  const rirAvg = rirs.length ? rirs.reduce((a, b) => a + b, 0) / rirs.length : undefined;
   const stalled = isStalled(sessions, exercise.id, unit, excludeSessionId);
   const base = { lastWeight: w, stalled };
 
@@ -329,7 +331,7 @@ export function suggestNext(
 
   if (w > 0 && minReps >= last.repMax) {
     const next = stepWeight(w, 1, exercise, eq);
-    if (next > w) return { kind: 'erhoehen', weight: next, ...base, text: `Alle Sätze mit ${unitLabel(w)} bis ${last.repMax} Wdh. geschafft – ${when} ${unitLabel(next)}.` };
+    if (next > w) return { kind: 'erhoehen', weight: next, ...base, text: `Alle Sätze mit ${unitLabel(w)} bis ${last.repMax} Wdh. geschafft${rirAvg !== undefined && rirAvg >= 2 ? ` und noch ${rirAvg >= 3 ? '3 oder mehr' : 'etwa 2'} Wdh. Reserve` : ''} – ${when} ${unitLabel(next)}.` };
     return { kind: 'halten', weight: w, ...base, text: `Höchste Stufe erreicht – ${unitLabel(w)} halten und die Ausführung verfeinern.` };
   }
   if (w > 0 && minReps < last.repMin) {
@@ -341,6 +343,14 @@ export function suggestNext(
       if (lower < w) return { kind: 'senken', weight: lower, ...base, text: `Zwei Mal unter ${last.repMin} Wdh. mit ${unitLabel(w)} – eine Stufe leichter (${unitLabel(lower)}) und sauber aufbauen.` };
     }
     return { kind: 'halten', weight: w, ...base, text: `${unitLabel(w)} halten und mindestens ${last.repMin} Wdh. in jedem Satz erreichen.` };
+  }
+  // Anstrengung (falls notiert): viel Reserve trotz Wiederholungsbereich → schwerer; keine Reserve → halten
+  if (w > 0 && rirAvg !== undefined && rirAvg >= 3 && minReps >= last.repMin) {
+    const next = stepWeight(w, 1, exercise, eq);
+    if (next > w) return { kind: 'erhoehen', weight: next, ...base, text: `Es waren noch 3 oder mehr Wdh. möglich – ${when} ${unitLabel(next)}.` };
+  }
+  if (w > 0 && rirAvg !== undefined && rirAvg <= 0.5) {
+    return { kind: 'halten', weight: w, ...base, text: `${unitLabel(w)} war an der Grenze (keine Reserve) – halten und sauber wiederholen (Ziel: ${last.repMax}).` };
   }
   return { kind: 'halten', weight: w || undefined, ...base, text: w > 0 ? `${unitLabel(w)} halten und jeweils eine Wiederholung mehr schaffen (Ziel: ${last.repMax}).` : `Wiederholungen steigern (Ziel: ${last.repMax}).` };
 }

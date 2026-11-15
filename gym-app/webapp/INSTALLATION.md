@@ -37,7 +37,7 @@ Nein, das geht nicht zuverlässig. Die App besteht aus vielen Dateien und brauch
 
 ## Ältere Version der Web-App
 
-Die Hauptadresse zeigt immer die neueste Version. Jede frühere Version bleibt unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/` erreichbar; die Übersicht aller Versionen steht unter <https://volvic93.github.io/apps/versionen.html>. Ältere Versionen teilen sich den Speicher mit der neuesten (gleiche Server-Adresse) – vor dem Wechsel in der App *Einstellungen → Sicherung exportieren*. Als eigenes Symbol auf dem Home-Bildschirm funktioniert eine ältere Version wie in Abschnitt 1 beschrieben, sie sollte aber nicht zusätzlich zur neuesten benutzt werden.
+Die Hauptadresse zeigt immer die neueste Version. Die neuesten drei Versionen bleiben unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/` erreichbar (ältere nur noch als `.ipa` im Release); die Übersicht aller Versionen steht unter <https://volvic93.github.io/apps/versionen.html>. Ältere Versionen teilen sich den Speicher mit der neuesten (gleiche Server-Adresse) – vor dem Wechsel in der App *Einstellungen → Sicherung exportieren*. Als eigenes Symbol auf dem Home-Bildschirm funktioniert eine ältere Version wie in Abschnitt 1 beschrieben, sie sollte aber nicht zusätzlich zur neuesten benutzt werden.
 
 ## 3. Wichtig zu wissen
 

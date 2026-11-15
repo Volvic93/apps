@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Baut jede frühere Version der Web-App (Tags gym-app-v…) und legt sie unter <Ausgabe>/gym-app-archiv/<Version>/ ab,
+# Baut die neuesten drei Versionen der Web-App (Tags gym-app-v…) und legt sie unter <Ausgabe>/gym-app-archiv/<Version>/ ab,
 # dazu eine Übersichtsseite <Ausgabe>/versionen.html mit Links zu jeder Version (Web-Archiv und Release mit der .ipa).
 # So bleibt jeder Stand installierbar, auch wenn die Hauptadresse immer die neueste Version zeigt.
 # Die Archive liegen bewusst NICHT unter /gym-app/ (sonst würde der Service Worker der neuesten Version sie übernehmen).
 # Aufruf (Repository-Stamm, alle Tags geholt): bash .github/scripts/archive-versions.sh _site
 set -uo pipefail
 OUT="${1:?Ausgabeordner fehlt}"
+KEEP=3 # so viele Web-Versionen bleiben im Archiv (die neuesten); die .ipa-Releases bleiben unbegrenzt erhalten
+COUNT=0
 REPO="Volvic93/apps"
 mkdir -p "$OUT/gym-app-archiv"
 ROWS=""
@@ -15,8 +17,9 @@ for TAG in $(git tag -l 'gym-app-v*' | sort -V -r); do
   [[ "$VER" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || continue
   DATE="$(git log -1 --format=%cd --date=format:%d.%m.%Y "$TAG")"
   DIR="$(mktemp -d)"
-  WEB='<span class="muted">Web-Version nicht verfügbar</span>'
-  if git worktree add --detach "$DIR" "$TAG" >/dev/null 2>&1 && [ -f "$DIR/gym-app/webapp/package.json" ]; then
+  WEB='<span class="muted">Web-Version nicht mehr im Archiv</span>'
+  COUNT=$((COUNT + 1))
+  if [ "$COUNT" -le "$KEEP" ] && git worktree add --detach "$DIR" "$TAG" >/dev/null 2>&1 && [ -f "$DIR/gym-app/webapp/package.json" ]; then
     if (cd "$DIR/gym-app/webapp" && npm ci --no-audit --no-fund >/dev/null 2>&1 && npm run build >/dev/null 2>&1); then
       mkdir -p "$OUT/gym-app-archiv/$VER"
       cp -R "$DIR/gym-app/webapp/dist/." "$OUT/gym-app-archiv/$VER/"
@@ -55,7 +58,7 @@ cat > "$OUT/versionen.html" <<HTML
   <body>
     <main>
       <h1>Eisenzeit – alle Versionen</h1>
-      <p class="muted">Jede veröffentlichte Version bleibt erhalten. Die <a href="gym-app/">neueste Web-App</a> liegt auf der Hauptadresse. Ältere Web-Versionen teilen sich den Speicher mit der neuesten (gleiche Adresse des Servers): vor dem Wechsel in den Einstellungen eine <strong>Sicherung exportieren</strong>. Die <strong>.ipa</strong> jeder Version steht im jeweiligen Release unter „Assets“.</p>
+      <p class="muted">Die <a href="gym-app/">neueste Web-App</a> liegt auf der Hauptadresse; im Web-Archiv bleiben die neuesten drei Versionen. Ältere Web-Versionen teilen sich den Speicher mit der neuesten (gleiche Adresse des Servers): vor dem Wechsel in den Einstellungen eine <strong>Sicherung exportieren</strong>. Die <strong>.ipa</strong> jeder Version bleibt dauerhaft im jeweiligen Release unter „Assets“ verfügbar.</p>
       <ul>
 $ROWS      </ul>
     </main>

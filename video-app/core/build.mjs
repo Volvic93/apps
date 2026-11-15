@@ -7,7 +7,7 @@ import vm from 'node:vm';
 const here = dirname(fileURLToPath(import.meta.url));
 
 // Feste Reihenfolge: Abhängigkeiten zuerst.
-export const MODULES = ['config', 'adblock', 'background', 'pip', 'bridge', 'index'];
+export const MODULES = ['config', 'adblock', 'background', 'pip', 'bridge', 'look', 'index'];
 
 export const UPDATE_URL = 'https://volvic93.github.io/apps/video-app/flimmerfrei.user.js';
 

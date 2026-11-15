@@ -28,6 +28,8 @@ enum WebViewFactory {
         config.allowsPictureInPictureMediaPlayback = true
         config.allowsAirPlayForMediaPlayback = true
         config.preferences.isElementFullscreenEnabled = true
+        // Auch auf dem iPad die mobile Seite laden (wie die YouTube-App).
+        config.defaultWebpagePreferences.preferredContentMode = .mobile
         // Google soll die Ansicht wie Safari behandeln; die Kennung der App steht nicht im User-Agent.
         config.applicationNameForUserAgent = "Version/18.0 Mobile/15E148 Safari/604.1"
 
@@ -46,9 +48,7 @@ enum WebViewFactory {
         controller.removeAllUserScripts()
 
         let settings = AppSettings.shared
-        let adblock = settings.adblock ? "true" : "false"
-        let background = settings.background ? "true" : "false"
-        let configSource = "window.__FLIMMERFREI_CONFIG__ = { adblock: " + adblock + ", background: " + background + ", pipFix: true, host: 'ios' };"
+        let configSource = "window.__FLIMMERFREI_CONFIG__ = { " + configFields(settings) + ", host: 'ios' };"
         controller.addUserScript(WKUserScript(source: configSource, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
 
         if let url = Bundle.main.url(forResource: "flimmerfrei.inject", withExtension: "js"),
@@ -60,9 +60,15 @@ enum WebViewFactory {
 
     /// JavaScript, der die Einstellungen im laufenden Betrieb setzt.
     static func setConfigScript() -> String {
-        let settings = AppSettings.shared
-        let adblock = settings.adblock ? "true" : "false"
-        let background = settings.background ? "true" : "false"
-        return "window.__flimmerfrei && window.__flimmerfrei.setConfig({ adblock: " + adblock + ", background: " + background + ", pipFix: true });"
+        return "window.__flimmerfrei && window.__flimmerfrei.setConfig({ " + configFields(AppSettings.shared) + " });"
+    }
+
+    private static func configFields(_ settings: AppSettings) -> String {
+        func flag(_ value: Bool) -> String { return value ? "true" : "false" }
+        return "adblock: " + flag(settings.adblock)
+            + ", background: " + flag(settings.background)
+            + ", pipFix: true, look: true"
+            + ", playerButtons: " + flag(settings.playerButtons)
+            + ", menuButton: true"
     }
 }

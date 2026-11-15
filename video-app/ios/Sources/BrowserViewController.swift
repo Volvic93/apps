@@ -2,7 +2,8 @@ import UIKit
 import WebKit
 import SafariServices
 
-/// Die einzige Hauptansicht: eine Web-Ansicht mit youtube.com, ein schwebender Menüknopf und eine Fehlerseite.
+/// Die einzige Hauptansicht: eine Web-Ansicht mit youtube.com, ein Ersatzknopf und eine Fehlerseite.
+/// Alles Sichtbare kommt von der Seite; das App-Menü ist ein Auswahlblatt (Menü-Knopf der Seite, Schütteln, Ersatzknopf).
 final class BrowserViewController: UIViewController {
 
     static let homeURL = URL(string: "https://m.youtube.com/")!
@@ -27,7 +28,13 @@ final class BrowserViewController: UIViewController {
 
     private var playerState = PlayerState()
     private var lastReportedAds = 0
-    private var menuSignature = ""
+
+    private var observations: [NSKeyValueObservation] = []
+    private var statusStyle: UIStatusBarStyle = .default
+    private let refreshControl = UIRefreshControl()
+    private var refreshToken = 0
+    private var buttonShowAllowed = true
+    private var buttonToken = 0
 
     private let floatingButton = FloatingMenuButton()
     private let errorView = ErrorOverlayView()
@@ -35,11 +42,15 @@ final class BrowserViewController: UIViewController {
     // MARK: - Lebenszyklus
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        return statusStyle
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         return .all
+    }
+
+    override var canBecomeFirstResponder: Bool {
+        return true
     }
 
     override func viewDidLoad() {
@@ -53,14 +64,16 @@ final class BrowserViewController: UIViewController {
         }
         view.addSubview(errorView)
         NSLayoutConstraint.activate([
-            errorView.topAnchor.constraint(equalTo: view.topAnchor),
-            errorView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            errorView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            errorView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            errorView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            errorView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            errorView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            errorView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor)
         ])
 
+        floatingButton.addTarget(self, action: #selector(floatingButtonTapped), for: .touchUpInside)
         view.addSubview(floatingButton)
-        rebuildMenu(force: true)
+
+        refreshControl.addTarget(self, action: #selector(refreshTriggered), for: .valueChanged)
 
         let center = NotificationCenter.default
         center.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
@@ -69,6 +82,21 @@ final class BrowserViewController: UIViewController {
         AudioSessionManager.shared.onShouldResume = { [weak self] in
             self?.runScript("(function(){var v=document.querySelector('video');if(v&&v.paused&&!v.ended){v.play();}})();")
         }
+
+        // Übertragen: die App liefert das aktuelle Video und hält es an, sobald es am Fernseher läuft.
+        CastManager.shared.currentVideoProvider = { [weak self] completion in
+            guard let self = self else {
+                completion(nil)
+                return
+            }
+            self.fetchCurrentVideo(completion)
+        }
+        CastManager.shared.onDidSendVideo = { [weak self] in
+            self?.runScript("window.__flimmerfrei && window.__flimmerfrei.pause()")
+        }
+
+        updateChrome()
+        updateFloatingButtonVisibility()
 
         // Sperrliste zuerst übersetzen, dann die Web-Ansicht bauen (schlägt es fehl, geht es ohne Liste weiter).
         ContentBlocker.load { [weak self] list in
@@ -79,7 +107,15 @@ final class BrowserViewController: UIViewController {
     }
 
     deinit {
+        for observation in observations {
+            observation.invalidate()
+        }
         NotificationCenter.default.removeObserver(self)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        becomeFirstResponder()
     }
 
     override func viewDidLayoutSubviews() {
@@ -93,6 +129,19 @@ final class BrowserViewController: UIViewController {
             guard let self = self else { return }
             self.floatingButton.reposition(in: self.view)
         }, completion: nil)
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateChrome()
+    }
+
+    /// Schütteln öffnet das App-Menü.
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        super.motionEnded(motion, with: event)
+        if motion == .motionShake {
+            presentMenuSheet()
+        }
     }
 
     private func buildWebView() {
@@ -109,10 +158,12 @@ final class BrowserViewController: UIViewController {
         wv.navigationDelegate = self
         wv.uiDelegate = self
         wv.allowsBackForwardNavigationGestures = true
+        wv.allowsLinkPreview = false
         wv.isOpaque = false
-        wv.backgroundColor = Theme.background
-        wv.scrollView.backgroundColor = Theme.background
+        wv.backgroundColor = UIColor.clear
+        wv.scrollView.backgroundColor = UIColor.clear
         wv.scrollView.contentInsetAdjustmentBehavior = .never
+        wv.scrollView.pinchGestureRecognizer?.isEnabled = false
 
         view.insertSubview(wv, at: 0)
         let guide = view.safeAreaLayoutGuide
@@ -120,14 +171,123 @@ final class BrowserViewController: UIViewController {
             wv.topAnchor.constraint(equalTo: guide.topAnchor),
             wv.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
             wv.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
-            wv.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            wv.bottomAnchor.constraint(equalTo: guide.bottomAnchor)
         ])
         webView = wv
+
+        // Farbe der Seite und Adresse beobachten (YouTube wechselt Seiten ohne Navigation).
+        observations.append(wv.observe(\.themeColor, options: [.new]) { [weak self] _, _ in
+            self?.updateChrome()
+        })
+        observations.append(wv.observe(\.underPageBackgroundColor, options: [.new]) { [weak self] _, _ in
+            self?.updateChrome()
+        })
+        observations.append(wv.observe(\.url, options: [.new]) { [weak self] _, _ in
+            self?.updateRefreshControl()
+        })
 
         let start = pendingURL ?? BrowserViewController.homeURL
         pendingURL = nil
         wv.load(URLRequest(url: start))
-        rebuildMenu(force: true)
+        updateChrome()
+        updateRefreshControl()
+    }
+
+    // MARK: - Erscheinungsbild
+
+    /// Hintergrund und Statusleiste nehmen die Farbe der Seite an.
+    private func updateChrome() {
+        var pageColor: UIColor? = nil
+        if let wv = webView {
+            if let theme = wv.themeColor {
+                pageColor = theme
+            } else if let under = wv.underPageBackgroundColor {
+                pageColor = under
+            }
+        }
+        let base: UIColor = pageColor ?? Theme.background
+        view.backgroundColor = base
+
+        let resolved = base.resolvedColor(with: traitCollection)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        var isDark = (traitCollection.userInterfaceStyle == .dark)
+        if resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            isDark = (0.299 * red + 0.587 * green + 0.114 * blue) < 0.5
+        }
+        statusStyle = isDark ? .lightContent : .darkContent
+        setNeedsStatusBarAppearanceUpdate()
+    }
+
+    /// Zoomen mit zwei Fingern aus (WebKit stellt den Erkenner gelegentlich zurück).
+    private func disablePinch() {
+        webView?.scrollView.pinchGestureRecognizer?.isEnabled = false
+    }
+
+    // MARK: - Ziehen zum Aktualisieren
+
+    /// Nur auf YouTube-Seiten außer Player (/watch) und Shorts (/shorts).
+    private func updateRefreshControl() {
+        guard let wv = webView else { return }
+        var allowed = false
+        if let url = wv.url, BrowserViewController.isYouTubeHost(url) {
+            let path = url.path
+            allowed = !(path.hasPrefix("/watch") || path.hasPrefix("/shorts"))
+        }
+        if allowed {
+            if wv.scrollView.refreshControl == nil {
+                wv.scrollView.refreshControl = refreshControl
+            }
+        } else {
+            if wv.scrollView.refreshControl != nil {
+                refreshControl.endRefreshing()
+                wv.scrollView.refreshControl = nil
+            }
+        }
+    }
+
+    @objc private func refreshTriggered() {
+        refreshToken += 1
+        let token = refreshToken
+        reloadPage()
+        // Spätestens nach 5 Sekunden beenden
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
+            guard let self = self, self.refreshToken == token else { return }
+            self.refreshControl.endRefreshing()
+        }
+    }
+
+    private func endRefreshing() {
+        refreshToken += 1
+        refreshControl.endRefreshing()
+    }
+
+    // MARK: - Ersatzknopf
+
+    /// Sichtbar, wenn die Seite ihren Menü-Knopf nicht hat (nach kurzer Verzögerung) oder die Einstellung es verlangt.
+    private func updateFloatingButtonVisibility() {
+        let show = AppSettings.shared.alwaysShowButton || (buttonShowAllowed && !playerState.menuButton)
+        floatingButton.isHidden = !show
+    }
+
+    /// Nach jedem Seitenwechsel: Menü-Knopf der Seite zunächst als fehlend annehmen, Einblenden aber 1,5 s verzögern.
+    private func pageDidCommit() {
+        playerState.menuButton = false
+        buttonShowAllowed = false
+        buttonToken += 1
+        let token = buttonToken
+        updateFloatingButtonVisibility()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self = self, self.buttonToken == token else { return }
+            self.buttonShowAllowed = true
+            self.updateFloatingButtonVisibility()
+        }
+    }
+
+    @objc private func floatingButtonTapped() {
+        presentMenuSheet()
     }
 
     // MARK: - Adressen
@@ -200,11 +360,34 @@ final class BrowserViewController: UIViewController {
         let presenter = topPresenter()
         if presenter is SFSafariViewController { return }
         let safari = SFSafariViewController(url: url)
-        safari.preferredControlTintColor = Theme.accent
         presenter.present(safari, animated: true, completion: nil)
     }
 
-    // MARK: - Aktionen (Menü)
+    /// Holt den frischen Zustand aus der Seite und baut daraus das Video für die Übertragung.
+    private func fetchCurrentVideo(_ completion: @escaping (CastVideo?) -> Void) {
+        guard let wv = webView else {
+            completion(nil)
+            return
+        }
+        let source = "JSON.stringify(window.__flimmerfrei ? window.__flimmerfrei.state() : null)"
+        wv.evaluateJavaScript(source) { result, _ in
+            guard let text = result as? String,
+                  let data = text.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data, options: []),
+                  let dict = object as? [String: Any] else {
+                completion(nil)
+                return
+            }
+            let state = PlayerState(stateDictionary: dict)
+            if state.videoId.isEmpty {
+                completion(nil)
+                return
+            }
+            completion(CastVideo(videoId: state.videoId, startSeconds: state.currentTime, listId: state.listId))
+        }
+    }
+
+    // MARK: - Aktionen
 
     private func togglePip() {
         runScript("window.__flimmerfrei && window.__flimmerfrei.pip()")
@@ -239,8 +422,7 @@ final class BrowserViewController: UIViewController {
     private func shareLink() {
         guard let url = webView?.url else { return }
         let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        sheet.popoverPresentationController?.sourceView = floatingButton
-        sheet.popoverPresentationController?.sourceRect = floatingButton.bounds
+        configurePopover(sheet)
         topPresenter().present(sheet, animated: true, completion: nil)
     }
 
@@ -267,58 +449,99 @@ final class BrowserViewController: UIViewController {
         wv.load(URLRequest(url: failedURL ?? BrowserViewController.homeURL))
     }
 
-    // MARK: - Menü
+    /// Auf dem iPad braucht ein Auswahlblatt eine Quelle: Rechteck oben rechts in der Ansicht.
+    private func configurePopover(_ controller: UIViewController) {
+        if let popover = controller.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.maxX - 44, y: view.safeAreaInsets.top + 4, width: 1, height: 1)
+            popover.permittedArrowDirections = [.up]
+        }
+    }
 
-    /// Baut das Menü des Knopfs neu auf (ein geöffnetes UIMenu ist fest, deshalb bei jeder Änderung).
-    private func rebuildMenu(force: Bool = false) {
+    // MARK: - Übertragen
+
+    private func showCastSheet() {
+        // Nicht öffnen, wenn schon etwas gezeigt wird
+        if presentedViewController != nil { return }
+        let controller = CastManager.shared.makeSheetController()
+        controller.modalPresentationStyle = .pageSheet
+        if let sheet = controller.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+        }
+        present(controller, animated: true, completion: nil)
+    }
+
+    // MARK: - Menü (Auswahlblatt)
+
+    private func presentMenuSheet() {
+        // Nicht öffnen, wenn schon etwas gezeigt wird
+        if presentedViewController != nil { return }
+
         let hasVideo = playerState.hasVideo
         let canGoBack = webView?.canGoBack ?? false
         let hasPage = webView?.url != nil
-        let signature = "\(hasVideo)|\(playerState.pip)|\(canGoBack)|\(hasPage)"
-        if !force && signature == menuSignature { return }
-        menuSignature = signature
 
-        let videoAttributes: UIMenuElement.Attributes = hasVideo ? [] : [.disabled]
-        let backAttributes: UIMenuElement.Attributes = canGoBack ? [] : [.disabled]
-        let pageAttributes: UIMenuElement.Attributes = hasPage ? [] : [.disabled]
+        let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 
-        let pipTitle = playerState.pip ? "Bild-in-Bild beenden" : "Bild-in-Bild"
-        let pipImage = UIImage(systemName: playerState.pip ? "pip.exit" : "pip.enter")
+        var castTitle = "Auf Fernseher übertragen"
+        if CastManager.shared.isConnected {
+            castTitle = "Übertragung: " + (CastManager.shared.deviceName ?? "Fernseher")
+        }
+        sheet.addAction(UIAlertAction(title: castTitle, style: .default) { [weak self] _ in
+            // Kurz warten, bis das Auswahlblatt ganz weg ist (sonst gilt noch „es wird etwas gezeigt“).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self?.showCastSheet()
+            }
+        })
 
-        let pipAction = UIAction(title: pipTitle, image: pipImage, attributes: videoAttributes) { [weak self] _ in
+        let pipAction = UIAlertAction(title: playerState.pip ? "Bild-in-Bild beenden" : "Bild-in-Bild", style: .default) { [weak self] _ in
             self?.togglePip()
         }
-        let airPlayAction = UIAction(title: "AirPlay", image: UIImage(systemName: "airplayvideo"), attributes: videoAttributes) { [weak self] _ in
+        pipAction.isEnabled = hasVideo
+        sheet.addAction(pipAction)
+
+        let airPlayAction = UIAlertAction(title: "AirPlay", style: .default) { [weak self] _ in
             self?.showAirPlay()
         }
-        let backAction = UIAction(title: "Zurück", image: UIImage(systemName: "chevron.backward"), attributes: backAttributes) { [weak self] _ in
-            self?.goBack()
-        }
-        let reloadAction = UIAction(title: "Neu laden", image: UIImage(systemName: "arrow.clockwise")) { [weak self] _ in
+        airPlayAction.isEnabled = hasVideo
+        sheet.addAction(airPlayAction)
+
+        sheet.addAction(UIAlertAction(title: "Neu laden", style: .default) { [weak self] _ in
             self?.reloadPage()
-        }
-        let homeAction = UIAction(title: "Startseite", image: UIImage(systemName: "house")) { [weak self] _ in
-            self?.goHome()
-        }
-        let shareAction = UIAction(title: "Link teilen", image: UIImage(systemName: "square.and.arrow.up"), attributes: pageAttributes) { [weak self] _ in
+        })
+
+        let shareAction = UIAlertAction(title: "Link teilen", style: .default) { [weak self] _ in
             self?.shareLink()
         }
-        let safariAction = UIAction(title: "In Safari öffnen", image: UIImage(systemName: "safari"), attributes: pageAttributes) { [weak self] _ in
+        shareAction.isEnabled = hasPage
+        sheet.addAction(shareAction)
+
+        let safariAction = UIAlertAction(title: "In Safari öffnen", style: .default) { [weak self] _ in
             self?.openInSafari()
         }
-        let signInAction = UIAction(title: "Mit Google anmelden", image: UIImage(systemName: "person.crop.circle")) { [weak self] _ in
+        safariAction.isEnabled = hasPage
+        sheet.addAction(safariAction)
+
+        sheet.addAction(UIAlertAction(title: "Mit Google anmelden", style: .default) { [weak self] _ in
             self?.signInWithGoogle()
+        })
+
+        let backAction = UIAlertAction(title: "Zurück", style: .default) { [weak self] _ in
+            self?.goBack()
         }
-        let settingsAction = UIAction(title: "Einstellungen", image: UIImage(systemName: "gearshape")) { [weak self] _ in
+        backAction.isEnabled = canGoBack
+        sheet.addAction(backAction)
+
+        sheet.addAction(UIAlertAction(title: "Startseite", style: .default) { [weak self] _ in
+            self?.goHome()
+        })
+        sheet.addAction(UIAlertAction(title: "Einstellungen", style: .default) { [weak self] _ in
             self?.showSettings()
-        }
+        })
+        sheet.addAction(UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil))
 
-        let videoGroup = UIMenu(title: "", options: .displayInline, children: [pipAction, airPlayAction])
-        let navGroup = UIMenu(title: "", options: .displayInline, children: [backAction, reloadAction, homeAction])
-        let linkGroup = UIMenu(title: "", options: .displayInline, children: [shareAction, safariAction])
-        let settingsGroup = UIMenu(title: "", options: .displayInline, children: [signInAction, settingsAction])
-
-        floatingButton.menu = UIMenu(title: "", children: [videoGroup, navGroup, linkGroup, settingsGroup])
+        configurePopover(sheet)
+        present(sheet, animated: true, completion: nil)
     }
 
     // MARK: - Zustand und Einstellungen
@@ -330,7 +553,14 @@ final class BrowserViewController: UIViewController {
             AudioSessionManager.shared.activate()
         }
         countBlockedAds(newState.adsBlocked)
-        rebuildMenu()
+        updateFloatingButtonVisibility()
+
+        // Der Manager entscheidet selbst, ob das Video an den Fernseher geschickt wird.
+        if newState.playing && !newState.videoId.isEmpty {
+            CastManager.shared.videoDidStart(
+                CastVideo(videoId: newState.videoId, startSeconds: newState.currentTime, listId: newState.listId)
+            )
+        }
     }
 
     /// Der Zähler des Skripts gilt je Seitenladen; hier wird er über alle Sitzungen aufsummiert.
@@ -345,8 +575,11 @@ final class BrowserViewController: UIViewController {
     }
 
     private func applySettings() {
-        guard let wv = webView else { return }
         let settings = AppSettings.shared
+        view.window?.overrideUserInterfaceStyle = settings.interfaceStyle
+        updateFloatingButtonVisibility()
+
+        guard let wv = webView else { return }
         let controller = wv.configuration.userContentController
 
         // Für künftige Seitenladungen
@@ -373,7 +606,7 @@ final class BrowserViewController: UIViewController {
     private func dataWasCleared() {
         playerState = PlayerState()
         lastReportedAds = 0
-        rebuildMenu(force: true)
+        updateFloatingButtonVisibility()
         webView?.load(URLRequest(url: BrowserViewController.homeURL))
     }
 
@@ -390,6 +623,7 @@ final class BrowserViewController: UIViewController {
     // MARK: - Fehler
 
     private func handleLoadError(_ error: Error) {
+        endRefreshing()
         let nsError = error as NSError
         if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled { return }
         // „Ladevorgang durch Richtlinienwechsel unterbrochen“ (z. B. wenn wir selbst auf Safari umleiten)
@@ -408,9 +642,19 @@ final class BrowserViewController: UIViewController {
 
 extension BrowserViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        // Unbekannte Typen werden ignoriert (PlayerState liefert dann nil).
-        if let state = PlayerState(message: message.body) {
-            apply(state: state)
+        guard let dict = message.body as? [String: Any], let type = dict["type"] as? String else { return }
+        switch type {
+        case "state":
+            if let state = PlayerState(message: dict) {
+                apply(state: state)
+            }
+        case "menu":
+            presentMenuSheet()
+        case "cast":
+            showCastSheet()
+        default:
+            // Unbekannte Typen werden ignoriert.
+            break
         }
     }
 }
@@ -459,12 +703,16 @@ extension BrowserViewController: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         errorView.isHidden = true
-        rebuildMenu()
+        disablePinch()
+        pageDidCommit()
+        updateRefreshControl()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         errorView.isHidden = true
-        rebuildMenu()
+        disablePinch()
+        endRefreshing()
+        updateRefreshControl()
 
         // Rückkehr von einer Anmelde-Seite zu YouTube: einmal frisch laden, damit das Konto sichtbar ist.
         if let url = webView.url {
@@ -558,7 +806,7 @@ extension BrowserViewController: WKUIDelegate {
 
 // MARK: - Fehlerseite
 
-/// Schlichte Fehleransicht mit „Erneut versuchen“.
+/// Schlichte Fehleransicht mit „Erneut versuchen“ (Systemfarben).
 private final class ErrorOverlayView: UIView {
     var onRetry: (() -> Void)?
 
@@ -580,19 +828,18 @@ private final class ErrorOverlayView: UIView {
         backgroundColor = Theme.background
 
         titleLabel.font = UIFont.preferredFont(forTextStyle: .title3)
-        titleLabel.textColor = .white
+        titleLabel.textColor = UIColor.label
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 0
 
         detailLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
-        detailLabel.textColor = UIColor(white: 1.0, alpha: 0.6)
+        detailLabel.textColor = UIColor.secondaryLabel
         detailLabel.textAlignment = .center
         detailLabel.numberOfLines = 0
 
         retryButton.setTitle("Erneut versuchen", for: .normal)
         retryButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
-        retryButton.setTitleColor(Theme.background, for: .normal)
-        retryButton.backgroundColor = Theme.accent
+        retryButton.backgroundColor = UIColor.secondarySystemFill
         retryButton.layer.cornerRadius = 12
         retryButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 24, bottom: 12, right: 24)
         retryButton.addTarget(self, action: #selector(retryTapped), for: .touchUpInside)

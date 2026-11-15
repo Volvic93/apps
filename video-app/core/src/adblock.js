@@ -19,7 +19,8 @@ export const AD_RENDERERS = [
 
 const AD_KEY_SET = new Set(AD_KEYS);
 const AD_RENDERER_SET = new Set(AD_RENDERERS);
-const AD_MARKERS = AD_KEYS.concat(AD_RENDERERS);
+// 'adClientParams' kennzeichnet Shorts-Werbung (command.reelWatchEndpoint.adClientParams.isAd)
+const AD_MARKERS = AD_KEYS.concat(AD_RENDERERS, ['adClientParams']);
 
 // Bremsen gegen riesige oder verschachtelte Eingaben.
 export const CLEAN_LIMITS = Object.freeze({ maxDepth: 64, maxNodes: 250000 });
@@ -37,9 +38,30 @@ function hasOwn(o, k) {
   return Object.prototype.hasOwnProperty.call(o, k);
 }
 
+// Shorts-Werbung: o.command.reelWatchEndpoint.adClientParams.isAd
+export function isReelAd(o) {
+  if (!o || typeof o !== 'object') return false;
+  const cmd = o.command;
+  const ep = cmd && typeof cmd === 'object' ? cmd.reelWatchEndpoint : null;
+  const p = ep && typeof ep === 'object' ? ep.adClientParams : null;
+  return !!(p && typeof p === 'object' && p.isAd);
+}
+
+// Eintrag oder einer seiner direkten Renderer-Kinder ist eine Shorts-Werbung
+function hasReelAd(o) {
+  if (isReelAd(o)) return true;
+  const keys = Object.keys(o);
+  for (let i = 0; i < keys.length; i++) {
+    const c = o[keys[i]];
+    if (c && typeof c === 'object' && !Array.isArray(c) && isReelAd(c)) return true;
+  }
+  return false;
+}
+
 // Ist dieser Listeneintrag eine Werbung? (direkt oder in richItemRenderer.content)
 export function isAdItem(item) {
   if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+  if (hasReelAd(item)) return true;
   const keys = Object.keys(item);
   for (let i = 0; i < keys.length; i++) {
     if (AD_RENDERER_SET.has(keys[i])) return true;
@@ -52,6 +74,7 @@ export function isAdItem(item) {
       for (let i = 0; i < ck.length; i++) {
         if (AD_RENDERER_SET.has(ck[i])) return true;
       }
+      if (hasReelAd(c)) return true;
     }
   }
   return false;

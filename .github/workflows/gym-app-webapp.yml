@@ -56,7 +56,7 @@ jobs:
         working-directory: video-app/core
         run: |
           node build.mjs
-          node --test test/
+          node --test test/*.test.js
 
       - name: Seite zusammenstellen
         run: |

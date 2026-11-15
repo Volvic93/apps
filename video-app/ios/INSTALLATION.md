@@ -87,18 +87,24 @@ Neue `.ipa` laden und mit **derselben Apple-ID** über die alte installieren (Al
 
 ## 5. Erste Schritte in der App
 
+- **Aussehen:** Die App sieht aus wie YouTube selbst: obere Leiste, Videoliste, untere Leiste, alles kommt von der Seite. Hell und Dunkel folgen dem iPhone (änderbar unter *Einstellungen → Darstellung*). Statusleiste und Ränder nehmen die Farbe der Seite an.
 - **Start:** Flimmerfrei öffnet `m.youtube.com`. Melde dich wie im Browser an; die Anmeldung bleibt gespeichert.
-- **Schwebender Knopf:** Der kleine runde Knopf mit den drei Punkten öffnet das Menü. Du kannst ihn **mit dem Finger verschieben**; er rastet am linken oder rechten Rand ein und merkt sich seine Lage.
-- **Bild-in-Bild:** Video starten, Knopf antippen → **„Bild-in-Bild“**. Das Video läuft dann in einem kleinen Fenster über anderen Apps weiter. Der Eintrag ist ausgegraut, solange kein Video da ist.
-- **AirPlay:** Knopf → **„AirPlay“** öffnet die Geräteauswahl (Apple TV, AirPlay-Fernseher, Lautsprecher).
-- **Weitere Menüpunkte:** Zurück, Neu laden, Startseite, Link teilen, In Safari öffnen, Einstellungen.
+- **Zusätzliche Knöpfe in YouTubes Leisten:** In der oberen Leiste sitzen links neben der Suche zwei Symbole: **Übertragen** und **Menü der App**. Im Player kommen oben rechts **Übertragen**, **Bild-in-Bild** und **AirPlay** dazu (abschaltbar unter *Einstellungen → Knöpfe im Player*).
+- **Menü der App:** Es öffnet sich als Auswahlblatt von unten – über das Menü-Symbol in der oberen Leiste, durch **Schütteln** des iPhones oder über den **Ersatzknopf**. Es enthält: Auf Fernseher übertragen, Bild-in-Bild, AirPlay, Neu laden, Link teilen, In Safari öffnen, Mit Google anmelden, Zurück, Startseite, Einstellungen. Bild-in-Bild und AirPlay sind ausgegraut, solange kein Video da ist.
+- **Ersatzknopf:** Ein kleiner grauer, halbtransparenter Knopf mit drei Punkten. Er erscheint nur, wenn das Menü-Symbol in der Leiste fehlt (z. B. auf der Anmelde-Seite oder wenn YouTube umgebaut hat), oder immer, wenn du *Schwebenden Knopf immer anzeigen* einschaltest. Du kannst ihn mit dem Finger verschieben; er rastet am Rand ein.
+- **Bild-in-Bild:** Video starten, Menü → **„Bild-in-Bild“** (oder das Symbol im Player). Das Video läuft in einem kleinen Fenster über anderen Apps weiter.
+- **AirPlay:** Menü oder Player-Symbol → **„AirPlay“** öffnet die Geräteauswahl (Apple TV, AirPlay-Fernseher, Lautsprecher).
+- **Aktualisieren:** Auf Startseite, Abos und Listen nach unten ziehen (nicht im Player und nicht in Shorts).
 - **Hintergrundwiedergabe:** Ton läuft weiter, wenn du die App verlässt oder das iPhone sperrt. Läuft er doch einmal nicht weiter, in der Sperrbildschirm-Steuerung auf Wiedergabe tippen.
 - **Einstellungen:**
+  - *Darstellung*: Automatisch, Hell, Dunkel.
   - *Werbeblocker* an/aus (lädt die Seite neu).
   - *Hintergrundwiedergabe* an/aus.
   - *Beim Verlassen automatisch Bild-in-Bild* (Versuch; Standard aus; iOS erlaubt es nicht in jeder Lage).
-  - *Blockierte Werbung*: Zähler.
-  - *Browserdaten löschen*: meldet dich bei YouTube ab.
+  - *Knöpfe im Player* und *Schwebenden Knopf immer anzeigen*.
+  - *Blockierte Werbung*: Zähler; *Sperrliste*: zeigt, ob die Netz-Sperrliste geladen ist.
+  - *Übertragungs-Protokoll*: Protokoll der Übertragung zur Fehlersuche (kopierbar).
+  - *Browserdaten löschen*: meldet dich bei YouTube und Google ab.
 - **Links aus anderen Apps:** Adressen der Form `flimmerfrei://open?url=<kodierte YouTube-Adresse>` öffnen die Seite in der App.
 - **Fremde Seiten:** Verweise auf Seiten außerhalb von YouTube/Google öffnen sich in einer Safari-Ansicht, nicht in der App.
 
@@ -106,11 +112,23 @@ Neue `.ipa` laden und mit **derselben Apple-ID** über die alte installieren (Al
 
 ## Mit Google anmelden
 
-1. In der App auf YouTubes **„Anmelden“** tippen – oder den schwebenden Knopf antippen → **„Mit Google anmelden“**.
+1. In der App auf YouTubes **„Anmelden“** tippen – oder den schwebenden Knopf antippen oder per Schütteln das Menü öffnen → **„Mit Google anmelden“**.
 2. Die Anmeldung läuft auf der Seite von Google selbst, in der App. Die App sieht dein Kennwort nicht und speichert es nicht.
 3. Nach der Anmeldung lädt die App YouTube einmal neu, damit dein Konto sofort sichtbar ist. Die Anmeldung bleibt gespeichert.
 4. **Passkey oder Sicherheitsschlüssel** funktionieren in der App möglicherweise nicht. Dann auf **„Andere Option wählen“** tippen und Kennwort, Bestätigung am Handy oder einen Code verwenden.
 5. Abmelden: *Einstellungen → Browserdaten löschen* (mit Bestätigung; löscht auch alle anderen gespeicherten Web-Daten der App).
+
+## Auf Chromecast oder Fernseher übertragen
+
+Der Fernseher spielt das Video selbst (mit seiner eigenen YouTube-App); das iPhone ist nur Fernbedienung. Das Video läuft deshalb weiter, auch wenn du das iPhone sperrst.
+
+1. Das **Übertragen-Symbol** in der oberen Leiste oder im Player antippen (oder Menü → *Auf Fernseher übertragen*). Es öffnet sich ein Blatt.
+2. Beim ersten Mal fragt iOS nach dem Zugriff aufs **lokale Netzwerk**: **„Erlauben“** wählen, sonst findet die App keine Geräte. (Später änderbar unter *Einstellungen → Flimmerfrei → Lokales Netzwerk*.)
+3. **Im WLAN gefundene Geräte** (Chromecast, Google TV, Android TV, Fernseher mit Chromecast) erscheinen in der Liste – iPhone und Gerät müssen im selben WLAN sein. Gerät antippen.
+4. **Mit TV-Code** (Smart-TV, Konsole, Fire TV): In der YouTube-App am Fernseher *Einstellungen → Mit TV-Code verknüpfen* öffnen und den angezeigten Code im Blatt unter *Mit TV-Code verbinden* eingeben. Zuletzt verbundene Geräte lassen sich später erneut verbinden.
+5. Nach dem Verbinden wird ein laufendes Video an der aktuellen Stelle zum Fernseher geschickt und am iPhone angehalten. Solange die Verbindung besteht, geht **jedes neu gestartete Video** automatisch an den Fernseher. Im Blatt gibt es Pause/Weiter, *Aktuelles Video senden* und *Trennen*.
+
+Hinweise: Auf dem Fernseher spielt dessen YouTube-App – **Werbung dort kann die App nicht entfernen**. Dies ist neu und konnte bisher nicht an echten Geräten erprobt werden. Bei Problemen: *Einstellungen → Übertragungs-Protokoll → Kopieren* und das Protokoll weitergeben.
 
 ## 6. Wenn etwas nicht geht
 
@@ -125,7 +143,7 @@ Neue `.ipa` laden und mit **derselben Apple-ID** über die alte installieren (Al
 | Es erscheint doch Werbung | YouTube ändert seine Seite laufend; der Werbeblocker kann zeitweise ausfallen, bis die App aktualisiert wird. Seite neu laden hilft manchmal. |
 | Ton stoppt im Hintergrund | In den Einstellungen prüfen, ob *Hintergrundwiedergabe* an ist; Video einmal in der App starten. Nach einem Anruf ggf. Wiedergabe neu starten. |
 | Bild-in-Bild geht nicht | Es muss ein Video laufen (Menüpunkt nicht ausgegraut). Manche Videos sperren es; dann das Video-Vollbild versuchen und von dort das Bild-in-Bild-Symbol des Players nutzen. |
-| Chromecast fehlt | Ist in dieser Version nicht enthalten (Google gibt den Empfänger nur für die eigene App frei). AirPlay geht. |
+| Keine Geräte beim Übertragen | Lokales Netzwerk für Flimmerfrei erlauben (*Einstellungen → Flimmerfrei*), iPhone und Gerät im selben WLAN, ggf. stattdessen den TV-Code verwenden. |
 | Seite bleibt weiß/Fehlerseite | „Erneut versuchen“ tippen oder Menü → Neu laden. Hilft das nicht: *Einstellungen → Browserdaten löschen* (meldet ab). |
 
 ## 7. Datenschutz

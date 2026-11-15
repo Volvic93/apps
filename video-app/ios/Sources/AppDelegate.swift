@@ -11,7 +11,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.backgroundColor = Theme.background
-        window.tintColor = Theme.accent
+        window.overrideUserInterfaceStyle = AppSettings.shared.interfaceStyle
         window.rootViewController = controller
         window.makeKeyAndVisible()
         self.window = window

@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 /// Einstellungen der App (UserDefaults).
 final class AppSettings {
@@ -13,6 +13,9 @@ final class AppSettings {
         static let adsBlockedTotal = "adsBlockedTotal"
         static let buttonSide = "buttonSide"
         static let buttonY = "buttonY"
+        static let appearance = "appearance"
+        static let playerButtons = "playerButtons"
+        static let alwaysShowButton = "alwaysShowButton"
     }
 
     private init() {
@@ -22,7 +25,10 @@ final class AppSettings {
             Key.autoPip: false,
             Key.adsBlockedTotal: 0,
             Key.buttonSide: 1,
-            Key.buttonY: 0.72
+            Key.buttonY: 0.72,
+            Key.appearance: 0,
+            Key.playerButtons: true,
+            Key.alwaysShowButton: false
         ])
     }
 
@@ -42,6 +48,32 @@ final class AppSettings {
     var autoPip: Bool {
         get { return defaults.bool(forKey: Key.autoPip) }
         set { defaults.set(newValue, forKey: Key.autoPip) }
+    }
+
+    /// Knöpfe (Übertragen, Bild-in-Bild, AirPlay) in der Player-Leiste
+    var playerButtons: Bool {
+        get { return defaults.bool(forKey: Key.playerButtons) }
+        set { defaults.set(newValue, forKey: Key.playerButtons) }
+    }
+
+    /// Ersatzknopf auch dann zeigen, wenn die Seite den Menü-Knopf hat
+    var alwaysShowButton: Bool {
+        get { return defaults.bool(forKey: Key.alwaysShowButton) }
+        set { defaults.set(newValue, forKey: Key.alwaysShowButton) }
+    }
+
+    /// Darstellung: 0 = automatisch, 1 = hell, 2 = dunkel
+    var appearance: Int {
+        get { return defaults.integer(forKey: Key.appearance) }
+        set { defaults.set(newValue, forKey: Key.appearance) }
+    }
+
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch appearance {
+        case 1: return .light
+        case 2: return .dark
+        default: return .unspecified
+        }
     }
 
     /// Insgesamt blockierte Werbung (über alle Sitzungen)

@@ -6,8 +6,11 @@ Eigener Video-Browser fürs iPhone. Öffnet youtube.com ganz normal – Anmeldun
 - **Wiedergabe im Hintergrund**, auch bei gesperrtem oder minimiertem iPhone
 - **Bild-in-Bild** auf Knopfdruck
 - **AirPlay** auf Apple TV und andere AirPlay-Geräte
+- **Übertragen auf Chromecast und Fernseher** – Geräte im WLAN oder per TV-Code (nur iPhone-App)
+- **Anmeldung mit dem Google-Konto** auf Googles eigener Seite
+- **aufgebaut wie die YouTube-App**: Die Zusatzknöpfe sitzen in YouTubes eigenen Leisten und im Player, eine eigene Browser-Oberfläche gibt es nicht
 
-Die App enthält keinen Code und keine Marken von Google; sie ist eine Web-Ansicht mit eigenem Skript. Chromecast ist in dieser Stufe nicht dabei (Gründe und möglicher Weg: [KONZEPT.md](KONZEPT.md), Abschnitt 1).
+Die App enthält keinen Code und keine Marken von Google; sie ist eine Web-Ansicht mit eigenem Skript. Name und App-Symbol sind bewusst eigene.
 
 ## Installieren
 
@@ -41,5 +44,6 @@ Die `.ipa` baut der Workflow `.github/workflows/video-app-ios.yml` auf einem mac
 ## Grenzen
 
 - YouTube ändert seine Seite laufend; Werbeblocker und Hintergrundwiedergabe können zeitweise ausfallen, bis der Kern angepasst ist.
+- Das Übertragen auf Chromecast/Fernseher nutzt eine inoffizielle Schnittstelle von YouTube. Auf dem Fernseher spielt dessen eigene YouTube-App; Werbung dort kann die App nicht entfernen.
 - Ohne Apple-Entwicklerkonto muss die App alle 7 Tage neu signiert werden (AltStore erledigt das automatisch).
 - Werbeblocker und Hintergrundwiedergabe widersprechen den Nutzungsbedingungen von YouTube. Die App ist für den privaten Gebrauch gedacht.

@@ -19,8 +19,8 @@ test('package.json: Version, Modultyp, Skripte, keine Abhängigkeiten', () => {
 });
 
 test('Einstellungen: Standard, Teilangaben, falsche Typen', () => {
-  assert.deepEqual(normalizeConfig(undefined), { adblock: true, background: true, pipFix: true, host: 'userscript' });
-  assert.deepEqual(normalizeConfig({ background: false, host: 'ios' }), { adblock: true, background: false, pipFix: true, host: 'ios' });
+  assert.deepEqual(normalizeConfig(undefined), { adblock: true, background: true, pipFix: true, look: true, playerButtons: true, menuButton: true, host: 'userscript' });
+  assert.deepEqual(normalizeConfig({ background: false, host: 'ios' }), { ...DEFAULT_CONFIG, background: false, host: 'ios' });
   assert.deepEqual(normalizeConfig({ adblock: 'nein', host: 5 }), { ...DEFAULT_CONFIG });
   assert.deepEqual(normalizeConfig('x'), { ...DEFAULT_CONFIG });
 });

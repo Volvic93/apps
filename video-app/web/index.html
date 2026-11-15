@@ -92,6 +92,10 @@
       <dd>Der Seite wird vorgespielt, sie sei sichtbar, und ein ungewolltes Pausieren beim Sperren oder Minimieren wird rückgängig gemacht. Eine Pause, die Sie selbst auslösen, bleibt bestehen.</dd>
       <dt>Bild-in-Bild</dt>
       <dd>Das laufende Video lässt sich in ein kleines Fenster auslagern. Sperren der Seite dagegen werden aufgehoben.</dd>
+      <dt>Aufbau wie die YouTube-App</dt>
+      <dd>Alles Sichtbare kommt von YouTube selbst: obere Leiste, Videoliste, Player, untere Leiste. Die App fügt keine eigene Browser-Oberfläche hinzu. Ihre Zusatzfunktionen sitzen in YouTubes eigenen Leisten: oben die Symbole für Übertragen und das App-Menü, im Player Übertragen, Bild-in-Bild und AirPlay. Farben folgen Hell und Dunkel des iPhones, „App öffnen“-Hinweise sind ausgeblendet.</dd>
+      <dt>Übertragen auf Chromecast und Fernseher</dt>
+      <dd>In der iPhone-App enthalten. Die App findet Chromecast, Google TV und Android TV im WLAN oder verbindet sich per TV-Code (in der YouTube-App des Fernsehers unter „Mit TV-Code verknüpfen“). Der Fernseher spielt das Video selbst, das iPhone ist nur Fernbedienung; das Video läuft also auch bei gesperrtem iPhone weiter. Das nutzt eine inoffizielle Schnittstelle von YouTube und kann jederzeit brechen. Auf dem Fernseher kann Werbung laufen, denn dort greift der Werbeblocker der App nicht.</dd>
       <dt>AirPlay</dt>
       <dd>Wiedergabe auf Apple TV, HomePod und andere AirPlay-Geräte.</dd>
     </dl>
@@ -105,7 +109,7 @@
       <li>App öffnen und bei YouTube anmelden wie im Browser.</li>
     </ol>
     <p>Die ausführliche Schritt-für-Schritt-Anleitung steht hier: <a href="https://github.com/Volvic93/apps/blob/main/video-app/ios/INSTALLATION.md">INSTALLATION.md</a>.</p>
-    <p>Bedienung: Ein kleiner, verschiebbarer Knopf öffnet ein Menü mit Bild-in-Bild, AirPlay, Zurück, Neu laden, Startseite, Link teilen, In Safari öffnen und den Einstellungen. Dort lassen sich Werbeblocker und Hintergrundwiedergabe einzeln abschalten.</p>
+    <p>Bedienung: Das Symbol „Menü“ in der oberen Leiste (oder Schütteln des iPhones) öffnet ein Auswahlblatt mit Übertragen, Bild-in-Bild, AirPlay, Neu laden, Link teilen, In Safari öffnen, Mit Google anmelden, Zurück, Startseite und den Einstellungen. Fehlt das Symbol (etwa auf der Anmeldeseite), erscheint ein kleiner Ersatzknopf. Dort lassen sich Werbeblocker und Hintergrundwiedergabe einzeln abschalten.</p>
   </section>
 
   <section id="userscript">
@@ -124,13 +128,14 @@
       <li>Den Knopf „Userscript installieren“ öffnen und die Installation bestätigen.</li>
       <li>youtube.com neu laden.</li>
     </ol>
+    <p><strong>Übertragen geht im Userscript nicht.</strong> Chromecast und Fernseher gibt es nur in der iPhone-App; das Userscript bietet Werbeblocker, Hintergrundwiedergabe, Bild-in-Bild und AirPlay, ohne eigene Symbole in der oberen Leiste.</p>
     <p class="note">Das Skript läuft nur auf <code>youtube.com</code> und aktualisiert sich über dieselbe Adresse, sofern der Skript-Manager Aktualisierungen unterstützt.</p>
   </section>
 
   <section id="grenzen">
     <h2>Grenzen</h2>
     <ul>
-      <li><strong>Kein Chromecast.</strong> Google gibt den YouTube-Empfänger auf dem Chromecast nur für die eigene App frei; im Web gibt es Cast nur in Chrome am Rechner. AirPlay funktioniert. Ein möglicher späterer Weg ist die Kopplung per TV-Code, die aber auf einer inoffiziellen Schnittstelle beruht und jederzeit brechen kann.</li>
+      <li><strong>Übertragen ist eine Eigenbau-Lösung.</strong> Sie beruht auf einer inoffiziellen Schnittstelle von YouTube und konnte noch nicht an echten Geräten erprobt werden. Im Userscript gibt es sie nicht; dort bleibt AirPlay.</li>
       <li><strong>YouTube kann Dinge ändern.</strong> Werbeblocker und Hintergrundwiedergabe können dadurch zeitweise ausfallen, bis der Kern angepasst ist.</li>
       <li><strong>Erster echter Test auf dem iPhone.</strong> Die App lässt sich nicht auf dem Entwicklungsrechner starten; Fehler sind daher möglich.</li>
       <li><strong>Passkeys und Sicherheitsschlüssel</strong> funktionieren in eingebetteten Ansichten nicht zuverlässig. Bei der Anmeldung dann „Andere Option wählen“ und Kennwort, Bestätigung am Handy oder Code benutzen. Google kann die Anmeldung in eingebetteten Ansichten jederzeit strenger behandeln.</li>

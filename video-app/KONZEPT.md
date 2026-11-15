@@ -14,7 +14,7 @@ Eine eigene, schlanke iPhone-App, die **youtube.com ganz normal öffnet** (Anmel
 | Weiterspielen bei gesperrtem/minimiertem iPhone | Hintergrund-Audio (`UIBackgroundModes: audio`, Audio-Sitzung „playback“) + Skript, das der Seite vorspielt, sie sei sichtbar, und ungewolltes Pausieren rückgängig macht | 1 |
 | Bild-in-Bild (Video im kleinen Fenster) | Knopf in der App, der das laufende Video ins Bild-in-Bild-Fenster schickt; Sperren von YouTube dagegen werden aufgehoben | 1 |
 | Teilen auf Apple-Geräte (AirPlay) | AirPlay in der Web-Ansicht erlaubt + Knopf „AirPlay“ | 1 |
-| Chromecast | **Nicht in Stufe 1.** Google gibt den YouTube-Empfänger auf dem Chromecast nur für die eigene App frei; im Web gibt es Cast nur in Chrome am Rechner. Möglicher späterer Weg: Kopplung „Mit TV-Code verbinden“ über die inoffizielle Fernseh-Schnittstelle von YouTube (wackelig, kann jederzeit brechen) | 2 |
+| Chromecast / Fernseher | Pflicht (Vorgabe des Nutzers, 15.11.2026). Die mobile Seite kann nicht übertragen, deshalb baut die App es selbst ein: Geräte im WLAN finden, die YouTube-App auf dem Gerät starten und über YouTubes Fernseh-Schnittstelle steuern; zusätzlich „Mit TV-Code verbinden“ (Abschnitt 5c). Inoffizielle Schnittstelle – kann brechen, wenn Google sie ändert | 1 |
 
 **Warum keine Reparatur der alten IPA:** `YouTubePlus_v13.02.9` ist die Original-YouTube-App von 2018 mit eingeschleusten Fremd-Bibliotheken (`libuasharedtools`, `MobileSubstrate`, Flurry-Analyse). So alte App-Versionen bedient YouTube nicht mehr; reparieren hieße, Googles Programm neu zu patchen und weiterzugeben – technisch von Windows aus nicht machbar und rechtlich nicht veröffentlichbar. Die neue App enthält **keinen** Code und keine Marken von Google; sie ist ein spezialisierter Browser.
 
@@ -59,7 +59,13 @@ Ein Kern, zwei Hüllen: `core/` ist die einzige Stelle mit YouTube-spezifischer 
 Die Hülle darf **vor** dem Skript setzen:
 
 ```js
-window.__FLIMMERFREI_CONFIG__ = { adblock: true, background: true, pipFix: true, host: 'ios' /* oder 'userscript' */ };
+window.__FLIMMERFREI_CONFIG__ = {
+  adblock: true, background: true, pipFix: true,
+  look: true,           // „App öffnen“-Hinweise ausblenden, App-Gefühl (Abschnitt 5b)
+  playerButtons: true,  // Knöpfe Bild-in-Bild / AirPlay / Übertragen in der Player-Leiste
+  menuButton: true,     // Menü- und Übertragen-Knopf in der oberen Leiste (nur host 'ios')
+  host: 'ios' /* oder 'userscript' */
+};
 ```
 
 Fehlt das Objekt oder ein Feld, gilt der Standard (alles `true`, `host: 'userscript'`).
@@ -71,7 +77,8 @@ window.__flimmerfrei = {
   version: '0.1.0',
   pip(),            // Bild-in-Bild für das aktive Video umschalten → true/false (false = kein Video)
   airplay(),        // AirPlay-Auswahl öffnen (webkitShowPlaybackTargetPicker) → true/false
-  state(),          // { hasVideo, playing, pip, title, url, adsBlocked }
+  state(),          // { hasVideo, playing, pip, title, url, adsBlocked, menuButton, videoId, listId, currentTime }
+  pause(),          // aktives Video anhalten (z. B. wenn es auf dem Fernseher weiterläuft) → true/false
   setConfig(teil),  // Einstellungen im Betrieb ändern, z. B. { background: false }
 };
 ```
@@ -81,10 +88,21 @@ window.__flimmerfrei = {
 Wenn `window.webkit?.messageHandlers?.flimmerfrei` existiert, schickt der Kern bei Änderungen (Start/Pause, neues Video, Bild-in-Bild an/aus, Seitenwechsel) gedrosselt (höchstens alle 250 ms):
 
 ```js
-postMessage({ type: 'state', hasVideo, playing, pip, title, url, adsBlocked })
+postMessage({ type: 'state', hasVideo, playing, pip, title, url, adsBlocked, menuButton, videoId, listId, currentTime })
 ```
 
-Andere Meldungstypen gibt es in Stufe 1 nicht. Die App muss unbekannte Typen ignorieren.
+- `menuButton`: `true`, solange der eingefügte Menü-Knopf in der oberen Leiste der Seite hängt (Abschnitt 5b).
+- `videoId`: Kennung des aktiven Videos (aus `?v=…` bzw. `/shorts/<id>`), sonst `''`. `listId`: `?list=…`, sonst `''`. `currentTime`: Sekunden (Zahl).
+- Ein Wechsel von `videoId` zählt als Änderung und wird gemeldet; `currentTime` allein löst **keine** Meldung aus.
+
+Knöpfe, die der Kern in die Seite einfügt, melden sich sofort (ungedrosselt):
+
+```js
+postMessage({ type: 'menu' })   // Menü-Knopf in der oberen Leiste
+postMessage({ type: 'cast' })   // Übertragen-Knopf (obere Leiste oder Player)
+```
+
+Weitere Meldungstypen gibt es in Stufe 1 nicht. Die App muss unbekannte Typen ignorieren.
 
 ## 4. Kern im Detail
 
@@ -115,9 +133,9 @@ Andere Meldungstypen gibt es in Stufe 1 nicht. Die App muss unbekannte Typen ign
 - **Sperrliste:** `content-blocker.json` aus dem App-Paket mit `WKContentRuleListStore` übersetzen (Kennung mit Versionsnummer, damit neue Listen greifen); schlägt das fehl, startet die App trotzdem.
 - **Ton im Hintergrund:** `AVAudioSession` Kategorie `.playback`, Modus `.moviePlayback`, beim Start und bei jedem Wiedergabe-Beginn aktiv setzen; `UIBackgroundModes: [audio]`. Unterbrechungen (Anruf) sauber behandeln.
 - **Navigation:** In der App bleiben `youtube.com`, `youtu.be`, `youtube-nocookie.com`, `google.com`/`google.de` (Anmeldung, Einwilligung), `gstatic.com`, `googleusercontent.com`. Alles andere im Hauptrahmen öffnet sich in Safari-Ansicht (`SFSafariViewController`). `target=_blank` lädt in derselben Ansicht. Ladefehler/Offline: schlichte Fehlerseite mit „Erneut versuchen“.
-- **Bedienung:** YouTube bringt eigene Leisten mit, deshalb keine feste Leiste. Ein kleiner, verschiebbarer runder Knopf (merkt sich seine Position, weicht dem sicheren Bereich aus, blendet im Vollbild aus) öffnet ein Menü: Bild-in-Bild · AirPlay · Zurück · Neu laden · Startseite · Link teilen · In Safari öffnen · Einstellungen. Bild-in-Bild/AirPlay sind nur aktiv, wenn laut Zustand ein Video da ist.
+- **Bedienung:** siehe Abschnitt 5b (Knöpfe in der Leiste der Seite und im Player, Schütteln, Ersatzknopf). Bild-in-Bild/AirPlay sind im Menü nur aktiv, wenn laut Zustand ein Video da ist.
 - **Einstellungen** (eigene Ansicht, in `UserDefaults`): Werbeblocker an/aus · Hintergrundwiedergabe an/aus · „Beim Verlassen der App automatisch Bild-in-Bild“ (Versuch, Standard aus) · Zähler „blockierte Werbung“ · Browserdaten löschen (abmelden) · Version. Änderungen wirken sofort über `setConfig` bzw. Neuladen.
-- **Gestaltung:** dunkel, zurückhaltend, Systemschrift und SF-Symbole; Akzentfarbe Türkis `#2DD4BF` auf Fast-Schwarz `#0B0F14`. **App-Symbol:** eigenes Motiv (türkises Wiedergabe-Dreieck in einem offenen Ring auf dunklem Grund) – ausdrücklich **kein** rotes YouTube-Logo, kein „YouTube“ im Namen.
+- **Gestaltung:** siehe Abschnitt 5b (Systemoptik, folgt Hell/Dunkel). Türkis `#2DD4BF` auf Fast-Schwarz `#0B0F14` gilt nur noch für App-Symbol und Infoseite. **App-Symbol:** eigenes Motiv (türkises Wiedergabe-Dreieck in einem offenen Ring auf dunklem Grund) – ausdrücklich **kein** rotes YouTube-Logo, kein „YouTube“ im Namen.
 - **Bau:** Workflow `.github/workflows/video-app-ios.yml` (macOS-Runner): Kern bauen und testen → XcodeGen → `xcodebuild archive` ohne Signierung → `Flimmerfrei.ipa` als Artefakt; bei Tags `video-app-v*` zusätzlich Release „Flimmerfrei x.y.z“. Auslöser: von Hand, Tags, und Pushes auf Zweige `video-app*` (zum Prüfen vor der Veröffentlichung).
 - **Installation:** wie bei der Gym-App mit AltStore oder Sideloadly (`ios/INSTALLATION.md`).
 
@@ -134,6 +152,69 @@ Die Anmeldung mit dem Google-Konto ist Pflichtfunktion der Stufe 1. Sie läuft *
 - **Zustand:** Kehrt die Ansicht von einer Anmelde-Seite zu YouTube zurück, wird die Startseite einmal frisch geladen, damit das Konto sofort sichtbar ist.
 - **Grenzen:** Passkeys und Sicherheitsschlüssel funktionieren in eingebetteten Ansichten nicht zuverlässig – dann „Andere Option wählen“ (Kennwort, Bestätigung am Handy, Code). Google kann die Anmeldung in eingebetteten Ansichten jederzeit strenger behandeln; die Safari-Kennung ist der übliche Weg, den auch andere iOS-Browser gehen.
 
+## 5b. Erscheinungsbild wie die YouTube-App (verbindlich)
+
+Vorgabe des Nutzers (15.11.2026): Die App soll optisch **wie die normale YouTube-App aufgebaut** sein; Vorbild ist die vorliegende IPA (YouTube 13 mit Zusatzfunktionen, die sich in die Oberfläche von YouTube einfügen, statt daneben zu stehen).
+
+**Grundsatz:** Alles Sichtbare kommt von YouTube selbst (mobile Seite): obere Leiste mit Logo, Suche und Konto, Videoliste, Player mit Titel/Aktionen/Kommentaren, untere Leiste mit den Bereichen. Die App fügt **keine eigene sichtbare Browser-Oberfläche** hinzu; ihre Zusatzfunktionen sitzen dort, wo man sie in der YouTube-App erwartet.
+
+| YouTube-App (Vorbild) | Flimmerfrei |
+|---|---|
+| Obere Leiste: Logo links, rechts Übertragen, Suche, Konto | Leiste der Seite; rechts zusätzlich zwei Symbole im selben Stil: **Übertragen** und **Menü der App** |
+| Untere Leiste mit den Bereichen | Leiste der Seite (heute: Startseite, Shorts, Abos, Mein YouTube – „Trends“ und „Posteingang“ aus der alten App hat YouTube selbst abgeschafft) |
+| Player-Leiste oben rechts mit Symbolen | zusätzlich im selben Stil: Übertragen, Bild-in-Bild, AirPlay |
+| Farben folgen Hell/Dunkel des iPhones | ebenso; Statusleiste und Ränder nehmen die Farbe der Seite an |
+| Zum Aktualisieren nach unten ziehen | ebenso (nicht im Player und nicht in Shorts) |
+| Keine Browser-Eigenheiten | kein Zoomen, keine Link-Vorschau beim langen Druck, keine „App öffnen“-Knöpfe und -Banner |
+
+**Kern (`look.js`):**
+- „App öffnen“ ausblenden: `.mobile-topbar-header-sign-in-button:has(a[href*="open_app"])`, Verweise mit `href^="intent://"`, `href^="vnd.youtube"`, `href*="redirect_app_store_ios"`, `href*="itc_campaign=mweb"`, dazu `ytm-mealbar-promo-renderer` und vergleichbare Hinweis-Banner. Jede Regel einzeln, damit ein unbekannter Selektor die anderen nicht entwertet.
+- App-Gefühl: `-webkit-tap-highlight-color: transparent`, `-webkit-touch-callout: none` für Verweise, Bilder, Knöpfe.
+- **Knöpfe in der oberen Leiste** (nur `host: 'ios'`, Einstellung `menuButton`): in `ytm-mobile-topbar-renderer .mobile-topbar-header-content` vor dem Such-Knopf zwei `button.icon-button` mit eigenen 24-px-Symbolen (`currentColor`, damit Hell/Dunkel stimmt): Übertragen (`aria-label="Auf Fernseher übertragen"`, Meldung `{ type: 'cast' }`) und Menü (`aria-label="Flimmerfrei-Menü"`, Meldung `{ type: 'menu' }`). Die Seite baut die Leiste öfter neu – die Knöpfe werden dann wieder eingesetzt (MutationObserver, gedrosselt).
+- **Knöpfe im Player** (Einstellung `playerButtons`): in `player-top-controls .player-controls-top` im Stil der vorhandenen (weißes 24-px-Symbol, Berührfläche ≥ 40 px): Übertragen (nur `host: 'ios'`, Meldung `{ type: 'cast' }`), Bild-in-Bild → `pip()`, AirPlay → `airplay()` (nur wenn der Browser `webkitShowPlaybackTargetPicker` kennt). Antippen darf die Player-Bedienung nicht ein-/ausblenden (`stopPropagation`).
+- Symbole sind selbst gezeichnet (einfache Linien: Bildschirm mit Wellen, zwei Rechtecke, Bildschirm mit Dreieck, drei Regler) – keine fremden Markenzeichen.
+- Stand 15.11.2026, an der echten Seite ermittelt: `ytm-mobile-topbar-renderer#header-bar > header.mobile-topbar-header > div.mobile-topbar-header-content` (enthält `button.icon-button.topbar-button-search-button`, bei abgemeldetem Nutzer außerdem `div.mobile-topbar-header-sign-in-button` mit dem „App öffnen“-Verweis `intent://…open_app…`); `ytm-watch-player-controls #player-control-overlay … player-top-controls > div.player-controls-top`; `ytm-pivot-bar-renderer` (untere Leiste, `position: fixed`); das `<video>` trägt `disablepictureinpicture`; `<meta name="theme-color">` liefert die Leistenfarbe.
+- Findet der Kern die Ankerstellen nicht (YouTube hat umgebaut), passiert nichts Schlimmes: `menuButton` bleibt `false`, die App zeigt dann ihren Ersatzknopf.
+
+**App:**
+- Folgt Hell/Dunkel des Systems (Einstellung „Darstellung“: Automatisch · Hell · Dunkel). Hintergrund der Hauptansicht und Statusleisten-Stil richten sich nach der Farbe der Seite (`themeColor` bzw. `underPageBackgroundColor` der Web-Ansicht), damit die Leisten optisch bis zum Rand reichen.
+- Web-Ansicht an allen vier Seiten am sicheren Bereich; mobile Darstellung auch auf dem iPad.
+- Menü der App als Auswahlblatt von unten (wie die Blätter der YouTube-App): Auf Fernseher übertragen · Bild-in-Bild · AirPlay · Neu laden · Link teilen · In Safari öffnen · Mit Google anmelden · Zurück · Startseite · Einstellungen. Es öffnet sich über den Menü-Knopf in der oberen Leiste, über **Schütteln** des iPhones und über den Ersatzknopf.
+- **Ersatzknopf** (klein, grau, halbtransparent, verschiebbar): nur sichtbar, wenn der Menü-Knopf der Seite fehlt (`menuButton == false`, z. B. Anmelde-Seite, Fehlerseite, Umbau bei YouTube) oder wenn „Schwebenden Knopf immer anzeigen“ eingeschaltet ist.
+- Kein Zoomen mit zwei Fingern, keine Link-Vorschau, Ziehen zum Aktualisieren.
+- Einstellungen in Systemoptik (hell/dunkel), ohne eigene Farbwelt.
+
+**Bewusst anders als das Vorbild:** Name und App-Symbol bleiben eigene (kein YouTube-Logo, kein „YouTube“ im Namen) – die App wird öffentlich abgelegt und darf sich nicht als YouTube ausgeben. In der App selbst ist das Logo der Seite ganz normal zu sehen, weil es YouTubes eigene Seite ist.
+
+## 5c. Übertragen auf Chromecast und Fernseher (verbindlich)
+
+Die mobile Seite hat keine Übertragen-Funktion. Die App baut sie nativ nach, so wie es die YouTube-App tut: Der Fernseher spielt das Video selbst (seine eigene YouTube-App), das iPhone ist nur Fernbedienung. Dadurch läuft das Video weiter, auch wenn das iPhone gesperrt wird.
+
+**Zwei Wege zum Gerät**
+1. **Im WLAN gefunden** (Chromecast, Google TV, Android TV, Fernseher mit Chromecast): Suche per Bonjour nach `_googlecast._tcp` (`NWBrowser`, Gerätename aus dem TXT-Eintrag `fn`). Verbindung zum Gerät über das Cast-Protokoll (TLS auf Port 8009, selbstsigniertes Zertifikat wird akzeptiert; Nachrichten = 4 Byte Länge (Big-Endian) + Protobuf `CastMessage`):
+   - `urn:x-cast:com.google.cast.tp.connection` → `{"type":"CONNECT"}` an `receiver-0`
+   - `urn:x-cast:com.google.cast.tp.heartbeat` → alle 5 s `{"type":"PING"}`, auf `PING` mit `{"type":"PONG"}` antworten
+   - `urn:x-cast:com.google.cast.receiver` → `{"type":"LAUNCH","appId":"233637DE","requestId":n}` (YouTube-Empfänger); aus `RECEIVER_STATUS` die `transportId` der Anwendung lesen
+   - `CONNECT` an die `transportId`, dann auf `urn:x-cast:com.google.youtube.mdx` → `{"type":"getMdxSessionStatus"}`; die Antwort `mdxSessionStatus` enthält `data.screenId`
+   - `CastMessage`-Felder: 1 `protocol_version` (varint 0), 2 `source_id` (`sender-0`), 3 `destination_id`, 4 `namespace`, 5 `payload_type` (varint 0 = Text), 6 `payload_utf8`
+2. **Mit TV-Code** (Smart-TV, Konsole, Fire TV, Google TV – in der YouTube-App des Fernsehers unter „Einstellungen → Mit TV-Code verknüpfen“): `POST https://www.youtube.com/api/lounge/pairing/get_screen` mit `pairing_code=<Ziffern>` → `screen.screenId`, `screen.loungeToken`, `screen.name`. Zuletzt verbundene Geräte dieser Art merkt sich die App (`screenId`, Name) für „Erneut verbinden“.
+
+**Steuerung (für beide Wege gleich, HTTPS)**
+- Lounge-Token: `POST https://www.youtube.com/api/lounge/pairing/get_lounge_token_batch`, Formular `screen_ids=<screenId>` → `screens[0].loungeToken`.
+- Sitzung: `POST https://www.youtube.com/api/lounge/bc/bind?RID=<n>&VER=8&CVER=1`, Kopfzeile `X-YouTube-LoungeId-Token: <Token>`, Formular `device=REMOTE_CONTROL&id=<zufällige Kennung>&name=Flimmerfrei&mdx-version=3&pairing_type=cast&app=android-phone-13.14.55`. Aus der Antwort per Muster lesen: `SID` (`"c","<SID>",`) und `gsessionid` (`"S","<gsessionid>"]`).
+- Befehle: `POST …/bc/bind?SID=…&gsessionid=…&RID=<n+1>&VER=8&CVER=1` mit Formular `count=1&req0__sc=<Befehl>&req0_<Parameter>=…`:
+  - Video starten: `setPlaylist` mit `_videoId`, `_currentTime` (Sekunden), `_currentIndex=-1`, `_audioOnly=false`, `_listId` (leer oder Wiedergabeliste)
+  - `pause`, `play`, `seekTo` (`_newTime`), `stopVideo`
+  - Antwort 400/404/410 → Sitzung neu aufbauen und Befehl einmal wiederholen.
+- Statusrückmeldungen vom Fernseher werden in Stufe 1 nicht gelesen (keine Zeitleiste in der App); die Fernbedienung bietet Pause/Weiter, 10 s vor/zurück entfällt deshalb, Lautstärke regelt die Fernbedienung des Fernsehers.
+
+**Verhalten in der App**
+- Übertragen-Knopf (obere Leiste, Player, Menü) öffnet ein Blatt: gefundene Geräte · „Mit TV-Code verbinden“ · zuletzt verbundene Geräte. Beim ersten Öffnen fragt iOS nach dem Zugriff aufs lokale Netzwerk (`NSLocalNetworkUsageDescription`, `NSBonjourServices`). Die Suche läuft nur, solange das Blatt offen ist.
+- Nach dem Verbinden: Läuft gerade ein Video, wird es mit der aktuellen Stelle an den Fernseher geschickt und auf dem iPhone angehalten. Solange die Verbindung besteht, geht **jedes neu gestartete Video** automatisch an den Fernseher (wie in der YouTube-App).
+- Verbunden zeigt das Blatt: Gerätename · Pause/Weiter · „Aktuelles Video senden“ · Trennen. Trennen schickt `stopVideo` und beendet die Sitzung.
+- Fehler werden verständlich gemeldet („Gerät nicht erreichbar“, „Code ungültig“, „YouTube auf dem Gerät konnte nicht gestartet werden“). Für die Fehlersuche gibt es in den Einstellungen ein **Übertragungs-Protokoll** (letzte ~200 Zeilen, kopierbar) – die Funktion kann erst am echten Gerät erprobt werden.
+- Auf dem Fernseher spielt dessen YouTube-App; Werbung dort kann die App nicht entfernen.
+
 ## 6. Web-Teil
 
 `web/index.html` (eine Datei, ohne Abhängigkeiten, dunkel, deutsch, am Handy gut lesbar): was die App kann, Verweis auf die `.ipa` unter Releases, Anleitung fürs Userscript (Safari + „Userscripts“, Rechner + Violentmonkey), Knopf „Userscript installieren“ (`flimmerfrei.user.js` im selben Ordner), ehrliche Liste der Grenzen. Veröffentlicht unter `https://volvic93.github.io/apps/video-app/`.
@@ -143,14 +224,15 @@ Die Anmeldung mit dem Google-Konto ist Pflichtfunktion der Stufe 1. Sie läuft *
 - Die App lässt sich von Windows aus nicht starten; geprüft werden kann nur: Kern-Tests, Bau der `.ipa` auf dem GitHub-Runner und Durchsicht des Codes. **Der erste echte Test passiert auf dem iPhone.**
 - YouTube ändert seine Seite laufend. Werbeblocker und Hintergrundwiedergabe können dadurch zeitweise ausfallen, bis der Kern angepasst ist.
 - Ohne Apple-Entwicklerkonto muss die App alle 7 Tage neu signiert werden (AltStore macht das automatisch).
-- Chromecast fehlt in Stufe 1 (siehe Abschnitt 1).
+- Übertragen auf Chromecast/Fernseher nutzt eine inoffizielle Schnittstelle und ist ohne Gerät nicht prüfbar; auf dem Fernseher spielt dessen eigene YouTube-App – dort kann Werbung laufen, die der Werbeblocker der App nicht erreicht.
 
 ## 8. Umsetzungsstand
 
 | Teil | Stand |
 |---|---|
 | Konzept | fertig (15.11.2026) |
-| Kern + Web | in Arbeit |
-| iPhone-App + Bau-Workflow | in Arbeit |
+| Kern + Web | erste Fassung fertig (45 Tests grün); Umbau nach 5b/5c läuft |
+| iPhone-App + Bau-Workflow | erste Fassung fertig, Test-Bau der .ipa auf dem Runner erfolgreich; Umbau nach 5b/5c läuft |
+| Übertragen (Chromecast/TV-Code) | in Arbeit |
 | Prüfschleife | offen |
 | Veröffentlichung | offen |

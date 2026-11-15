@@ -216,3 +216,16 @@ export function installPipGuards(win, doc, isOn, activity, pipState) {
     }
   });
 }
+
+// Aktives Video anhalten; zählt als Nutzeraktion, damit die Wiederaufnahme es nicht neu startet.
+export function pauseActive(win, doc, activity) {
+  const v = findActiveVideo(doc, { width: win.innerWidth, height: win.innerHeight });
+  if (!v) return false;
+  if (activity) activity.noteUser();
+  try {
+    v.pause();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}

@@ -56,7 +56,7 @@ function makeContext(config) {
     addEventListener: (t, f) => listeners.push(['doc', t, f]),
     querySelector: () => null,
     querySelectorAll: () => [],
-    createElement: () => ({ setAttribute() {}, textContent: '' }),
+    createElement: () => { const a = {}; return { setAttribute(k, v) { a[k] = v; }, attrs: a, textContent: '' }; },
   };
   return { ctx, win, listeners, appended };
 }
@@ -69,10 +69,10 @@ test('gebautes Skript: Objekt vorhanden, Hooks wirken, doppeltes Laden schadet n
   const api = win.__flimmerfrei;
   assert.ok(api);
   assert.equal(api.version, '0.1.0');
-  for (const k of ['pip', 'airplay', 'state', 'setConfig']) assert.equal(typeof api[k], 'function', k);
+  for (const k of ['pip', 'airplay', 'state', 'setConfig', 'pause']) assert.equal(typeof api[k], 'function', k);
 
   const s = api.state();
-  assert.deepEqual(Object.keys(s).sort(), ['adsBlocked', 'hasVideo', 'pip', 'playing', 'title', 'url'].sort());
+  assert.deepEqual(Object.keys(s).sort(), ['adsBlocked', 'currentTime', 'hasVideo', 'listId', 'menuButton', 'pip', 'playing', 'title', 'url', 'videoId']);
   assert.equal(s.hasVideo, false);
   assert.equal(s.title, 'Start');
   assert.equal(api.pip(), false);
@@ -89,15 +89,21 @@ test('gebautes Skript: Objekt vorhanden, Hooks wirken, doppeltes Laden schadet n
   assert.equal(vm.runInContext('JSON.stringify(window.ytInitialPlayerResponse)', ctx), '{"ok":1}');
 
   // Werbe-Stil eingehängt
-  assert.equal(appended.length, 1);
-  assert.ok(appended[0].textContent.includes('ytd-ad-slot-renderer'));
+  const adStyle = appended.find((n) => n.attrs['data-flimmerfrei'] === 'ads');
+  const lookStyle = appended.find((n) => n.attrs['data-flimmerfrei'] === 'look');
+  assert.ok(adStyle && lookStyle);
+  assert.equal(appended.length, 2);
+  assert.ok(adStyle.textContent.includes('ytd-ad-slot-renderer'));
 
   // Einstellungen im Betrieb
   api.setConfig({ adblock: false });
-  assert.equal(appended[0].textContent, '');
+  assert.equal(adStyle.textContent, '');
   assert.equal(vm.runInContext(`JSON.stringify(JSON.parse('{"adPlacements":[1]}'))`, ctx), '{"adPlacements":[1]}');
   api.setConfig({ adblock: true });
-  assert.ok(appended[0].textContent.length > 0);
+  assert.ok(adStyle.textContent.length > 0);
+  api.setConfig({ look: false });
+  assert.equal(lookStyle.textContent, '');
+  assert.equal(api.pause(), false);
 
   // doppeltes Ausführen
   const parseBefore = vm.runInContext('JSON.parse', ctx);

@@ -2,8 +2,9 @@
 import { VERSION, isYouTubeHost, createConfigStore, createUserActivity, installActivityTracking, safeCall } from './config.js';
 import { createAdState, installAdSkipper, installAdStyle, installInitialDataSetters, installJsonHooks } from './adblock.js';
 import { installBackground } from './background.js';
-import { createPipState, installPipGuards, installVideoObserver, scanVideos, showAirplay, togglePip } from './pip.js';
+import { createPipState, installPipGuards, installVideoObserver, pauseActive, scanVideos, showAirplay, togglePip } from './pip.js';
 import { collectState, installBridge } from './bridge.js';
+import { installLook } from './look.js';
 
 export function runFlimmerfrei(win, doc) {
   if (!win || !doc) return null;
@@ -20,6 +21,7 @@ export function runFlimmerfrei(win, doc) {
   const pipOn = () => store.get().pipFix;
 
   let notify = null;
+  let look = null;
   const api = {
     version: VERSION,
     pip() {
@@ -29,7 +31,10 @@ export function runFlimmerfrei(win, doc) {
       return safeCall(() => showAirplay(win, doc), false);
     },
     state() {
-      return collectState(win, doc, adState);
+      return collectState(win, doc, adState, () => !!look && look.menuButtonPresent());
+    },
+    pause() {
+      return safeCall(() => pauseActive(win, doc, activity), false);
     },
     setConfig(part) {
       const cfg = safeCall(() => store.set(part), Object.assign({}, store.get()));
@@ -50,9 +55,10 @@ export function runFlimmerfrei(win, doc) {
   const style = safeCall(() => installAdStyle(doc, adOn), null);
   safeCall(() => installAdSkipper(win, doc, adOn, adState));
   safeCall(() => installBackground(win, doc, bgOn, activity));
+  look = safeCall(() => installLook(win, doc, store, { pip: () => api.pip(), airplay: () => api.airplay(), onChange: () => notify && notify() }), null);
   safeCall(() => installPipGuards(win, doc, pipOn, activity, pipState));
   safeCall(() => installVideoObserver(win, doc, pipOn));
-  notify = safeCall(() => installBridge(win, doc, adState), null);
+  notify = safeCall(() => installBridge(win, doc, adState, () => !!look && look.menuButtonPresent()), null);
 
   // Einstellungen im Betrieb: Einhängungen bleiben, prüfen aber die aktuelle Einstellung.
   store.subscribe(function () {

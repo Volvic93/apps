@@ -5,7 +5,7 @@ Sammlung meiner kleinen Apps. Jede App liegt in einem eigenen Ordner.
 | App | Beschreibung | Web-App | Installieren |
 |---|---|---|---|
 | [**gym-app**](gym-app/) – *Eisenzeit* | Trainings-App für das eigene Fitnessstudio: Pläne, Training mit Pausentimer, Fortschritt, Geräte mit Foto. Oberfläche auf Deutsch, Einheiten in kg, alle Daten nur lokal auf dem Gerät. | <https://volvic93.github.io/apps/gym-app/> | [Web-App auf dem iPhone](gym-app/webapp/INSTALLATION.md) · [`.ipa` mit AltStore oder Sideloadly](gym-app/ipa-app/INSTALLATION.md) |
-| [**video-app**](video-app/) – *Flimmerfrei* | Eigener Video-Browser fürs iPhone: öffnet youtube.com ganz normal, aber ohne Werbung, mit Wiedergabe im Hintergrund (auch bei gesperrtem iPhone), Bild-in-Bild und AirPlay. Enthält keinen Code von Google. | <https://volvic93.github.io/apps/video-app/> (Infoseite und Userscript) | [`.ipa` mit AltStore oder Sideloadly](video-app/ios/INSTALLATION.md) |
+| [**video-app**](video-app/) – *Flimmerfrei* | Eigener Video-Browser fürs iPhone: öffnet youtube.com ganz normal, aber ohne Werbung, mit Wiedergabe im Hintergrund (auch bei gesperrtem iPhone), Bild-in-Bild, AirPlay und Übertragen auf Chromecast/Fernseher. Aufgebaut wie die YouTube-App, enthält aber keinen Code von Google. | <https://volvic93.github.io/apps/video-app/> (Infoseite und Userscript) | [`.ipa` mit AltStore oder Sideloadly](video-app/ios/INSTALLATION.md) |
 
 ## Schnellstart für das iPhone
 

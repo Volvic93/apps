@@ -6,14 +6,18 @@ export const DEFAULT_CONFIG = Object.freeze({
   adblock: true,
   background: true,
   pipFix: true,
+  look: true,
+  playerButtons: true,
+  menuButton: true,
   host: 'userscript',
 });
 
-const BOOL_KEYS = ['adblock', 'background', 'pipFix'];
+const BOOL_KEYS = ['adblock', 'background', 'pipFix', 'look', 'playerButtons', 'menuButton'];
 
 // Rohwerte (von der Hülle gesetzt) mit dem Standard zusammenführen; unbekannte/falsche Typen fallen auf die Basis zurück.
 export function normalizeConfig(raw, base = DEFAULT_CONFIG) {
-  const out = { adblock: base.adblock, background: base.background, pipFix: base.pipFix, host: base.host };
+  const out = { host: base.host };
+  for (const k of BOOL_KEYS) out[k] = base[k];
   if (raw && typeof raw === 'object') {
     for (const k of BOOL_KEYS) {
       if (typeof raw[k] === 'boolean') out[k] = raw[k];

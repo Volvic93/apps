@@ -1,15 +1,17 @@
 import UIKit
 import WebKit
 
-/// Einstellungen (Tabelle, insetGrouped). Änderungen werden sofort in UserDefaults gesichert
+/// Einstellungen (Tabelle, insetGrouped, Systemoptik). Änderungen werden sofort in UserDefaults gesichert
 /// und über `onSettingsChanged` an die Web-Ansicht weitergegeben.
 final class SettingsViewController: UITableViewController {
     var onSettingsChanged: (() -> Void)?
     var onDataCleared: (() -> Void)?
 
     private enum Section: Int, CaseIterable {
+        case appearance
         case playback
         case statistics
+        case cast
         case data
         case about
     }
@@ -18,7 +20,11 @@ final class SettingsViewController: UITableViewController {
         case adblock
         case background
         case autoPip
+        case playerButtons
+        case alwaysShowButton
     }
+
+    private let appearanceTitles = ["Automatisch", "Hell", "Dunkel"]
 
     init() {
         super.init(style: .insetGrouped)
@@ -57,8 +63,10 @@ final class SettingsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let kind = Section(rawValue: section) else { return 0 }
         switch kind {
+        case .appearance: return appearanceTitles.count
         case .playback: return SwitchRow.allCases.count
-        case .statistics: return 1
+        case .statistics: return 2
+        case .cast: return 1
         case .data: return 1
         case .about: return 1
         }
@@ -67,8 +75,10 @@ final class SettingsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         guard let kind = Section(rawValue: section) else { return nil }
         switch kind {
+        case .appearance: return "Darstellung"
         case .playback: return "Werbung und Wiedergabe"
         case .statistics: return "Statistik"
+        case .cast: return "Übertragung"
         case .data: return "Daten"
         case .about: return "Info"
         }
@@ -78,7 +88,12 @@ final class SettingsViewController: UITableViewController {
         guard let kind = Section(rawValue: section) else { return nil }
         switch kind {
         case .playback:
-            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu."
+            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu. Der Ersatzknopf erscheint sonst nur, wenn die Seite ihren Menü-Knopf nicht zeigt."
+        case .statistics:
+            if let error = ContentBlocker.lastError {
+                return "Sperrliste nicht geladen: " + error
+            }
+            return nil
         case .data:
             return "Löscht Anmeldung, Cookies und Zwischenspeicher der Web-Ansicht. Du bist danach bei YouTube abgemeldet."
         default:
@@ -95,11 +110,19 @@ final class SettingsViewController: UITableViewController {
         guard let kind = Section(rawValue: indexPath.section) else { return cell }
 
         switch kind {
+        case .appearance:
+            var content = cell.defaultContentConfiguration()
+            content.text = appearanceTitles[indexPath.row]
+            cell.contentConfiguration = content
+            cell.selectionStyle = .default
+            if indexPath.row == AppSettings.shared.appearance {
+                cell.accessoryType = .checkmark
+            }
+
         case .playback:
             guard let row = SwitchRow(rawValue: indexPath.row) else { return cell }
             var content = cell.defaultContentConfiguration()
             let toggle = UISwitch()
-            toggle.onTintColor = Theme.accent
             toggle.tag = row.rawValue
             toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
             switch row {
@@ -112,15 +135,37 @@ final class SettingsViewController: UITableViewController {
             case .autoPip:
                 content.text = "Beim Verlassen automatisch Bild-in-Bild"
                 toggle.isOn = AppSettings.shared.autoPip
+            case .playerButtons:
+                content.text = "Knöpfe im Player"
+                toggle.isOn = AppSettings.shared.playerButtons
+            case .alwaysShowButton:
+                content.text = "Schwebenden Knopf immer anzeigen"
+                toggle.isOn = AppSettings.shared.alwaysShowButton
             }
             cell.contentConfiguration = content
             cell.accessoryView = toggle
 
         case .statistics:
             var content = UIListContentConfiguration.valueCell()
-            content.text = "Blockierte Werbung"
-            content.secondaryText = String(AppSettings.shared.adsBlockedTotal)
+            if indexPath.row == 0 {
+                content.text = "Blockierte Werbung"
+                content.secondaryText = String(AppSettings.shared.adsBlockedTotal)
+            } else {
+                content.text = "Sperrliste"
+                if ContentBlocker.isLoaded {
+                    content.secondaryText = AppSettings.shared.adblock ? "aktiv" : "geladen, aus"
+                } else {
+                    content.secondaryText = "nicht geladen"
+                }
+            }
             cell.contentConfiguration = content
+
+        case .cast:
+            var content = cell.defaultContentConfiguration()
+            content.text = "Übertragungs-Protokoll"
+            cell.contentConfiguration = content
+            cell.accessoryType = .disclosureIndicator
+            cell.selectionStyle = .default
 
         case .data:
             var content = cell.defaultContentConfiguration()
@@ -140,8 +185,18 @@ final class SettingsViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        if let kind = Section(rawValue: indexPath.section), kind == .data {
+        guard let kind = Section(rawValue: indexPath.section) else { return }
+        switch kind {
+        case .appearance:
+            AppSettings.shared.appearance = indexPath.row
+            tableView.reloadSections(IndexSet(integer: indexPath.section), with: .none)
+            onSettingsChanged?()
+        case .cast:
+            navigationController?.pushViewController(CastLogViewController(), animated: true)
+        case .data:
             confirmClearData()
+        default:
+            break
         }
     }
 
@@ -153,6 +208,8 @@ final class SettingsViewController: UITableViewController {
         case .adblock: AppSettings.shared.adblock = sender.isOn
         case .background: AppSettings.shared.background = sender.isOn
         case .autoPip: AppSettings.shared.autoPip = sender.isOn
+        case .playerButtons: AppSettings.shared.playerButtons = sender.isOn
+        case .alwaysShowButton: AppSettings.shared.alwaysShowButton = sender.isOn
         }
         onSettingsChanged?()
     }
@@ -160,11 +217,11 @@ final class SettingsViewController: UITableViewController {
     private func confirmClearData() {
         let alert = UIAlertController(
             title: "Browserdaten löschen?",
-            message: "Du wirst bei YouTube abgemeldet. Das lässt sich nicht rückgängig machen.",
+            message: "Du wirst bei YouTube und Google abgemeldet. Das lässt sich nicht rückgängig machen.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Löschen", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "Löschen und abmelden", style: .destructive) { [weak self] _ in
             self?.clearData()
         })
         present(alert, animated: true, completion: nil)
@@ -176,7 +233,7 @@ final class SettingsViewController: UITableViewController {
         store.removeData(ofTypes: types, modifiedSince: Date(timeIntervalSince1970: 0)) { [weak self] in
             DispatchQueue.main.async {
                 self?.onDataCleared?()
-                let done = UIAlertController(title: "Erledigt", message: "Die Browserdaten wurden gelöscht.", preferredStyle: .alert)
+                let done = UIAlertController(title: "Erledigt", message: "Die Browserdaten wurden gelöscht, du bist abgemeldet.", preferredStyle: .alert)
                 done.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self?.present(done, animated: true, completion: nil)
             }

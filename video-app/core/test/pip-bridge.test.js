@@ -98,7 +98,7 @@ test('Zustand: Titel ohne Suffix, Zähler, pip', () => {
   const adState = createAdState();
   adState.adsBlocked = 4;
   const s = collectState({ innerWidth: 400, innerHeight: 800, location: { href: 'https://m.youtube.com/watch?v=1' } }, docOf([v]), adState);
-  assert.deepEqual(s, { hasVideo: true, playing: true, pip: true, title: 'Titel', url: 'https://m.youtube.com/watch?v=1', adsBlocked: 4 });
+  assert.deepEqual(s, { hasVideo: true, playing: true, pip: true, title: 'Titel', url: 'https://m.youtube.com/watch?v=1', adsBlocked: 4, menuButton: false, videoId: '1', listId: '', currentTime: 0 });
   assert.equal(isPipActive({}, null), false);
   const none = collectState({ location: { href: 'u' } }, docOf([]), null);
   assert.equal(none.hasVideo, false);

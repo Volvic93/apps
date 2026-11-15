@@ -1,9 +1,9 @@
 import UIKit
 
-/// Kleiner, halbtransparenter, verschiebbarer Knopf; ein Tipp öffnet das Menü (`menu`).
+/// Kleiner, grauer, halbtransparenter, verschiebbarer Ersatzknopf (Tipp = `touchUpInside`).
 /// Rastet am linken oder rechten Rand ein, merkt sich die Lage und bleibt im sicheren Bereich.
 final class FloatingMenuButton: UIButton {
-    static let diameter: CGFloat = 44
+    static let diameter: CGFloat = 40
     private static let margin: CGFloat = 8
 
     private var isDragging = false
@@ -19,17 +19,12 @@ final class FloatingMenuButton: UIButton {
     }
 
     private func setUp() {
-        backgroundColor = UIColor(red: 11.0 / 255.0, green: 15.0 / 255.0, blue: 20.0 / 255.0, alpha: 0.7)
-        tintColor = Theme.accent
+        backgroundColor = UIColor.systemGray.withAlphaComponent(0.55)
+        tintColor = UIColor.white
         layer.cornerRadius = FloatingMenuButton.diameter / 2
-        layer.borderWidth = 1
-        layer.borderColor = Theme.accent.withAlphaComponent(0.5).cgColor
-        alpha = 0.8
 
-        let symbol = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        let symbol = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         setImage(UIImage(systemName: "ellipsis", withConfiguration: symbol), for: .normal)
-
-        showsMenuAsPrimaryAction = true
         accessibilityLabel = "Menü"
 
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))

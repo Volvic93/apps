@@ -91,9 +91,7 @@ final class SettingsViewController: UITableViewController {
         guard let kind = Section(rawValue: section) else { return nil }
         switch kind {
         case .playback:
-            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu. Der Ersatzknopf erscheint sonst nur, wenn die Seite ihren Menü-Knopf nicht zeigt.
-
-AirPlay-Modus (Versuch): Nötig für AirPlay. YouTube überträgt das Video dann auf andere Art; die Auflösung kann geringer sein. Aus lassen, wenn AirPlay nicht gebraucht wird."
+            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu. Der Ersatzknopf erscheint sonst nur, wenn die Seite ihren Menü-Knopf nicht zeigt.\n\nAirPlay-Modus (Versuch): Nötig für AirPlay. YouTube überträgt das Video dann auf andere Art; die Auflösung kann geringer sein. Aus lassen, wenn AirPlay nicht gebraucht wird."
         case .statistics:
             if let error = ContentBlocker.lastError {
                 return "Sperrliste nicht geladen: " + error
@@ -264,12 +262,9 @@ AirPlay-Modus (Versuch): Nötig für AirPlay. YouTube überträgt das Video dann
         request { [weak self] pageText in
             guard let self = self else { return }
             let blocker = "Sperrliste: " + (ContentBlocker.isLoaded ? "aktiv" : "nicht geladen")
-            var text = pageText + "
-" + blocker + "
-App-Version: " + self.versionText()
+            var text = pageText + "\n" + blocker + "\nApp-Version: " + self.versionText()
             if let error = ContentBlocker.lastError {
-                text += "
-Sperrliste-Fehler: " + error
+                text += "\nSperrliste-Fehler: " + error
             }
             let alert = UIAlertController(title: "Diagnose", message: text, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Kopieren", style: .default) { _ in

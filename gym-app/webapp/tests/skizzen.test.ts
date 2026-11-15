@@ -6,6 +6,7 @@ import { ARM_LEN, ik, LEG_LEN, SEG, solve, mixPose } from '../src/ui/sketch-engi
 const d = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 describe('Bewegungsskizzen', () => {
+
   it('jede mitgelieferte Übung hat eine Skizze', () => {
     const without = ALL_CATALOG_EXERCISES.filter((e) => !motionFor(e)).map((e) => `${e.id} (${e.name})`);
     expect(without).toEqual([]);
@@ -21,6 +22,36 @@ describe('Bewegungsskizzen', () => {
     expect(id('x', 'Abduktoren (Maschine)')).toBe('abduktion');
     expect(id('x', 'Adduktoren (Maschine)')).toBe('adduktion');
     expect(id('curl-kurzhantel', 'Bizepscurl (Kurzhantel)')).toBe('bizepscurl');
+  });
+
+  it('kritische Übungen bekommen das richtige Muster (Name vor Kennung)', () => {
+    const expected: Record<string, string> = {
+      'ex-paramount-leg-curl': 'beinbeuger-sitzend',
+      'ex-gym80-sitz-a-adduktoren': 'abduktion',
+      'ex-gym80-sitz-b-abduktoren': 'adduktion',
+      'ex-kniebeuge-multipresse': 'kniebeuge',
+      'ex-gym80-multipresse': 'bankdruecken',
+      'ex-curl-kabel': 'bizepscurl',
+      'ex-beinbeuger-liegend': 'beinbeuger-liegend',
+      'ex-gym80-beinbeuger-stehend': 'beinbeuger-stehend',
+      'ex-fliegende-kurzhantel': 'fliegende',
+      'ex-latzug-eng': 'latzug',
+      'ex-klimmzug-hilfe': 'klimmzug',
+      'ex-goblet-squat': 'kniebeuge',
+      'ex-bulgarian-split-squat': 'ausfallschritt',
+      'ex-sissy-squat': 'sissy-squat',
+      'ex-hyperextension': 'rueckenstrecker',
+      'ex-waden-sitzend': 'waden-sitzend',
+      'ex-panatta-donkey-calf': 'waden-vorgebeugt',
+      'ex-trizeps-ueberkopf': 'trizeps-ueberkopf',
+      'ex-aufrechtes-rudern': 'aufrechtes-rudern',
+      'ex-rudern-kurzhantel-einarmig': 'rudern-vorgebeugt',
+    };
+    for (const [id, pattern] of Object.entries(expected)) {
+      const ex = ALL_CATALOG_EXERCISES.find((e) => e.id === id);
+      expect(ex, id).toBeDefined();
+      expect(motionIdFor(ex!), `${id} (${ex!.name})`).toBe(pattern);
+    }
   });
 
   it('eine ausdrücklich gesetzte motionId hat Vorrang', () => {

@@ -272,8 +272,6 @@ export interface Settings {
   catalogVersion?: number;
   /** Das Studio, in dem trainiert wird (nur Text, erscheint auf „Heute“ und im KI-Kontext). */
   studio?: { name: string; city: string };
-  /** KI-Anbindung: nur das gewählte Modell; der API-Schlüssel liegt getrennt auf dem Gerät und nie in der Sicherung. */
-  ai?: { model: string };
 }
 
 export const GOAL_LABEL: Record<Goal, string> = {

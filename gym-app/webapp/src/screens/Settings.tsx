@@ -9,7 +9,6 @@ import { APP_VERSION, backupFileName, buildBackup, importBackup, markBackupDone,
 import { platform } from '../platform';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { useCatalog } from '../ui/ExercisePicker';
-import { AI_MODELS, DEFAULT_AI_MODEL, clearApiKey, getApiKey, maskKey, setApiKey, testConnection } from '../logic/claude';
 import { isPresent } from '../logic/catalog';
 import { useLive } from '../ui/hooks';
 import { IconDownload, IconUpload } from '../ui/Icons';
@@ -21,10 +20,6 @@ export function Settings() {
   const { toast, confirm } = useUi();
   const s = useLive(() => getSettings());
   const studioCat = useCatalog();
-  const [apiKey, setApiKeyState] = useState<string | undefined>(() => getApiKey());
-  const [keyDraft, setKeyDraft] = useState('');
-  const [aiBusy, setAiBusy] = useState(false);
-  const [aiNote, setAiNote] = useState<{ ok: boolean; text: string } | undefined>(undefined);
   const activeHintCount = (s?.dismissedHints ?? []).filter((k) => !k.startsWith('later:') || Number(k.split(':').pop()) > Date.now()).length;
   const studioCount = studioCat ? studioCat.equipment.filter(isPresent).length : undefined;
   const [withPhotos, setWithPhotos] = useState(true);
@@ -100,91 +95,14 @@ export function Settings() {
           {s?.studioSetupDone && studioCat && <> Aktuell: <b>{studioCount} von {studioCat.equipment.length} Geräten</b> vorhanden.</>}
         </p>
         <Field label="Name des Studios">
-          <input className="input" value={s?.studio?.name ?? ''} maxLength={60} onChange={(e) => void saveSettings({ studio: { name: e.target.value, city: s?.studio?.city ?? '' } })} />
+          <input className="input" key={`n-${s?.studio?.name ?? ''}`} defaultValue={s?.studio?.name ?? ''} maxLength={60} onBlur={(e) => void saveSettings({ studio: { name: e.target.value, city: s?.studio?.city ?? '' } })} />
         </Field>
         <Field label="Ort">
-          <input className="input" value={s?.studio?.city ?? ''} maxLength={60} onChange={(e) => void saveSettings({ studio: { name: s?.studio?.name ?? '', city: e.target.value } })} />
+          <input className="input" key={`c-${s?.studio?.city ?? ''}`} defaultValue={s?.studio?.city ?? ''} maxLength={60} onBlur={(e) => void saveSettings({ studio: { name: s?.studio?.name ?? '', city: e.target.value } })} />
         </Field>
         <button className="btn block" onClick={() => nav('/uebungen/studio')}>
           {s?.studioSetupDone ? 'Geräte des Studios anpassen' : 'Studio einrichten'}
         </button>
-      </section>
-
-      <div className="section-label">KI-Anbindung</div>
-      <section className="card">
-        <p className="muted small">
-          Mit „Mit KI planen“ kann Claude direkt in der App einen Plan erstellen. Dafür brauchst du einen API-Schlüssel aus der Anthropic-Konsole (console.anthropic.com) mit eigener Abrechnung nach Verbrauch – ein Claude-Abo allein genügt nicht. Der Schlüssel bleibt nur auf diesem Gerät, steht nicht in der Sicherung und wird nur an Anthropic gesendet.
-        </p>
-        <Field label="Modell">
-          <select className="input" value={s?.ai?.model ?? DEFAULT_AI_MODEL} onChange={(e) => void saveSettings({ ai: { model: e.target.value } })}>
-            {AI_MODELS.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label} – {m.hint}
-              </option>
-            ))}
-          </select>
-        </Field>
-        {apiKey ? (
-          <p className="muted small">
-            Schlüssel gespeichert (<b>{maskKey(apiKey)}</b>).
-          </p>
-        ) : (
-          <Field label="API-Schlüssel">
-            <input
-              className="input"
-              type="password"
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              value={keyDraft}
-              onChange={(e) => setKeyDraft(e.target.value)}
-              placeholder="sk-ant-…"
-            />
-          </Field>
-        )}
-        {aiNote && <div className={'notice' + (aiNote.ok ? '' : ' warn')}>{aiNote.text}</div>}
-        <div className="row gap wrap">
-          {!apiKey && (
-            <button
-              className="btn primary"
-              disabled={keyDraft.trim().length < 20}
-              onClick={() => {
-                if (!setApiKey(keyDraft)) return setAiNote({ ok: false, text: 'Der Schlüssel konnte auf diesem Gerät nicht gespeichert werden.' });
-                setApiKeyState(getApiKey());
-                setKeyDraft('');
-                setAiNote({ ok: true, text: 'Schlüssel gespeichert. Teste jetzt die Verbindung.' });
-              }}
-            >
-              Schlüssel speichern
-            </button>
-          )}
-          <button
-            className="btn"
-            disabled={!apiKey || aiBusy}
-            onClick={async () => {
-              if (!apiKey) return;
-              setAiBusy(true);
-              setAiNote(undefined);
-              const r = await testConnection(apiKey, s?.ai?.model ?? DEFAULT_AI_MODEL);
-              setAiNote(r.ok ? { ok: true, text: 'Verbindung klappt.' } : { ok: false, text: r.error });
-              setAiBusy(false);
-            }}
-          >
-            Verbindung testen
-          </button>
-          {apiKey && (
-            <button
-              className="btn ghost"
-              onClick={() => {
-                clearApiKey();
-                setApiKeyState(undefined);
-                setAiNote({ ok: true, text: 'Schlüssel entfernt.' });
-              }}
-            >
-              Schlüssel entfernen
-            </button>
-          )}
-        </div>
       </section>
 
       <div className="section-label">Hinweise</div>

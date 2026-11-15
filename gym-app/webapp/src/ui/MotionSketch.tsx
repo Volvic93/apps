@@ -127,9 +127,18 @@ export function SketchSvg({ pattern, t, label }: { pattern: Pattern; t: number; 
 export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; title?: string; compact?: boolean }) {
   const [t, setT] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const boxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const reduced = useRef(reducedMotion()).current;
   useEffect(() => {
-    if (reduced || paused) return;
+    if (reduced || paused || !visible) return;
     let raf = 0;
     const t0 = performance.now() - t * 1500;
     const tick = (now: number) => {
@@ -141,7 +150,7 @@ export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; ti
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced, paused]);
+  }, [reduced, paused, visible]);
 
   const body = reduced ? (
     <div className="sketch-pair">
@@ -155,7 +164,7 @@ export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; ti
       </figure>
     </div>
   ) : (
-    <div className="sketch">
+    <div className="sketch" ref={boxRef}>
       <button
         type="button"
         className="sketch-frame"

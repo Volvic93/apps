@@ -22,6 +22,7 @@ export function Lightbox({ images, start = 0, onClose }: { images: LightboxImage
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({ startDist: 0, startScale: 1, startView: { scale: 1, x: 0, y: 0 }, moved: false, lastTap: 0, startPoint: { x: 0, y: 0 } });
   const viewRef = useRef(view);
+  const imgRef = useRef<HTMLImageElement>(null);
   viewRef.current = view;
 
   useEffect(() => {
@@ -111,7 +112,9 @@ export function Lightbox({ images, start = 0, onClose }: { images: LightboxImage
       setView((v) => (v.scale > 1 ? { scale: 1, x: 0, y: 0 } : { scale: 2.5, x: 0, y: 0 }));
     } else {
       g.lastTap = t;
-      if ((e.target as HTMLElement).dataset.lbBackdrop) {
+      const r = imgRef.current?.getBoundingClientRect();
+      const onImage = !!r && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      if (!onImage) {
         setTimeout(() => {
           if (gesture.current.lastTap === t) onClose();
         }, 310);
@@ -139,6 +142,7 @@ export function Lightbox({ images, start = 0, onClose }: { images: LightboxImage
         onWheel={onWheel}
       >
         <img
+          ref={imgRef}
           className="lb-img"
           src={img.src}
           alt={img.caption ?? ''}

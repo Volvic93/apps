@@ -13,7 +13,6 @@
     "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.8.0",
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor/camera": "^8.2.6",
     "@capacitor/core": "^8.6.2",

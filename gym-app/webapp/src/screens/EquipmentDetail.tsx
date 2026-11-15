@@ -191,7 +191,7 @@ export function EquipmentDetail() {
       {exs.filter((e) => motionFrames(e.motionPhotoIds).length >= 2).map((e) => (
         <MotionImage key={e.id} ids={e.motionPhotoIds} label={e.name} title={`So geht’s: ${e.name}`} />
       ))}
-      <MotionPlaceholder exercises={exs.filter((e) => motionFrames(e.motionPhotoIds).length < 2).slice(0, 4).map((e) => ({ id: e.id, name: e.name }))} title="So geht’s" />
+      <MotionPlaceholder exercises={exs.filter((e) => motionFrames(e.motionPhotoIds).length < 2 && !motionFor(e)).slice(0, 4).map((e) => ({ id: e.id, name: e.name }))} title="So geht’s" />
 
       <section>
         <div className="section-label">Übungen an diesem Gerät · {exs.length}</div>

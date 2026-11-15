@@ -373,7 +373,7 @@ input[type='checkbox']:checked {
 }
 .toast.record {
   background: var(--sys-yellow);
-  color: #000;
+  color: #0a0a0a;
 }
 
 /* Heute, Pläne, Statistik */
@@ -1521,50 +1521,13 @@ textarea.input.mono {
   background: transparent;
   pointer-events: none;
 }
-
-/* ------------------------------------------------------------------ Gespräch mit Claude (v0.4.0) */
-.aichat {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Beschriftung „Zu bestätigen“ auf Warnfarbe: dunkle Schrift (Kontrast) */
+.eqcard-tbc {
+  background: var(--warn);
+  color: #0a0a0a;
 }
-.aichat-bubble {
-  max-width: 92%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.aichat-bubble.user {
-  align-self: flex-end;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-.aichat-bubble.assistant {
-  align-self: flex-start;
-  background: var(--sys-row-2);
-}
-.aichat-bubble.error {
-  align-self: stretch;
-  max-width: 100%;
-  background: color-mix(in srgb, var(--danger) 16%, transparent);
-  color: var(--danger-text, var(--danger));
-}
-.aichat-plan {
-  background: var(--sys-row-2) !important;
-}
-.aichat-plan-name {
-  font-size: 19px;
-  font-weight: 700;
-}
-.aichat-plan-w ul {
-  margin: 4px 0 8px;
-  padding-left: 18px;
-  font-size: 15px;
-  color: var(--label-2);
-}
-.aichat-input {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Beim Scrollen zu einer Karte bleibt sie unter der festen Kopfleiste sichtbar */
+.card,
+section {
+  scroll-margin-top: calc(var(--safe-top) + 110px);
 }

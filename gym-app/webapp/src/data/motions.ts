@@ -644,6 +644,9 @@ const RULES: [RegExp, string][] = [
   [/trizeps-ueberkopf|trizepsstrecken|overhead extension/, 'trizeps-ueberkopf'],
   [/trizeps|push down|pushdown/, 'trizepsdruecken'],
   [/dips/, 'dips'],
+  [/beinbeuger-liegend|beinbeuger liegend/, 'beinbeuger-liegend'],
+  [/beinbeuger-stehend|beinbeuger stehend/, 'beinbeuger-stehend'],
+  [/beinbeuger|leg-curl|leg curl/, 'beinbeuger-sitzend'],
   [/scott|gymleco-biceps|konzentrationscurl/, 'scott-curl'],
   [/curl/, 'bizepscurl'],
   [/face-pull|face pull/, 'face-pull'],
@@ -651,8 +654,8 @@ const RULES: [RegExp, string][] = [
   [/klimmzug|klimmzüge/, 'klimmzug'],
   [/latzug/, 'latzug'],
   [/brustrudern|brustauflage|2way-row|tbar/, 'rudern-brustauflage'],
-  [/vorgebeugt.*rudern|rudern.*vorgebeugt|rudern-langhantel|rudern-kurzhantel|rudern-vorgebeugt|bent over row/, 'rudern-vorgebeugt'],
-  [/aufrechtes-rudern/, 'aufrechtes-rudern'],
+  [/vorgebeugt.*rudern|rudern.*vorgebeugt|rudern-langhantel|rudern-kurzhantel|langhantelrudern|kurzhantelrudern|rudern-vorgebeugt|bent over row/, 'rudern-vorgebeugt'],
+  [/aufrechtes[- ]rudern/, 'aufrechtes-rudern'],
   [/rudern|row/, 'rudern-sitzend'],
   [/shrug/, 'shrugs'],
   [/reverse|vorgebeugtes seitheben|seitheben-vorgebeugt|fliegende/, 'fliegende'],
@@ -661,6 +664,11 @@ const RULES: [RegExp, string][] = [
   [/seitheben|lateral/, 'seitheben'],
   [/frontheben/, 'frontheben'],
   [/schulterdr|schulterpresse|shoulder press/, 'schulterdruecken'],
+  [/sissy/, 'sissy-squat'],
+  [/hackenschmidt|purekraft-beinpresse|pendulum-squat|pendel-kniebeuge/, 'hackenschmidt'],
+  [/belt-squat|belt squat/, 'belt-squat'],
+  [/ausfall|bulgarian/, 'ausfallschritt'],
+  [/kniebeuge|squat/, 'kniebeuge'],
   [/liegestütz|liegestuetz/, 'liegestuetze'],
   [/schraegbank|schrägbank/, 'schraegbankdruecken'],
   [/bankdr|multipresse|power-smith|power smith/, 'bankdruecken'],
@@ -671,11 +679,7 @@ const RULES: [RegExp, string][] = [
   [/hip-press|hüftpresse|hueftpresse/, 'hueftpresse'],
   [/beinpresse/, 'beinpresse'],
   [/ausfall|bulgarian/, 'ausfallschritt'],
-  [/kniebeuge|squat/, 'kniebeuge'],
   [/beinstrecker|leg-extension|leg extension/, 'beinstrecker'],
-  [/beinbeuger-liegend|liegend/, 'beinbeuger-liegend'],
-  [/beinbeuger-stehend|beinbeuger stehend/, 'beinbeuger-stehend'],
-  [/beinbeuger|leg-curl|leg curl/, 'beinbeuger-sitzend'],
   [/hip-thrust|hip thrust/, 'hip-thrust'],
   [/kick/, 'kickback'],
   [/adduktoren/, 'adduktion'],
@@ -688,8 +692,10 @@ const RULES: [RegExp, string][] = [
 /** Muster einer Übung: ausdrücklich gesetzte `motionId`, sonst nach Kennung und Name. */
 export function motionIdFor(ex: Pick<Exercise, 'id' | 'name'> & { motionId?: string }): string | undefined {
   if (ex.motionId && MOTION_BY_ID[ex.motionId]) return ex.motionId;
-  const hay = `${ex.id} ${ex.name}`.toLowerCase();
-  for (const [re, id] of RULES) if (re.test(hay)) return id;
+  // Erst nach dem Namen suchen (er ist maßgeblich), dann nach der Kennung (manche Kennungen sind historisch vertauscht)
+  for (const hay of [ex.name.toLowerCase(), ex.id.toLowerCase()]) {
+    for (const [re, id] of RULES) if (re.test(hay)) return id;
+  }
   return undefined;
 }
 

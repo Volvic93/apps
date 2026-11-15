@@ -163,7 +163,7 @@ export function ProgressOverview() {
 
       <section className="card">
         <div className="card-title">Muskeln – Sätze pro Woche</div>
-        <p className="muted small">Durchschnitt der letzten 4 Wochen. Ein Satz zählt für den Hauptmuskel voll, für Nebenmuskeln halb. Der grüne Bereich (10–20 Sätze je Muskel und Woche) ist nur eine grobe Orientierung.</p>
+        <p className="muted small">Durchschnitt der letzten 4 Wochen. Ein Satz zählt für den Hauptmuskel voll, für Nebenmuskeln halb. Der markierte Bereich (10–20 Sätze je Muskel und Woche) ist nur eine grobe Orientierung.</p>
         {load.length === 0 ? (
           <p className="muted">In den letzten 4 Wochen wurde nichts trainiert.</p>
         ) : (

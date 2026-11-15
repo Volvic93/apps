@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B0F14">
+<title>Flimmerfrei</title>
+<meta name="description" content="Flimmerfrei: ein eigener Browser für youtube.com mit Werbeblocker, Hintergrundwiedergabe, Bild-in-Bild und AirPlay. Für den privaten Gebrauch.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0F14'/%3E%3Cpath d='M32 9a23 23 0 1 0 22 30' fill='none' stroke='%232DD4BF' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M26 22l17 10-17 10z' fill='%232DD4BF'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --panel: #121922;
+    --line: #1f2a37;
+    --text: #e6edf3;
+    --muted: #93a1b0;
+    --accent: #2DD4BF;
+    --accent-ink: #04201c;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; padding: 0 1.1rem 4rem; }
+  header { padding: 3rem 0 1.5rem; }
+  .logo { width: 64px; height: 64px; display: block; margin-bottom: 1.1rem; }
+  h1 { font-size: 2.2rem; line-height: 1.15; margin: 0 0 .5rem; letter-spacing: -.01em; }
+  h2 { font-size: 1.3rem; margin: 2.6rem 0 .8rem; padding-top: .4rem; border-top: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; color: var(--accent); }
+  p { margin: .6rem 0; }
+  .lead { color: var(--muted); font-size: 1.1rem; }
+  a { color: var(--accent); }
+  a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  ul, ol { padding-left: 1.3rem; margin: .6rem 0; }
+  li { margin: .35rem 0; }
+  .buttons { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.4rem 0 .4rem; }
+  .btn {
+    display: inline-block; padding: .8rem 1.3rem; border-radius: 12px; text-decoration: none; font-weight: 600;
+    border: 1px solid var(--accent); color: var(--accent); background: transparent; min-height: 44px;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.2rem; margin: 1rem 0; }
+  .card p:first-child { margin-top: 0; } .card p:last-child { margin-bottom: 0; }
+  dl { margin: .6rem 0; }
+  dt { font-weight: 600; margin-top: .9rem; }
+  dd { margin: .15rem 0 0; color: var(--muted); }
+  code { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: .05rem .35rem; font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-word; }
+  .note { color: var(--muted); font-size: .95rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Flimmerfrei-Symbol: Wiedergabe-Dreieck in einem offenen Ring">
+      <rect width="64" height="64" rx="14" fill="#0B0F14"/>
+      <path d="M32 9a23 23 0 1 0 22 30" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round"/>
+      <path d="M26 22l17 10-17 10z" fill="#2DD4BF"/>
+    </svg>
+    <h1>Flimmerfrei</h1>
+    <p class="lead">Ein eigener, schlanker Browser für youtube.com. Er öffnet die Seite ganz normal, mit Anmeldung, Abos und Verlauf, und ergänzt, was man sonst nur von einem Browser mit Zusatzfunktionen kennt: Werbeblocker, Wiedergabe im Hintergrund, Bild-in-Bild und AirPlay.</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/Volvic93/apps/releases">iPhone-App laden (.ipa)</a>
+      <a class="btn" href="flimmerfrei.user.js">Userscript installieren</a>
+    </div>
+    <p class="note">Privates Projekt. Keine Verbindung zu Google oder YouTube, kein Code und keine Marken von dort.</p>
+  </header>
+
+  <section id="was">
+    <h2>Was es ist</h2>
+    <p>Flimmerfrei gibt es in zwei Formen, die denselben Kern benutzen:</p>
+    <ul>
+      <li><strong>iPhone-App:</strong> eine eingebettete Web-Ansicht, die <code>m.youtube.com</code> lädt und das Skript bei jedem Seitenaufruf einsetzt.</li>
+      <li><strong>Userscript:</strong> dasselbe Skript für Safari (mit der kostenlosen Erweiterung „Userscripts“) oder für Brave, Firefox und Chrome am Rechner.</li>
+    </ul>
+    <p>Eine reine Web-App ist nicht möglich: Eine Webseite darf youtube.com aus Sicherheitsgründen weder einbetten noch verändern. Deshalb braucht es entweder die App oder ein Userscript.</p>
+  </section>
+
+  <section id="funktionen">
+    <h2>Funktionen</h2>
+    <dl>
+      <dt>Anmeldung mit dem Google-Konto</dt>
+      <dd>Die Anmeldung läuft auf der eigenen Seite von Google, in derselben Ansicht und mit Safari-Kennung. Die App speichert und überträgt kein Kennwort. Der Kern des Werbeblockers hält sich auf Google-Seiten vollständig heraus.</dd>
+      <dt>Werbeblocker</dt>
+      <dd>Werbe-Einträge werden aus den Antworten von YouTube entfernt, bevor die Seite sie zeigt. Werbeflächen werden ausgeblendet. Läuft doch einmal eine Werbung, wird sie stumm ans Ende gespult und übersprungen. In der App kommt eine Sperrliste für bekannte Werbe- und Mess-Adressen dazu.</dd>
+      <dt>Hintergrundwiedergabe</dt>
+      <dd>Der Seite wird vorgespielt, sie sei sichtbar, und ein ungewolltes Pausieren beim Sperren oder Minimieren wird rückgängig gemacht. Eine Pause, die Sie selbst auslösen, bleibt bestehen.</dd>
+      <dt>Bild-in-Bild</dt>
+      <dd>Das laufende Video lässt sich in ein kleines Fenster auslagern. Sperren der Seite dagegen werden aufgehoben.</dd>
+      <dt>AirPlay</dt>
+      <dd>Wiedergabe auf Apple TV, HomePod und andere AirPlay-Geräte.</dd>
+    </dl>
+  </section>
+
+  <section id="app">
+    <h2>iPhone-App</h2>
+    <ol>
+      <li>Die Datei <code>Flimmerfrei.ipa</code> von der <a href="https://github.com/Volvic93/apps/releases">Seite der Veröffentlichungen</a> laden.</li>
+      <li>Mit AltStore oder Sideloadly auf das iPhone bringen. Das geht ohne Apple-Entwicklerkonto, die App muss dann aber alle 7 Tage neu signiert werden (AltStore übernimmt das automatisch).</li>
+      <li>App öffnen und bei YouTube anmelden wie im Browser.</li>
+    </ol>
+    <p>Die ausführliche Schritt-für-Schritt-Anleitung steht hier: <a href="https://github.com/Volvic93/apps/blob/main/video-app/ios/INSTALLATION.md">INSTALLATION.md</a>.</p>
+    <p>Bedienung: Ein kleiner, verschiebbarer Knopf öffnet ein Menü mit Bild-in-Bild, AirPlay, Zurück, Neu laden, Startseite, Link teilen, In Safari öffnen und den Einstellungen. Dort lassen sich Werbeblocker und Hintergrundwiedergabe einzeln abschalten.</p>
+  </section>
+
+  <section id="userscript">
+    <h2>Userscript</h2>
+    <div class="buttons"><a class="btn primary" href="flimmerfrei.user.js">Userscript installieren</a></div>
+    <h3>Safari auf iPhone, iPad oder Mac</h3>
+    <ol>
+      <li>Die kostenlose Erweiterung „Userscripts“ aus dem App Store installieren und in den Safari-Einstellungen unter „Erweiterungen“ aktivieren, mit Zugriff auf youtube.com.</li>
+      <li>In der Erweiterung einen Skript-Ordner festlegen.</li>
+      <li>Den Knopf „Userscript installieren“ öffnen. Die Erweiterung bietet die Installation an. Alternativ die Datei <code>flimmerfrei.user.js</code> in den Skript-Ordner legen.</li>
+      <li>youtube.com neu laden.</li>
+    </ol>
+    <h3>Rechner (Brave, Firefox, Chrome, Edge)</h3>
+    <ol>
+      <li>Violentmonkey oder Tampermonkey installieren.</li>
+      <li>Den Knopf „Userscript installieren“ öffnen und die Installation bestätigen.</li>
+      <li>youtube.com neu laden.</li>
+    </ol>
+    <p class="note">Das Skript läuft nur auf <code>youtube.com</code> und aktualisiert sich über dieselbe Adresse, sofern der Skript-Manager Aktualisierungen unterstützt.</p>
+  </section>
+
+  <section id="grenzen">
+    <h2>Grenzen</h2>
+    <ul>
+      <li><strong>Kein Chromecast.</strong> Google gibt den YouTube-Empfänger auf dem Chromecast nur für die eigene App frei; im Web gibt es Cast nur in Chrome am Rechner. AirPlay funktioniert. Ein möglicher späterer Weg ist die Kopplung per TV-Code, die aber auf einer inoffiziellen Schnittstelle beruht und jederzeit brechen kann.</li>
+      <li><strong>YouTube kann Dinge ändern.</strong> Werbeblocker und Hintergrundwiedergabe können dadurch zeitweise ausfallen, bis der Kern angepasst ist.</li>
+      <li><strong>Erster echter Test auf dem iPhone.</strong> Die App lässt sich nicht auf dem Entwicklungsrechner starten; Fehler sind daher möglich.</li>
+      <li><strong>Passkeys und Sicherheitsschlüssel</strong> funktionieren in eingebetteten Ansichten nicht zuverlässig. Bei der Anmeldung dann „Andere Option wählen“ und Kennwort, Bestätigung am Handy oder Code benutzen. Google kann die Anmeldung in eingebetteten Ansichten jederzeit strenger behandeln.</li>
+      <li><strong>Signierung.</strong> Ohne Apple-Entwicklerkonto läuft die App nur 7 Tage, dann muss sie neu signiert werden.</li>
+      <li><strong>Nutzungsbedingungen.</strong> Werbeblocker und Hintergrundwiedergabe widersprechen den Nutzungsbedingungen von YouTube. Flimmerfrei ist für den privaten Gebrauch gedacht; die Nutzung geschieht auf eigene Verantwortung.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Flimmerfrei ist ein privates Projekt und nicht mit YouTube oder Google verbunden. Quelltext: <a href="https://github.com/Volvic93/apps">github.com/Volvic93/apps</a>, Ordner <code>video-app</code>.</p>
+  </footer>
+</main>
+</body>
+</html>

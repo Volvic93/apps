@@ -9,6 +9,8 @@ on:
     branches: [main]
     paths:
       - 'gym-app/webapp/**'
+      - 'video-app/core/**'
+      - 'video-app/web/**'
       - 'site/**'
       - '.github/workflows/gym-app-webapp.yml'
   workflow_dispatch:
@@ -50,10 +52,20 @@ jobs:
         working-directory: gym-app/webapp
         run: npm run build
 
+      - name: Flimmerfrei – Skript-Kern testen und bauen
+        working-directory: video-app/core
+        run: |
+          node build.mjs
+          node --test test/
+
       - name: Seite zusammenstellen
         run: |
           mkdir -p _site/gym-app
           cp -R gym-app/webapp/dist/. _site/gym-app/
+          # Flimmerfrei: Infoseite und Userscript unter …/apps/video-app/
+          mkdir -p _site/video-app
+          cp -R video-app/web/. _site/video-app/
+          cp video-app/core/dist/flimmerfrei.user.js _site/video-app/
           cp site/index.html site/icon.png site/favicon.png _site/
           touch _site/.nojekyll
           # Jede frühere Version bleibt erreichbar (…/gym-app-archiv/<Version>/) und in versionen.html verlinkt

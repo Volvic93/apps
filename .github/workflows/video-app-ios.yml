@@ -1,0 +1,159 @@
+name: Flimmerfrei iOS (unsignierte IPA)
+
+# Baut aus video-app/core (Skript-Kern) und video-app/ios (Swift-App) eine UNSIGNIERTE .ipa für Sideloadly / AltStore.
+# Auslöser:
+#   - von Hand: Actions -> "Flimmerfrei iOS (unsignierte IPA)" -> "Run workflow"
+#     Ergebnis: Artefakt am Lauf (30 Tage), Download erfordert GitHub-Anmeldung.
+#   - Push auf Zweige "video-app*" (nur bei Änderungen an Kern, App oder diesem Workflow): zum Prüfen vor der Veröffentlichung.
+#   - Tags der Form video-app-v1.2.3: zusätzlich wird ein Release "Flimmerfrei 1.2.3" mit der .ipa angelegt.
+#     (Bei Tag-Pushes wertet GitHub den paths-Filter nicht aus; das ist so gewollt.)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'video-app*'
+    tags:
+      - 'video-app-v*'
+    paths:
+      - 'video-app/ios/**'
+      - 'video-app/core/**'
+      - '.github/workflows/video-app-ios.yml'
+
+permissions:
+  contents: write # Release bei Tags
+
+concurrency:
+  group: video-app-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    name: IPA bauen
+    runs-on: macos-26
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Xcode 26 auswählen (sonst bleibt das voreingestellte Xcode)
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -vi -e beta -e release_candidate -e _rc | sort -V | tail -1 || true)"
+          if [ -n "$XCODE" ]; then
+            sudo xcode-select -s "$XCODE/Contents/Developer"
+          else
+            echo "Kein Xcode 26 gefunden, verwende das voreingestellte Xcode. Vorhanden:"
+            ls -d /Applications/Xcode* || true
+          fi
+          xcodebuild -version
+
+      - name: Kern bauen
+        working-directory: video-app/core
+        run: node build.mjs
+
+      - name: Kern testen
+        working-directory: video-app/core
+        run: |
+          shopt -s nullglob
+          files=(test/*.js test/*.mjs test/*.cjs)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "Keine Testdateien in video-app/core/test gefunden"; exit 1
+          fi
+          node --test "${files[@]}"
+
+      - name: Kern-Dateien prüfen
+        run: |
+          [ -s video-app/core/dist/flimmerfrei.inject.js ] || { echo "video-app/core/dist/flimmerfrei.inject.js fehlt oder ist leer"; exit 1; }
+          [ -s video-app/core/rules/content-blocker.json ] || { echo "video-app/core/rules/content-blocker.json fehlt oder ist leer"; exit 1; }
+          ls -l video-app/core/dist video-app/core/rules
+
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt erzeugen
+        working-directory: video-app/ios
+        run: |
+          xcodegen --version
+          xcodegen generate
+
+      - name: Version festlegen
+        id: ver
+        run: |
+          VERSION="$(node -p "require('./video-app/core/package.json').version" 2>/dev/null || true)"
+          [ -n "$VERSION" ] || VERSION="0.1.0"
+          TAGVER="${GITHUB_REF_NAME#video-app-v}"
+          # Nur echte Versionsnummern (1, 1.2, 1.2.3) aus dem Tag übernehmen, sonst gilt package.json.
+          if [[ "${GITHUB_REF_NAME}" == video-app-v* && "$TAGVER" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then VERSION="$TAGVER"; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, Build ${GITHUB_RUN_NUMBER}"
+
+      - name: Archivieren (ohne Signierung)
+        working-directory: video-app/ios
+        run: |
+          set -o pipefail
+          mkdir -p build
+          if ! xcodebuild archive \
+            -project Flimmerfrei.xcodeproj \
+            -scheme Flimmerfrei \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Flimmerfrei.xcarchive \
+            -derivedDataPath build/DerivedData \
+            MARKETING_VERSION="${{ steps.ver.outputs.version }}" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            2>&1 | tee build/xcodebuild.log | tail -n 60; then
+            echo "xcodebuild ist fehlgeschlagen. Fehlerzeilen aus dem Protokoll:"
+            grep -E 'error:' build/xcodebuild.log | sort -u | head -n 50 | while IFS= read -r line; do echo "::error::$line"; done
+            exit 1
+          fi
+
+      - name: IPA packen
+        working-directory: video-app/ios
+        run: |
+          APP="$(find build/Flimmerfrei.xcarchive/Products/Applications -maxdepth 1 -name '*.app' | head -1)"
+          [ -n "$APP" ] || { echo "Keine .app im Archiv gefunden"; exit 1; }
+          BID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")"
+          [ "$BID" = "de.flimmerfrei.app" ] || { echo "Falsche Bundle-Kennung: $BID"; exit 1; }
+          [ -f "$APP/flimmerfrei.inject.js" ] || { echo "flimmerfrei.inject.js fehlt in der App"; ls "$APP"; exit 1; }
+          [ -f "$APP/content-blocker.json" ] || { echo "content-blocker.json fehlt in der App"; ls "$APP"; exit 1; }
+          rm -rf build/ipa && mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+          (cd build/ipa && zip -qry ../Flimmerfrei.ipa Payload)
+          ls -lh build/Flimmerfrei.ipa
+          unzip -l build/Flimmerfrei.ipa | tail -n 3
+
+      - name: IPA als Artefakt bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: flimmerfrei-ios-ipa-${{ steps.ver.outputs.version }}-${{ github.run_number }}
+          path: video-app/ios/build/Flimmerfrei.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Release mit der IPA anlegen (nur bei Tags)
+        if: startsWith(github.ref, 'refs/tags/video-app-v')
+        working-directory: video-app/ios
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/Flimmerfrei.ipa "build/Flimmerfrei-${{ steps.ver.outputs.version }}.ipa"
+          gh release create "$GITHUB_REF_NAME" "build/Flimmerfrei-${{ steps.ver.outputs.version }}.ipa" \
+            --title "Flimmerfrei ${{ steps.ver.outputs.version }}" \
+            --notes "Unsignierte .ipa zum Installieren mit AltStore oder Sideloadly. Anleitung: video-app/ios/INSTALLATION.md" \
+            --verify-tag
+
+      - name: Build-Protokoll bei Fehlern sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: video-app/ios/build/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7

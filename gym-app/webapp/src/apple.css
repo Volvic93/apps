@@ -1,7 +1,7 @@
 /* ===========================================================================
    Apple-Feinschliff (HIG) – wird nach styles.css geladen und überschreibt dort
    Typografie, Inset-Grouped-Listen und Bedienelemente im iOS-Stil.
-   Farben: ausschließlich Apple-Systemfarben (siehe :root in styles.css).
+   Farben: Kraftkultur-Palette (siehe :root in styles.css); früher ausschließlich Apple-Systemfarben.
    =========================================================================== */
 body {
   font-size: 17px;
@@ -113,7 +113,7 @@ body {
 }
 .btn.primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 .btn.ghost {
   background: transparent;
@@ -186,7 +186,7 @@ body {
 }
 .chip.on {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   border: 0;
 }
 .segmented {
@@ -369,7 +369,7 @@ input[type='checkbox']:checked {
 }
 .toast.error {
   background: var(--danger);
-  color: #fff;
+  color: var(--danger-ink);
 }
 .toast.record {
   background: var(--sys-yellow);
@@ -473,14 +473,14 @@ input[type='checkbox']:checked {
 }
 .strip-item.on {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 .strip-item.done {
   color: var(--sys-green);
   box-shadow: inset 0 0 0 1.5px var(--sys-green);
 }
 .strip-item.on.done {
-  color: #fff;
+  color: var(--accent-ink);
   box-shadow: none;
 }
 .strip-item.add {
@@ -535,7 +535,7 @@ input[type='checkbox']:checked {
 .check-btn.on {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 .stepper {
   background: var(--fill-3);
@@ -839,7 +839,7 @@ textarea {
 }
 .cal-day.has {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .cal-day.today {
@@ -1043,17 +1043,17 @@ textarea.input.mono {
 }
 /* Hell: Apples „Accessibility“-Varianten für Text auf hellem Grund (mind. 4,5 : 1) und kräftigeres Sekundärgrau */
 :root[data-theme='light'] {
-  --ok-text: #248a3d;
-  --warn-text: #a84a00;
-  --danger-text: #d70015;
-  --label-2: rgba(60, 60, 67, 0.74);
+  --ok-text: #033220;
+  --warn-text: #8a4b00;
+  --danger-text: #c4231a;
+  --label-2: rgba(10, 10, 10, 0.72);
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
-    --ok-text: #248a3d;
-    --warn-text: #a84a00;
-    --danger-text: #d70015;
-    --label-2: rgba(60, 60, 67, 0.74);
+    --ok-text: #033220;
+    --warn-text: #8a4b00;
+    --danger-text: #c4231a;
+    --label-2: rgba(10, 10, 10, 0.72);
   }
 }
 .hint-card .eyebrow,
@@ -1190,4 +1190,37 @@ textarea.input.mono {
   padding-top: 8px;
   padding-bottom: 8px;
   overflow-wrap: anywhere;
+}
+
+/* Kraftkultur: Zusammenfassung als Markenkarte */
+.summary-hero {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+/* ------------------------------------------------------------------ Feste Kopfleiste (v0.4.0)
+   Deckender Hintergrund bis in die Safe-Area, damit unter der iOS-Statusleiste nichts durchscheint und
+   kein Bedienelement abgedunkelt wird. Der große Titel schrumpft beim Scrollen. */
+.screen-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--bg);
+  margin: calc(-1 * (var(--safe-top) + 14px)) -16px 0;
+  padding: calc(var(--safe-top) + 14px) 16px 8px;
+}
+.screen-header.compact {
+  padding-bottom: 6px;
+  box-shadow: 0 0.5px 0 var(--separator);
+}
+.screen-header.compact .eyebrow {
+  display: none;
+}
+.screen-header.compact .h1 {
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.screen-header.compact .screen-header-main {
+  align-items: center;
 }

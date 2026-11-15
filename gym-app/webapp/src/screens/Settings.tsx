@@ -91,11 +91,17 @@ export function Settings() {
       <div className="section-label">Dein Studio</div>
       <section className="card">
         <p className="muted small">
-          Markiere, welche Geräte es bei dir gibt. Katalog und Plan-Assistent richten sich danach.
+          Das hinterlegte Studio. Markiere, welche Geräte es dort gibt – Katalog und Plan-Assistent richten sich danach.
           {s?.studioSetupDone && studioCat && <> Aktuell: <b>{studioCount} von {studioCat.equipment.length} Geräten</b> vorhanden.</>}
         </p>
+        <Field label="Name des Studios">
+          <input className="input" value={s?.studio?.name ?? ''} maxLength={60} onChange={(e) => void saveSettings({ studio: { name: e.target.value, city: s?.studio?.city ?? '' } })} />
+        </Field>
+        <Field label="Ort">
+          <input className="input" value={s?.studio?.city ?? ''} maxLength={60} onChange={(e) => void saveSettings({ studio: { name: s?.studio?.name ?? '', city: e.target.value } })} />
+        </Field>
         <button className="btn block" onClick={() => nav('/uebungen/studio')}>
-          {s?.studioSetupDone ? 'Studio anpassen' : 'Studio einrichten'}
+          {s?.studioSetupDone ? 'Geräte des Studios anpassen' : 'Studio einrichten'}
         </button>
       </section>
 

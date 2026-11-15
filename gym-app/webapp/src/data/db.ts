@@ -54,6 +54,9 @@ export function defaultSettings(): Settings {
     appearance: 'dunkel',
     backupReminder: true,
     dismissedHints: [],
+    // Ab Werk: die mitgelieferten Geräte sind die des Studios, also ist es eingerichtet
+    studioSetupDone: true,
+    studio: { name: 'Kraftkultur Gym', city: 'Mönchengladbach' },
   };
 }
 

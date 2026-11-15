@@ -46,12 +46,12 @@ export const MUSCLE_LABEL: Record<MuscleId, string> = {
 export type MuscleGroupId = 'brust' | 'ruecken' | 'schultern' | 'arme' | 'rumpf' | 'beine';
 
 export const MUSCLE_GROUPS: { id: MuscleGroupId; label: string; muscles: MuscleId[]; color: string }[] = [
-  { id: 'brust', label: 'Brust', muscles: ['brust'], color: 'var(--sys-red)' },
-  { id: 'ruecken', label: 'Rücken', muscles: ['oberer_ruecken', 'latissimus', 'unterer_ruecken'], color: 'var(--sys-blue)' },
-  { id: 'schultern', label: 'Schultern', muscles: ['schulter_vorn', 'schulter_seitlich', 'schulter_hinten'], color: 'var(--sys-orange)' },
-  { id: 'arme', label: 'Arme', muscles: ['bizeps', 'trizeps', 'unterarm'], color: 'var(--sys-purple)' },
-  { id: 'rumpf', label: 'Rumpf', muscles: ['bauch', 'schraeg'], color: 'var(--sys-green)' },
-  { id: 'beine', label: 'Beine & Gesäß', muscles: ['gesaess', 'quadrizeps', 'beinbeuger', 'adduktoren', 'abduktoren', 'waden'], color: 'var(--sys-pink)' },
+  { id: 'brust', label: 'Brust', muscles: ['brust'], color: 'var(--grp-brust)' },
+  { id: 'ruecken', label: 'Rücken', muscles: ['oberer_ruecken', 'latissimus', 'unterer_ruecken'], color: 'var(--grp-ruecken)' },
+  { id: 'schultern', label: 'Schultern', muscles: ['schulter_vorn', 'schulter_seitlich', 'schulter_hinten'], color: 'var(--grp-schultern)' },
+  { id: 'arme', label: 'Arme', muscles: ['bizeps', 'trizeps', 'unterarm'], color: 'var(--grp-arme)' },
+  { id: 'rumpf', label: 'Rumpf', muscles: ['bauch', 'schraeg'], color: 'var(--grp-rumpf)' },
+  { id: 'beine', label: 'Beine & Gesäß', muscles: ['gesaess', 'quadrizeps', 'beinbeuger', 'adduktoren', 'abduktoren', 'waden'], color: 'var(--grp-beine)' },
 ];
 
 export function groupOfMuscle(m: MuscleId): MuscleGroupId {

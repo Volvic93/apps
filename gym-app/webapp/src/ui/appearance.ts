@@ -12,7 +12,7 @@ export function applyAppearance(a: Appearance): void {
     /* Speicher nicht verfügbar – dann gilt die Einstellung nur für diese Sitzung */
   }
   const dark = theme === 'dark' || (theme === 'auto' && !window.matchMedia('(prefers-color-scheme: light)').matches);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#f2f2f7');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a0a0a' : '#f4f6ef');
 }
 
 /** Beim Start (vor dem ersten Zeichnen) aus dem lokalen Zwischenspeicher, damit nichts aufblitzt. */

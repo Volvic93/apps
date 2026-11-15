@@ -268,6 +268,8 @@ export interface Settings {
   studioSetupDone?: boolean;
   /** Version des eingebauten Katalogs, der zuletzt eingespielt wurde. */
   catalogVersion?: number;
+  /** Das Studio, in dem trainiert wird (nur Text, erscheint auf „Heute“ und im KI-Kontext). */
+  studio?: { name: string; city: string };
 }
 
 export const GOAL_LABEL: Record<Goal, string> = {

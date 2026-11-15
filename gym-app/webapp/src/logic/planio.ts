@@ -296,7 +296,7 @@ export function filePlanToPlan(file: PlanFile, resolve: (ref: string) => string,
 
 export interface AiExportInput {
   now: number;
-  settings: Pick<Settings, 'profile' | 'planWeeksDefault'>;
+  settings: Pick<Settings, 'profile' | 'planWeeksDefault'> & { studio?: Settings['studio'] };
   wishes: string;
   weeks: number;
   includeGeneral: boolean;
@@ -383,6 +383,7 @@ export function buildAiExportText(input: AiExportInput): string {
   out.push(`- Ziel: ${GOAL_LABEL[settings.profile.goal]}`);
   out.push(`- Erfahrung: ${EXPERIENCE_LABEL[settings.profile.experience]}`);
   out.push(`- Trainingstage pro Woche: ${settings.profile.daysPerWeek}`);
+  if (settings.studio?.name) out.push(`- Trainiert im ${settings.studio.name}${settings.studio.city ? ` ${settings.studio.city}` : ''}`);
   out.push(`- Laufzeit des neuen Plans: ${weeks} Wochen`);
   if (wishes.trim()) out.push(`- Wünsche und Einschränkungen: ${wishes.trim().replace(/\s+/g, ' ')}`);
   out.push('', `# Verfügbare Übungen (${offered.length}) – Format: Kennung | Name | Hauptmuskeln | Gerät`);

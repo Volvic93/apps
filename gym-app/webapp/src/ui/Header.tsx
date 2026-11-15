@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconChevronLeft } from './Icons';
 
@@ -12,9 +12,25 @@ export function BackButton({ to, label = 'Zurück' }: { to?: string; label?: str
   );
 }
 
+/** Wird die Seite gescrollt, schrumpft die feste Kopfleiste (Zurück, kompakter Titel, Aktionen bleiben sichtbar). */
+function useCompact(): boolean {
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setCompact((c) => (c ? y > 8 : y > 48)); // Hysterese gegen Flackern an der Schwelle
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return compact;
+}
+
 export function ScreenHeader({ title, eyebrow, right, back }: { title: string; eyebrow?: string; right?: ReactNode; back?: ReactNode }) {
+  const compact = useCompact();
   return (
-    <header className="screen-header">
+    <header className={'screen-header' + (compact ? ' compact' : '')}>
       {back}
       <div className="screen-header-main">
         <div className="screen-header-text">

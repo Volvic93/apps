@@ -1,40 +1,50 @@
 /* Eisenzeit – dunkles Design, einhändig bedienbar, Safe-Area-fest */
 /* ---------------------------------------------------------------------------
-   Gestaltung nach Apples Human Interface Guidelines:
-   ausschließlich Apple-Systemfarben (semantische Farben für Flächen und Text,
-   Systemblau als Akzent), Systemschrift, Inset-Grouped-Listen, Tab-Leiste,
-   Dunkel (Standard) und Hell. Keine eigene Markenpalette.
+   Farbschema „Kraftkultur“: Schwarz #0A0A0A, Dunkelgrün #033220, Neongelb #E0F84A.
+   Aufbau, Abstände und Bedienmuster folgen weiter Apples Human Interface Guidelines
+   (Inset-Grouped-Listen, Tab-Leiste, Systemschrift, Dunkel als Standard, Hell als Option).
+   Die Variablennamen --sys-* stammen aus der früheren Apple-Palette und zeigen jetzt auf die
+   Markenfarben; Blau kommt nirgends mehr vor.
    --------------------------------------------------------------------------- */
 :root {
   color-scheme: dark;
-  /* Apple-Systemfarben, dunkel */
-  --sys-blue: #0a84ff;
-  --sys-green: #30d158;
-  --sys-orange: #ff9f0a;
-  --sys-red: #ff453a;
-  --sys-yellow: #ffd60a;
-  --sys-purple: #bf5af2;
-  --sys-pink: #ff375f;
-  --sys-teal: #40c8e0;
-  --sys-indigo: #5e5ce6;
-  /* Hintergründe (grouped) */
-  --sys-bg: #000000; /* systemGroupedBackground */
-  --sys-row: #1c1c1e; /* secondarySystemGroupedBackground */
-  --sys-row-2: #2c2c2e; /* tertiarySystemGroupedBackground */
-  --sys-gray5: #2c2c2e;
-  --sys-gray4: #3a3a3c;
+  /* Markenfarben */
+  --brand: #033220;
+  --brand-edge: rgba(224, 248, 74, 0.18);
+  --neon: #e0f84a;
+  /* Akzent und Statusfarben (dunkel) */
+  --accent: #e0f84a;
+  --accent-ink: #0a0a0a; /* Schrift auf Akzentflächen: nie weiß */
+  --accent-text: #e0f84a;
+  --accent-soft: color-mix(in srgb, #e0f84a 14%, transparent);
+  --sys-blue: var(--accent);
+  --sys-green: var(--accent); /* Erfolg ist Neongelb */
+  --sys-yellow: #e0f84a;
+  --sys-orange: #ffb340;
+  --sys-red: #ff5a4f;
+  --sys-purple: #a8b5a0;
+  --sys-pink: #d9c27a;
+  --sys-teal: #5fae8b;
+  --sys-indigo: #5fae8b;
+  /* Flächen */
+  --sys-bg: #0a0a0a;
+  --sys-row: #121613; /* Karten */
+  --sys-row-2: #1a211c; /* erhöhte Flächen, Zeilen, Eingaben */
+  --sys-gray5: #1a211c;
+  --sys-gray4: #26302a;
   /* Text */
-  --label: #ffffff;
-  --label-2: rgba(235, 235, 245, 0.6);
-  --label-3: rgba(235, 235, 245, 0.3);
+  --label: #f4f6ee;
+  --label-2: rgba(244, 246, 238, 0.62);
+  --label-3: rgba(244, 246, 238, 0.4);
   /* Füllungen und Trenner */
-  --fill: rgba(120, 120, 128, 0.36);
-  --fill-2: rgba(120, 120, 128, 0.32);
-  --fill-3: rgba(120, 120, 128, 0.24);
-  --fill-4: rgba(120, 120, 128, 0.18);
-  --separator: rgba(84, 84, 88, 0.65);
-  --bar-bg: rgba(28, 28, 30, 0.82);
-  --scrim: rgba(0, 0, 0, 0.4);
+  --fill: rgba(244, 246, 238, 0.18);
+  --fill-2: rgba(244, 246, 238, 0.14);
+  --fill-3: rgba(244, 246, 238, 0.1);
+  --fill-4: rgba(244, 246, 238, 0.06);
+  --separator: rgba(255, 255, 255, 0.08);
+  --bar-bg: rgba(10, 10, 10, 0.92);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --danger-ink: #0a0a0a;
 
   /* Aliase für die Bausteine unten */
   --bg: var(--sys-bg);
@@ -46,14 +56,18 @@
   --line-strong: var(--separator);
   --text: var(--label);
   --muted: var(--label-2);
-  --accent: var(--sys-blue);
-  --accent-soft: color-mix(in srgb, var(--sys-blue) 18%, transparent);
-  --accent-ink: #ffffff;
-  --accent-text: var(--sys-blue);
-  --ok: var(--sys-green);
+  --ok: var(--accent);
   --warn: var(--sys-orange);
   --danger: var(--sys-red);
-  --mf-body: var(--sys-gray5);
+  --mf-body: #1f2a24;
+  --mf-main: #e0f84a;
+  /* Muskelgruppen (Punkte, Balken) */
+  --grp-brust: #ff5a4f;
+  --grp-ruecken: #5fae8b;
+  --grp-schultern: #ffb340;
+  --grp-arme: #e0f84a;
+  --grp-rumpf: #a8b5a0;
+  --grp-beine: #d9c27a;
 
   --radius: 12px;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -64,62 +78,104 @@
 /* Hell: explizit gewählt … */
 :root[data-theme='light'] {
   color-scheme: light;
-  --sys-blue: #007aff;
-  --sys-green: #34c759;
-  --sys-orange: #ff9500;
-  --sys-red: #ff3b30;
-  --sys-yellow: #ffcc00;
-  --sys-purple: #af52de;
-  --sys-pink: #ff2d55;
-  --sys-teal: #30b0c7;
-  --sys-indigo: #5856d6;
-  --sys-bg: #f2f2f7;
+  --accent: #033220;
+  --accent-ink: #e0f84a;
+  --accent-text: #033220;
+  --accent-soft: color-mix(in srgb, #033220 10%, transparent);
+  --sys-yellow: #e0f84a;
+  --sys-orange: #c77700;
+  --sys-red: #d93025;
+  --sys-purple: #6b7a62;
+  --sys-pink: #8a7a2a;
+  --sys-teal: #2f7d5c;
+  --sys-indigo: #2f7d5c;
+  --sys-bg: #f4f6ef;
   --sys-row: #ffffff;
-  --sys-row-2: #f2f2f7;
-  --sys-gray5: #e5e5ea;
-  --sys-gray4: #d1d1d6;
-  --accent-text: #0040dd; /* Apples Systemblau mit erhöhtem Kontrast (Text) */
-  --label: #000000;
-  --label-2: rgba(60, 60, 67, 0.6);
-  --label-3: rgba(60, 60, 67, 0.3);
-  --fill: rgba(120, 120, 128, 0.2);
-  --fill-2: rgba(120, 120, 128, 0.16);
-  --fill-3: rgba(120, 120, 128, 0.12);
-  --fill-4: rgba(120, 120, 128, 0.08);
-  --separator: rgba(60, 60, 67, 0.29);
-  --bar-bg: rgba(249, 249, 249, 0.86);
+  --sys-row-2: #ebeee5;
+  --sys-gray5: #e6eadf;
+  --sys-gray4: #d3d9cb;
+  --label: #0a0a0a;
+  --label-2: rgba(10, 10, 10, 0.66);
+  --label-3: rgba(10, 10, 10, 0.38);
+  --fill: rgba(10, 10, 10, 0.14);
+  --fill-2: rgba(10, 10, 10, 0.1);
+  --fill-3: rgba(10, 10, 10, 0.07);
+  --fill-4: rgba(10, 10, 10, 0.045);
+  --separator: rgba(10, 10, 10, 0.12);
+  --bar-bg: rgba(244, 246, 239, 0.94);
   --scrim: rgba(0, 0, 0, 0.3);
+  --danger-ink: #ffffff;
+  --mf-body: #dfe5d8;
+  --mf-main: #033220;
+  --grp-brust: #d93025;
+  --grp-ruecken: #2f7d5c;
+  --grp-schultern: #c77700;
+  --grp-arme: #033220;
+  --grp-rumpf: #6b7a62;
+  --grp-beine: #8a7a2a;
 }
 /* … oder dem System folgen */
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
     color-scheme: light;
-    --sys-blue: #007aff;
-    --sys-green: #34c759;
-    --sys-orange: #ff9500;
-    --sys-red: #ff3b30;
-    --sys-yellow: #ffcc00;
-    --sys-purple: #af52de;
-    --sys-pink: #ff2d55;
-    --sys-teal: #30b0c7;
-    --sys-indigo: #5856d6;
-    --sys-bg: #f2f2f7;
+    --accent: #033220;
+    --accent-ink: #e0f84a;
+    --accent-text: #033220;
+    --accent-soft: color-mix(in srgb, #033220 10%, transparent);
+    --sys-yellow: #e0f84a;
+    --sys-orange: #c77700;
+    --sys-red: #d93025;
+    --sys-purple: #6b7a62;
+    --sys-pink: #8a7a2a;
+    --sys-teal: #2f7d5c;
+    --sys-indigo: #2f7d5c;
+    --sys-bg: #f4f6ef;
     --sys-row: #ffffff;
-    --sys-row-2: #f2f2f7;
-    --sys-gray5: #e5e5ea;
-    --sys-gray4: #d1d1d6;
-    --accent-text: #0040dd;
-    --label: #000000;
-    --label-2: rgba(60, 60, 67, 0.6);
-    --label-3: rgba(60, 60, 67, 0.3);
-    --fill: rgba(120, 120, 128, 0.2);
-    --fill-2: rgba(120, 120, 128, 0.16);
-    --fill-3: rgba(120, 120, 128, 0.12);
-    --fill-4: rgba(120, 120, 128, 0.08);
-    --separator: rgba(60, 60, 67, 0.29);
-    --bar-bg: rgba(249, 249, 249, 0.86);
+    --sys-row-2: #ebeee5;
+    --sys-gray5: #e6eadf;
+    --sys-gray4: #d3d9cb;
+    --label: #0a0a0a;
+    --label-2: rgba(10, 10, 10, 0.66);
+    --label-3: rgba(10, 10, 10, 0.38);
+    --fill: rgba(10, 10, 10, 0.14);
+    --fill-2: rgba(10, 10, 10, 0.1);
+    --fill-3: rgba(10, 10, 10, 0.07);
+    --fill-4: rgba(10, 10, 10, 0.045);
+    --separator: rgba(10, 10, 10, 0.12);
+    --bar-bg: rgba(244, 246, 239, 0.94);
     --scrim: rgba(0, 0, 0, 0.3);
+    --danger-ink: #ffffff;
+    --mf-body: #dfe5d8;
+    --mf-main: #033220;
+    --grp-brust: #d93025;
+    --grp-ruecken: #2f7d5c;
+    --grp-schultern: #c77700;
+    --grp-arme: #033220;
+    --grp-rumpf: #6b7a62;
+    --grp-beine: #8a7a2a;
   }
+}
+
+/* Markenfläche (dunkelgrün): hervorgehobene Karten – darin gelten die dunklen Farben in beiden Modi */
+.brand-surface,
+.next-card,
+.resume,
+.summary-hero {
+  background: var(--brand) !important;
+  border: 1px solid var(--brand-edge) !important;
+  --label: #f4f6ee;
+  --label-2: rgba(244, 246, 238, 0.72);
+  --label-3: rgba(244, 246, 238, 0.45);
+  --accent: #e0f84a;
+  --accent-ink: #0a0a0a;
+  --accent-text: #e0f84a;
+  --accent-soft: color-mix(in srgb, #e0f84a 16%, transparent);
+  --fill: rgba(244, 246, 238, 0.2);
+  --fill-2: rgba(244, 246, 238, 0.16);
+  --fill-3: rgba(244, 246, 238, 0.12);
+  --fill-4: rgba(244, 246, 238, 0.07);
+  --separator: rgba(244, 246, 238, 0.14);
+  color: var(--label);
 }
 
 *,
@@ -295,7 +351,7 @@ p {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   padding: 4px 6px calc(var(--safe-bottom) + 2px);
-  background: rgba(14, 15, 17, 0.84);
+  background: var(--bar-bg);
   backdrop-filter: saturate(1.6) blur(22px);
   -webkit-backdrop-filter: saturate(1.6) blur(22px);
   border-top: 1px solid var(--line);
@@ -653,7 +709,7 @@ button.card {
   max-width: 560px;
   margin: 0 auto;
   padding: 12px 16px calc(var(--safe-bottom) + 12px);
-  background: rgba(14, 15, 17, 0.9);
+  background: var(--bar-bg);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-top: 1px solid var(--line);
@@ -1076,7 +1132,7 @@ input[type='checkbox']:checked::after {
   gap: 6px;
   padding: 5px 10px;
   border-radius: 999px;
-  background: rgba(13, 14, 16, 0.72);
+  background: rgba(10, 10, 10, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   font-size: 12px;
@@ -1099,7 +1155,7 @@ input[type='checkbox']:checked::after {
   bottom: 66px;
   padding: 4px 6px;
   border-radius: 12px;
-  background: rgba(13, 14, 16, 0.66);
+  background: rgba(10, 10, 10, 0.66);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1110,7 +1166,7 @@ input[type='checkbox']:checked::after {
   right: 0;
   bottom: 0;
   padding: 44px 14px 12px;
-  background: linear-gradient(to top, rgba(8, 9, 10, 0.92) 12%, rgba(8, 9, 10, 0));
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 12%, rgba(10, 10, 10, 0));
 }
 .eqcard-name {
   color: #fff;
@@ -1638,7 +1694,7 @@ input[type='checkbox']:checked::after {
   right: 0;
   bottom: 0;
   padding: 40px 14px 12px;
-  background: linear-gradient(to top, rgba(8, 9, 10, 0.92) 15%, rgba(8, 9, 10, 0));
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 15%, rgba(10, 10, 10, 0));
 }
 .hero-name {
   color: #fff;

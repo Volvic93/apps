@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { db } from '../data/db';
+import { db, getSettings } from '../data/db';
 import { getActiveSession, startFreeSession, startSession } from '../data/repo';
 import { planWeek, planWeekLabel, sameDay, suggestNextWorkout, weekDays } from '../logic/stats';
 import { useCatalog } from '../ui/ExercisePicker';
@@ -15,8 +15,8 @@ export function Today() {
   const nav = useNavigate();
   const cat = useCatalog();
   const data = useLive(async () => {
-    const [plans, sessions, active] = await Promise.all([db.plans.toArray(), db.sessions.toArray(), getActiveSession()]);
-    return { plans, sessions, active };
+    const [plans, sessions, active, settings] = await Promise.all([db.plans.toArray(), db.sessions.toArray(), getActiveSession(), getSettings()]);
+    return { plans, sessions, active, settings };
   });
   const now = useNow(!!data?.active, 1000);
 
@@ -39,7 +39,7 @@ export function Today() {
   return (
     <div className="screen">
       <ScreenHeader
-        eyebrow={formatDateLong(Date.now())}
+        eyebrow={`${formatDateLong(Date.now())}${data.settings.studio?.name ? ` · ${data.settings.studio.name}` : ''}`}
         title="Heute"
         right={
           <button className="icon-btn" aria-label="Einstellungen" onClick={() => nav('/einstellungen')}>

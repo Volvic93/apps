@@ -44,6 +44,7 @@ cp ../webapp/assets/icon-1024.png "$ICON_FILE"
 # Live-Aktivität (Widget-Erweiterung) – nur auf Wunsch: LIVE_ACTIVITY=1 (Workflow-Eingabe „Live-Aktivität“)
 if [ "${LIVE_ACTIVITY:-0}" = "1" ]; then
   echo "Live-Aktivität wird eingebaut …"
+  ruby -e 'require "xcodeproj"' 2>/dev/null || sudo gem install xcodeproj --no-document
   ruby scripts/add-live-activity.rb
   xcodebuild -list -project ios/App/App.xcodeproj
 fi

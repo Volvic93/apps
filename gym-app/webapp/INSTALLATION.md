@@ -4,7 +4,7 @@ Die Web-App läuft im Browser, lässt sich aber wie eine richtige App auf den Ho
 
 **Adresse der Web-App:** <https://volvic93.github.io/apps/gym-app/>
 
-> Wer lieber die echte iPhone-App (`.ipa`) möchte, findet die Anleitung unter [../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md). Die Web-App ist der einfachere Einstieg und hat denselben Funktionsumfang – nur ein paar Kleinigkeiten (siehe unten) sind in der `.ipa` zuverlässiger.
+> Wer lieber die echte iPhone-App (`.ipa`) möchte, findet die Anleitung unter [../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md). Die Web-App ist der einfachere Einstieg und hat im Kern denselben Funktionsumfang. Nur die iPhone-App (`.ipa`) kann Vibration, Mitteilungen/Erinnerungen, die automatische Sicherung in „Dateien“ und (optional) die Live-Aktivität; ein paar Kleinigkeiten (siehe unten) sind dort ebenfalls zuverlässiger.
 
 ---
 

@@ -259,7 +259,7 @@ function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-const EQUIPMENT_TRACKED = ['name', 'brand', 'model', 'studioNumber', 'kind', 'loading', 'pictogram', 'weightStack', 'perSideInput', 'ownWeightKg', 'adjustments', 'inStudio'] as const;
+const EQUIPMENT_TRACKED = ['name', 'brand', 'model', 'studioNumber', 'kind', 'loading', 'pictogram', 'weightStack', 'perSideInput', 'ownWeightKg', 'plateSlots', 'adjustments', 'inStudio'] as const;
 const EXERCISE_TRACKED = ['name', 'equipmentId', 'primaryMuscles', 'secondaryMuscles', 'tracking', 'instructions', 'defaultRestSec', 'weightStep', 'unilateral'] as const;
 
 const structure = (a: Adjustment[]) => a.map(({ id, label, min, max }) => ({ id, label, min, max }));

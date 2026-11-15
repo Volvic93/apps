@@ -38,8 +38,8 @@ webapp/
 ├─ scripts/           Foto- und Icon-Werkzeuge
 ├─ src/
 │  ├─ data/           Datenbank (Dexie), Typen, Migrationen, Startkatalog, Studio-Geräte
-│  ├─ logic/          Gewichtsstufen, Statistik, Fortschritt, Empfehlungen, Plan-Assistent, KI-Export/-Import, Sicherung
-│  ├─ platform/       Web- und Capacitor-Umsetzung (Kamera, Teilen, Vibration, Timer-Signal, Wachhalten)
+│  ├─ logic/          Gewichtsstufen, Statistik, Fortschritt, Empfehlungen, Plan-Assistent, KI-Export/-Import, Sicherung, Scheibenrechner, Aufwärmsätze, CSV, Auto-Sicherung, Erinnerungen, Zusammenfassungsbild
+│  ├─ platform/       Web- und Capacitor-Umsetzung (Kamera, Teilen, Vibration, Timer-Signal, Wachhalten, Mitteilungen, Auto-Sicherung, Live-Aktivität)
 │  ├─ ui/             Bausteine, Gerätekarte, Diagramme, Muskelgrafik, Piktogramme
 │  └─ screens/        Heute, Training, Pläne, Übungen & Geräte, Fortschritt, Einstellungen, Dein Studio
 └─ tests/

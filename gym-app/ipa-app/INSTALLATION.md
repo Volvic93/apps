@@ -107,6 +107,8 @@ Dieser Weg wurde bisher auf keinem Gerät ausprobiert. Wenn der Bau scheitert od
 | App meldet „Nicht vertrauenswürdiger Entwickler“ | *Einstellungen → Allgemein → VPN & Geräteverwaltung* → Apple-ID → Vertrauen. |
 | App startet nicht mehr | Die 7 Tage sind abgelaufen: erneuern (Abschnitt 2 bzw. 3). Daten bleiben erhalten. |
 | Anmeldung mit der Apple-ID scheitert | Zwei-Faktor-Code prüfen; bei einigen Konten ein **App-spezifisches Passwort** erzeugen (appleid.apple.com → Anmelden und Sicherheit) und statt des normalen Passworts verwenden. |
+| Automatische Sicherung nicht in „Dateien“ zu sehen | Erst nach dem ersten abgeschlossenen Training: *Dateien → Auf meinem iPhone → Eisenzeit → Sicherungen*. Bei App-Neuinstallation gehen die Dateien mit der App verloren – wichtige Sicherungen zusätzlich nach iCloud/auf den Rechner kopieren. |
+| Live-Aktivität erscheint nicht | Nur mit dem Sonder-Artefakt „…-live-aktivitaet“ (Abschnitt 3a); *Einstellungen → Eisenzeit → Live-Aktivitäten* muss an sein; die Dynamic Island gibt es erst ab iPhone 14 Pro, sonst nur den Sperrbildschirm. |
 | „Maximale Zahl an Apps erreicht“ | Mit einer kostenlosen Apple-ID sind nur wenige Apps gleichzeitig erlaubt: eine andere Test-App entfernen oder eine zweite Apple-ID verwenden. |
 
 ## 6. Datenschutz

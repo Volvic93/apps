@@ -1,6 +1,6 @@
 import { db, getSettings } from '../data/db';
 import { platform } from '../platform';
-import { buildBackup, markBackupDone } from './backup';
+import { buildBackup } from './backup';
 
 export function autoBackupName(d = new Date()): string {
   const p = (n: number) => String(n).padStart(2, '0');
@@ -17,9 +17,8 @@ export async function runAutoBackup(): Promise<boolean> {
     const st = await getSettings();
     if (st.autoBackup === false) return false;
     const backup = await buildBackup(db, !!st.autoBackupPhotos);
-    const ok = await platform.autoBackup(autoBackupName(), JSON.stringify(backup));
-    if (ok) await markBackupDone();
-    return ok;
+    // bewusst kein „Sicherung erledigt“: die Datei bleibt im App-Ordner und ersetzt keine Sicherung außerhalb der App
+    return await platform.autoBackup(autoBackupName(), JSON.stringify(backup));
   } catch {
     return false;
   }

@@ -25,7 +25,8 @@ export function RestTimer({
   const warned = useRef(false);
   useEffect(() => {
     fired.current = false;
-    warned.current = false;
+    // Wer mit −15 schon in den letzten 10 Sekunden landet, bekommt die Vorwarnung nicht noch einmal
+    warned.current = Math.ceil((endsAt - Date.now()) / 1000) <= 10;
   }, [endsAt]);
   useEffect(() => {
     if (remaining <= 10 && remaining > 0 && totalSec > 12 && !warned.current) {

@@ -53,7 +53,7 @@ export const capacitorPlatform: Platform = {
       const written = blob
         ? await Filesystem.writeFile({ path: filename, data: await blobToBase64(blob), directory: Directory.Cache })
         : await Filesystem.writeFile({ path: filename, data: text ?? '', directory: Directory.Cache, encoding: Encoding.UTF8 });
-      await Share.share({ title: filename, url: written.uri, dialogTitle: 'Sicherung speichern' });
+      await Share.share({ title: filename, url: written.uri, dialogTitle: 'Datei teilen' });
       return 'geteilt';
     } catch (e) {
       const msg = String((e as Error)?.message ?? e);
@@ -114,14 +114,20 @@ export const capacitorPlatform: Platform = {
       const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
       await Filesystem.writeFile({ path: `Sicherungen/${filename}`, data: text, directory: Directory.Documents, encoding: Encoding.UTF8, recursive: true });
       // nur die letzten fünf behalten
-      const list = await Filesystem.readdir({ path: 'Sicherungen', directory: Directory.Documents });
+      const list = await Filesystem.readdir({ path: 'Sicherungen', directory: Directory.Documents }).catch(() => ({ files: [] as { name: string }[] }));
       const old = list.files
         .map((f) => f.name)
         .filter((n) => n.startsWith('eisenzeit-sicherung') && n.endsWith('.json'))
         .sort()
         .reverse()
         .slice(5);
-      for (const n of old) await Filesystem.deleteFile({ path: `Sicherungen/${n}`, directory: Directory.Documents });
+      for (const n of old) {
+        try {
+          await Filesystem.deleteFile({ path: `Sicherungen/${n}`, directory: Directory.Documents });
+        } catch {
+          /* altes Archiv nicht löschbar – die neue Sicherung steht trotzdem */
+        }
+      }
       return true;
     } catch {
       return false;

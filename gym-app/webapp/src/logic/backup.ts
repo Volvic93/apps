@@ -166,6 +166,7 @@ export function validateBackup(raw: unknown): ValidationResult {
       }
     }
     if (r.ownWeightKg !== undefined && !isNum(r.ownWeightKg)) errors.push(`${who}: das Eigengewicht ist ungültig.`);
+    if (r.plateSlots !== undefined && !(Number.isInteger(r.plateSlots) && (r.plateSlots as number) >= 1 && (r.plateSlots as number) <= 8)) errors.push(`${who}: die Zahl der Aufnahmen ist ungültig.`);
     if (r.perSideInput !== undefined && typeof r.perSideInput !== 'boolean') errors.push(`${who}: die Eingabehilfe „je Seite“ ist ungültig.`);
     if (r.weightStack !== undefined && r.weightStack !== null) {
       const w = r.weightStack;
@@ -232,6 +233,7 @@ export function validateBackup(raw: unknown): ValidationResult {
           errors.push(`Training #${i + 1}: ein Satz hat keine gültige Satzart.`);
           break;
         }
+        if (s.rir !== undefined && !(Number.isInteger(s.rir) && (s.rir as number) >= 0 && (s.rir as number) <= 3)) errors.push(`Training #${i + 1}: die Anstrengung eines Satzes ist ungültig.`);
         for (const k of ['weight', 'reps', 'durationSec', 'distanceKm', 'level', 'doneAt']) {
           if (s[k] !== undefined && s[k] !== null && !isNum(s[k])) {
             errors.push(`Training #${i + 1}: Satzwert "${k}" ist keine Zahl.`);
@@ -360,7 +362,7 @@ export function carryUserFields<T extends Rec>(cur: T, inc: T): T | undefined {
       changed = true;
     }
   }
-  for (const k of ['notes', 'settingsNote', 'location', 'ownWeightKg', 'photoId', 'adjustmentOverrides', 'motionPhotoIds', 'motionId']) {
+  for (const k of ['notes', 'settingsNote', 'location', 'ownWeightKg', 'plateSlots', 'photoId', 'adjustmentOverrides', 'motionPhotoIds', 'motionId']) {
     if (a[k] === undefined && b[k] !== undefined) {
       out[k] = b[k];
       changed = true;

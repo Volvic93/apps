@@ -35,9 +35,11 @@ apps/
 ├─ .github/workflows/
 │  ├─ gym-app-webapp.yml        baut und veröffentlicht die Web-App (bei Änderungen auf main)
 │  └─ gym-app-ios.yml           baut die unsignierte .ipa (von Hand oder bei Tags gym-app-v…)
+├─ .github/scripts/
+│  └─ archive-versions.sh       baut die neuesten drei Web-Versionen ins Archiv und schreibt versionen.html
 └─ gym-app/
    ├─ README.md                 Überblick über die App
    ├─ KONZEPT.md                Konzept, Entscheidungen, Umsetzungsstand
    ├─ webapp/                   die App selbst (React, TypeScript, Vite) – läuft im Browser
-   └─ ipa-app/                  iOS-Hülle (Capacitor) und Anleitung für die .ipa
+   └─ ipa-app/                  iOS-Hülle (Capacitor), Live-Aktivität (live-activity/) und Anleitung für die .ipa
 ```

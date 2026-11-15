@@ -158,11 +158,16 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
   const setEntry = (i: number, fn: (e: Entry) => Entry) => update((c) => ({ ...c, entries: c.entries.map((e, k) => (k === i ? fn(e) : e)) }));
   const goTo = (i: number) => update((c) => ({ ...c, currentIndex: Math.max(0, Math.min(i, c.entries.length - 1)) }));
 
+  // Mitteilung zum Pausenende nur, wenn ein Signal gewählt ist (bei „Aus“ soll es still bleiben)
+  const notifyRest = (endsAt: number, nextName: string) => {
+    if (!settings || (!settings.restSignal && !settings.vibration)) return;
+    void platform.scheduleRestNotification(endsAt, 'Pause vorbei', `Weiter mit ${nextName}`);
+  };
   const startRest = (sec: number, nextName: string) => {
     if (sec <= 0) return;
     const endsAt = Date.now() + sec * 1000;
     update((c) => ({ ...c, restEndsAt: endsAt, restTotalSec: sec }));
-    void platform.scheduleRestNotification(endsAt, 'Pause vorbei', `Weiter mit ${nextName}`);
+    notifyRest(endsAt, nextName);
   };
   const clearRest = () => {
     update((c) => ({ ...c, restEndsAt: undefined, restTotalSec: undefined }));
@@ -481,7 +486,7 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
             onAdjust={(d) => {
               const endsAt = Math.max(Date.now() + 1000, (s.restEndsAt ?? Date.now()) + d * 1000);
               update((c) => ({ ...c, restEndsAt: endsAt, restTotalSec: Math.max(c.restTotalSec ?? 0, Math.ceil((endsAt - Date.now()) / 1000)) }));
-              void platform.scheduleRestNotification(endsAt, 'Pause vorbei', `Weiter mit ${ex?.name ?? 'der nächsten Übung'}`);
+              notifyRest(endsAt, ex?.name ?? 'der nächsten Übung');
             }}
             onSkip={clearRest}
             onFinished={onRestFinished}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, getSettings } from '../data/db';
 import { backupFileName, buildBackup, markBackupDone } from '../logic/backup';
 import { renderSummaryImage } from '../logic/summaryImage';
+import { fileSlug } from '../logic/csv';
 import { platform } from '../platform';
 import { useUi } from '../ui/kit';
 import { formatNumber, summarizeSets } from '../logic/progression';
@@ -36,6 +37,13 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
   const records = sessionRecords(s, data.all);
 
   const shareImage = async () => {
+    try {
+      await doShareImage();
+    } catch (e) {
+      toast(`Bild konnte nicht geteilt werden: ${(e as Error).message}`, 'error');
+    }
+  };
+  const doShareImage = async () => {
     const st = await getSettings();
     const blob = await renderSummaryImage({
       title: s.workoutName,
@@ -49,7 +57,7 @@ export function Summary({ sessionId, onClose }: { sessionId: string; onClose: ()
       records: records.map((r) => `${cat.exMap.get(r.exerciseId)?.name ?? ''}: ${r.unit === 'platte' ? 'Platte ' : ''}${formatNumber(r.weight)}${r.unit === 'platte' ? '' : ' kg'} × ${r.reps}`),
     });
     if (!blob) return toast('Das Bild konnte nicht erzeugt werden.', 'error');
-    const res = await platform.saveFile({ filename: `eisenzeit-${s.workoutName.replace(/\W+/g, '-').toLowerCase()}.png`, mime: 'image/png', blob });
+    const res = await platform.saveFile({ filename: `eisenzeit-${fileSlug(s.workoutName)}.png`, mime: 'image/png', blob });
     if (res !== 'abgebrochen') toast('Bild bereitgestellt');
   };
 

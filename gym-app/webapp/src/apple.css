@@ -202,16 +202,19 @@ body {
   color: var(--label);
 }
 .segmented button.on {
-  background: var(--sys-gray4);
-  font-weight: 600;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
 }
 :root[data-theme='light'] .segmented button.on {
   background: #fff;
+  color: var(--label);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] .segmented button.on {
     background: #fff;
+    color: var(--label);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
   }
 }
@@ -1680,4 +1683,20 @@ html.standalone {
 .day-chips .chip {
   min-width: 44px;
   justify-content: center;
+}
+
+/* Prüfung 0.6.0 */
+.rir-row {
+  scroll-margin-bottom: 220px;
+}
+.rir-row .chip {
+  min-width: 44px;
+  justify-content: center;
+}
+.sheet-body {
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+.plate-stack {
+  max-width: 100%;
+  overflow-x: auto;
 }

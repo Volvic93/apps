@@ -5,6 +5,13 @@ import WidgetKit
 private let neon = Color(red: 0.878, green: 0.973, blue: 0.290)  // #E0F84A
 private let brand = Color(red: 0.012, green: 0.196, blue: 0.125) // #033220
 
+/// Restzeit der Pause als Bereich – `now` wird nur einmal gelesen, damit `end` nie vor dem Beginn liegt.
+private func restRange(_ end: Date?) -> ClosedRange<Date>? {
+    guard let end = end else { return nil }
+    let now = Date()
+    return end > now ? now...end : nil
+}
+
 struct TrainingLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: EisenzeitActivityAttributes.self) { context in
@@ -25,11 +32,11 @@ struct TrainingLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 6) {
-                        if let end = context.state.restEndsAt, end > Date.now {
+                        if let range = restRange(context.state.restEndsAt) {
                             HStack {
                                 Text("Pause")
                                 Spacer()
-                                Text(timerInterval: Date.now...end, countsDown: true)
+                                Text(timerInterval: range, countsDown: true)
                                     .monospacedDigit()
                                     .foregroundStyle(neon)
                             }
@@ -46,8 +53,8 @@ struct TrainingLiveActivity: Widget {
                 Image(systemName: "dumbbell.fill")
                     .foregroundStyle(neon)
             } compactTrailing: {
-                if let end = context.state.restEndsAt, end > Date.now {
-                    Text(timerInterval: Date.now...end, countsDown: true)
+                if let range = restRange(context.state.restEndsAt) {
+                    Text(timerInterval: range, countsDown: true)
                         .monospacedDigit()
                         .frame(width: 44)
                         .foregroundStyle(neon)
@@ -83,11 +90,11 @@ struct LockScreenView: View {
             Text("Satz \(context.state.setIndex) von \(context.state.setTotal) · \(context.state.target)")
                 .font(.subheadline)
                 .lineLimit(1)
-            if let end = context.state.restEndsAt, end > Date.now {
+            if let range = restRange(context.state.restEndsAt) {
                 HStack {
                     Text("Pause")
                     Spacer()
-                    Text(timerInterval: Date.now...end, countsDown: true)
+                    Text(timerInterval: range, countsDown: true)
                         .monospacedDigit()
                         .foregroundStyle(neon)
                 }

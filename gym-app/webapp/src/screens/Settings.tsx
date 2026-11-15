@@ -9,6 +9,7 @@ import { APP_VERSION, backupFileName, buildBackup, importBackup, markBackupDone,
 import { platform } from '../platform';
 import { csvFileName, trainingCsv } from '../logic/csv';
 import { DEFAULT_PLATES } from '../logic/plates';
+import { syncReminders } from '../logic/reminders';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { useCatalog } from '../ui/ExercisePicker';
 import { isPresent } from '../logic/catalog';
@@ -33,7 +34,8 @@ export function Settings() {
   if (!s) return <div className="screen" />;
   const set = (p: Parameters<typeof saveSettings>[0]) => saveSettings(p);
   type SignalMode = 'aus' | 'ton' | 'vibration' | 'beides';
-  const signalMode: SignalMode = s.restSignal && s.vibration ? 'beides' : s.restSignal ? 'ton' : s.vibration ? 'vibration' : 'aus';
+  const canVib = platform.canVibrate;
+  const signalMode: SignalMode = !canVib ? (s.restSignal ? 'ton' : 'aus') : s.restSignal && s.vibration ? 'beides' : s.restSignal ? 'ton' : s.vibration ? 'vibration' : 'aus';
   const plates = s.plates ?? DEFAULT_PLATES;
   const PLATE_CHOICES = [0.5, 1.25, 2.5, 5, 10, 15, 20, 25, 30];
   const days = s.trainingDays ?? [];
@@ -99,6 +101,7 @@ export function Settings() {
     setBusy(true);
     try {
       await importBackup(preview.backup, mode);
+      void syncReminders();
       setPreview(null);
       toast(mode === 'ersetzen' ? 'Sicherung eingespielt' : 'Sicherung zusammengeführt');
     } catch (e) {
@@ -180,7 +183,7 @@ export function Settings() {
               <span>Fotos in die automatische Sicherung</span>
               <input type="checkbox" checked={!!s.autoBackupPhotos} onChange={(e) => set({ autoBackupPhotos: e.target.checked })} />
             </label>
-            <p className="muted small">Die Dateien liegen in der Dateien-App unter „Auf meinem iPhone“ → Eisenzeit → Sicherungen. Es bleiben die letzten fünf.</p>
+            <p className="muted small">Die Dateien liegen in der Dateien-App unter „Auf meinem iPhone“ → Eisenzeit → Sicherungen (letzte fünf). Sie enthalten alle deine Daten unverschlüsselt, auch Körperwerte, und gehen mit dem Löschen der App verloren – für echten Schutz die Datei zusätzlich in iCloud oder auf einen Rechner kopieren.</p>
           </>
         ) : (
           <p className="muted small">Automatisch im Hintergrund sichern kann nur die iPhone-App. In der Web-Version gibt es nach dem Training den Knopf „Sicherung teilen“.</p>
@@ -224,18 +227,25 @@ export function Settings() {
         <div className="field-label">Signal am Pausenende</div>
         <Segmented<SignalMode>
           value={signalMode}
-          options={[
-            { value: 'aus', label: 'Aus' },
-            { value: 'ton', label: 'Ton' },
-            { value: 'vibration', label: 'Vibration' },
-            { value: 'beides', label: 'Beides' },
-          ]}
-          onChange={(v) => set({ restSignal: v === 'ton' || v === 'beides', vibration: v === 'vibration' || v === 'beides' })}
+          options={
+            canVib
+              ? [
+                  { value: 'aus', label: 'Aus' },
+                  { value: 'ton', label: 'Ton' },
+                  { value: 'vibration', label: 'Vibration' },
+                  { value: 'beides', label: 'Beides' },
+                ]
+              : [
+                  { value: 'aus', label: 'Aus' },
+                  { value: 'ton', label: 'Ton' },
+                ]
+          }
+          onChange={(v) => set(canVib ? { restSignal: v === 'ton' || v === 'beides', vibration: v === 'vibration' || v === 'beides' } : { restSignal: v === 'ton' })}
         />
         {!platform.canVibrate && (
           <p className="muted small">Vibration gibt es auf dem iPhone nur in der iPhone-App. In der Web-Version bleiben Ton und der Hinweis „Pause vorbei“ auf dem Bildschirm.</p>
         )}
-        {platform.name === 'ios' && <p className="muted small">Bei gesperrtem Bildschirm kommt zum Pausenende eine Mitteilung (Ton/Vibration nach deiner iPhone-Einstellung).</p>}
+        {platform.name === 'ios' && <p className="muted small">Ist ein Signal gewählt, kommt zum Pausenende bei gesperrtem Bildschirm eine Mitteilung (mit dem iOS-Standardton; eigener Ton und Vibration nur bei geöffneter App). Die Erlaubnis dafür fragt iOS beim ersten abgehakten Satz.</p>}
         <label className="switch-row">
           <span>10 Sekunden vorher ankündigen</span>
           <input type="checkbox" checked={!!s.restWarn} onChange={(e) => set({ restWarn: e.target.checked })} />
@@ -255,7 +265,10 @@ export function Settings() {
         <p className="muted small">Welche Scheiben gibt es bei dir? Auf scheibenbeladenen Geräten steht unter dem Gewicht, welche Scheiben je Seite aufgelegt werden. Nicht darstellbare Gewichte werden auf das nächste mögliche gerundet.</p>
         <div className="chips wrap">
           {PLATE_CHOICES.map((p) => (
-            <Chip key={p} on={plates.includes(p)} onClick={() => set({ plates: plates.includes(p) ? plates.filter((x) => x !== p) : [...plates, p].sort((a, b) => a - b) })}>
+            <Chip key={p} on={plates.includes(p)} onClick={() => {
+                if (plates.includes(p) && plates.length <= 1) return toast('Mindestens eine Scheibe muss ausgewählt bleiben.', 'error');
+                void set({ plates: plates.includes(p) ? plates.filter((x) => x !== p) : [...plates, p].sort((a, b) => a - b) });
+              }}>
               {String(p).replace('.', ',')} kg
             </Chip>
           ))}
@@ -300,7 +313,7 @@ export function Settings() {
             </Chip>
           ))}
         </div>
-        <Field label="Trainingstage pro Woche">
+        <Field label="Tage pro Woche (für den Plan)">
           <NumberInput decimals={false} value={s.profile.daysPerWeek} min={1} max={7} onChange={(v) => v && set({ profile: { ...s.profile, daysPerWeek: Math.round(v) } })} />
         </Field>
         <p className="muted small">Ziel und Trainingstage dienen als Vorbelegung für Plan-Assistent und „Mit KI planen“ (der Assistent plant 2–6 Tage).</p>
@@ -340,6 +353,7 @@ export function Settings() {
               await Promise.all([db.plans.clear(), db.sessions.clear(), db.bodyMetrics.clear(), db.photos.clear(), db.equipment.clear(), db.exercises.clear(), db.settings.clear()]);
             });
             await seedCatalog(db, true);
+            void syncReminders();
             toast('Alle Daten gelöscht');
             nav('/heute');
           }}

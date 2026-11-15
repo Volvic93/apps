@@ -24,9 +24,13 @@ const cents = (kg: number) => Math.round(kg * 100);
  * Es werden so wenige Scheiben wie möglich verwendet (Münzwechsel-Verfahren), unbegrenzt viele je Größe.
  */
 export function platesPerSide(totalKg: number, ownKg = 0, slots = 2, available: number[] = DEFAULT_PLATES): PlatePlan {
-  const plates = [...new Set(available.filter((p) => p > 0).map(cents))].sort((a, b) => b - a);
-  const s = Math.max(1, Math.round(slots));
-  const requestedKg = totalKg;
+  const num = (v: number, fallback: number) => (Number.isFinite(v) ? v : fallback);
+  // Eingaben begrenzen (Gewichte aus Sicherungen/Eingabe können unsinnig sein; die Tabelle wächst mit dem Gewicht)
+  const plates = [...new Set(available.filter((p) => Number.isFinite(p) && p > 0 && p <= 100).map(cents))].sort((a, b) => b - a);
+  const s = Math.min(8, Math.max(1, Math.round(num(slots, 2))));
+  ownKg = Math.min(500, Math.max(0, num(ownKg, 0)));
+  const requestedKg = num(totalKg, 0);
+  totalKg = Math.min(2000, Math.max(0, requestedKg));
   if (!plates.length) return { perSide: [], perSideKg: 0, totalKg: ownKg, requestedKg, exact: Math.abs(totalKg - ownKg) < 0.005 };
   const wanted = Math.max(0, cents((totalKg - ownKg) / s));
   const limit = wanted + plates[0] + 1;

@@ -112,6 +112,9 @@ jobs:
           BID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")"
           [ "$BID" = "de.eisenzeit.app" ] || { echo "Falsche Bundle-Kennung: $BID"; exit 1; }
           [ -f "$APP/public/index.html" ] || { echo "Web-Dateien fehlen in der App"; exit 1; }
+          if [ "${{ inputs.live_activity == true && '1' || '0' }}" = "1" ]; then
+            [ -d "$APP/PlugIns/EisenzeitWidget.appex" ] || { echo "Widget-Erweiterung fehlt in der App (PlugIns/EisenzeitWidget.appex)"; ls "$APP"; exit 1; }
+          fi
           rm -rf build/ipa && mkdir -p build/ipa/Payload
           cp -R "$APP" build/ipa/Payload/
           (cd build/ipa && zip -qry ../Eisenzeit.ipa Payload)

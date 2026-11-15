@@ -25,12 +25,32 @@ let audioCtx: AudioContext | undefined;
 let wakeLock: WakeLockSentinel | null = null;
 let wantAwake = false;
 
+function audioContext(): AudioContext | undefined {
+  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return undefined;
+  audioCtx ??= new Ctx();
+  return audioCtx;
+}
+
+// Safari erlaubt Ton erst nach einer Berührung: beim ersten Tippen den Audio-Kontext freischalten, damit das Pausensignal später klingt.
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'pointerdown',
+    () => {
+      try {
+        void audioContext()?.resume();
+      } catch {
+        /* Ton ist ein Zusatz */
+      }
+    },
+    { once: true, passive: true },
+  );
+}
+
 function beep(kind: 'end' | 'warn' = 'end') {
   try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    audioCtx ??= new Ctx();
-    const ctx = audioCtx;
+    const ctx = audioContext();
+    if (!ctx) return;
     void ctx.resume();
     const t0 = ctx.currentTime;
     (kind === 'warn' ? [0] : [0, 0.22, 0.44]).forEach((offset, i) => {

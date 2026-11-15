@@ -124,7 +124,7 @@ export function SketchSvg({ pattern, t, label }: { pattern: Pattern; t: number; 
 }
 
 /** Skizze eines Bewegungsmusters: läuft von selbst zwischen Start und Ende; Tippen hält an bzw. schaltet um. */
-export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; title?: string; compact?: boolean }) {
+export function MotionSketch({ pattern, title, compact, bare }: { pattern: Pattern; title?: string; compact?: boolean; bare?: boolean }) {
   const [t, setT] = useState(0);
   const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -152,7 +152,13 @@ export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; ti
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced, paused, visible]);
 
-  const body = reduced ? (
+  const body = bare ? (
+    <div className="sketch" ref={boxRef}>
+      <div className="sketch-frame-bare">
+        <SketchSvg pattern={pattern} t={reduced ? 0 : t} />
+      </div>
+    </div>
+  ) : reduced ? (
     <div className="sketch-pair">
       <figure>
         <SketchSvg pattern={pattern} t={0} />
@@ -206,8 +212,8 @@ export function MotionSketch({ pattern, title, compact }: { pattern: Pattern; ti
 }
 
 /** Skizze zu einer Übung des Katalogs oder einer eigenen Übung (Muster nach `motionId` bzw. Name). */
-export function ExerciseSketch({ ex, title, compact }: { ex: Pick<Exercise, 'id' | 'name'> & { motionId?: string }; title?: string; compact?: boolean }) {
+export function ExerciseSketch({ ex, title, compact, bare }: { ex: Pick<Exercise, 'id' | 'name'> & { motionId?: string }; title?: string; compact?: boolean; bare?: boolean }) {
   const p = motionFor(ex);
   if (!p) return null;
-  return <MotionSketch pattern={p} title={title} compact={compact} />;
+  return <MotionSketch pattern={p} title={title} compact={compact} bare={bare} />;
 }

@@ -4,7 +4,11 @@ import { saveEvaluation } from '../src/data/repo';
 import { seedCatalog } from '../src/data/seed';
 import { buildBackup, validateBackup } from '../src/logic/backup';
 import { EVAL_FORMAT_EXAMPLE, buildOrderMarkdown, correctionText, diffPlanFile, orderFileName, parseAiAnswer, toStoredEvaluation } from '../src/logic/aiorder';
-import { PLAN_FORMAT_EXAMPLE } from '../src/logic/planio';
+import { PLAN_FORMAT_EXAMPLE as PLAN_EXAMPLE_RAW } from '../src/logic/planio';
+
+// Die Beispiele aus dem Auftrag gelten nicht als Antwort – für Tests mit eigenem Text/Begründung
+const PLAN_FORMAT_EXAMPLE = PLAN_EXAMPLE_RAW.replace('Kurze Begründung der Auswahl und Aufteilung.', 'Meine Begründung.');
+const EVAL_ANSWER = EVAL_FORMAT_EXAMPLE.replace('Zwei bis drei Sätze Kurzfazit.', 'Gutes Training, solide Fortschritte.');
 import type { Plan } from '../src/data/types';
 
 beforeAll(async () => {
@@ -53,7 +57,7 @@ describe('Antwort einlesen', () => {
   });
 
   it('erkennt eine Auswertung und deren Planvorschlag', () => {
-    const o = { ...JSON.parse(EVAL_FORMAT_EXAMPLE), nextPlan: JSON.parse(PLAN_FORMAT_EXAMPLE) };
+    const o = { ...JSON.parse(EVAL_ANSWER), nextPlan: JSON.parse(PLAN_FORMAT_EXAMPLE) };
     const r = parseAiAnswer('```json\n' + JSON.stringify(o) + '\n```');
     expect(r.ok && r.kind).toBe('auswertung');
     if (r.ok && r.kind === 'auswertung') expect(r.evaluation.nextPlan?.workouts.length).toBeGreaterThan(0);
@@ -73,6 +77,26 @@ describe('Antwort einlesen', () => {
     expect(broken.ok).toBe(false);
   });
 
+  it('der ganze Auftrag (mit den Beispielen) ist keine Antwort', async () => {
+    const { plan, input } = await base();
+    for (const kind of ['neu', 'anpassen', 'auswertung'] as const) {
+      const r = parseAiAnswer(buildOrderMarkdown(kind, input, plan));
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.errors.join(' ')).toContain('Beispiel');
+    }
+    // Auftrag plus echte Antwort: die Antwort gewinnt
+    const md = buildOrderMarkdown('neu', input, plan);
+    const ok = parseAiAnswer(md + '\n\nAntwort:\n```json\n' + PLAN_FORMAT_EXAMPLE + '\n```');
+    expect(ok.ok && ok.kind).toBe('plan');
+  });
+
+  it('merkt sich die Art des Fehlers für den Korrekturtext', () => {
+    const bad = parseAiAnswer('```json\n{"format":"eisenzeit-auswertung","version":1}\n```');
+    expect(!bad.ok && bad.kind).toBe('auswertung');
+    const bad2 = parseAiAnswer('```json\n{"format":"eisenzeit-plan","workouts":[]}\n```');
+    expect(!bad2.ok && bad2.kind).toBe('plan');
+  });
+
   it('erzeugt einen Korrekturtext zum Zurückgeben', () => {
     const t = correctionText(['"summary" (Kurzfazit) fehlt.'], 'auswertung');
     expect(t).toContain('nicht übernommen');
@@ -82,6 +106,16 @@ describe('Antwort einlesen', () => {
 });
 
 describe('Plan anpassen: Unterschiede', () => {
+  it('eine eingefügte Einheit ist eine neue Einheit, nicht ein Ersatz', async () => {
+    const mk = (name: string, ids: string[]) => ({ id: name, name, items: ids.map((e, i) => ({ id: `${name}${i}`, exerciseId: e, sets: 3, repMin: 8, repMax: 12, restSec: 90 })) });
+    const old = { workouts: [mk('A', ['e1']), mk('B', ['e3'])] } as unknown as Plan;
+    const file = { format: 'eisenzeit-plan', version: 1, name: 'x', goal: '', plannedWeeks: 8, workouts: [{ name: 'A', items: [{ exercise: 'e1', sets: 3, repMin: 8, repMax: 12, restSec: 90 }] }, { name: 'Rumpf', items: [{ exercise: 'e9', sets: 3, repMin: 8, repMax: 12, restSec: 60 }] }, { name: 'B', items: [{ exercise: 'e3', sets: 3, repMin: 8, repMax: 12, restSec: 90 }] }] };
+    const text = diffPlanFile(old, file as never, (r) => r, (id) => id).join('\n');
+    expect(text).toContain('Neue Einheit „Rumpf“');
+    expect(text).toContain('„B“ – unverändert');
+    expect(text).not.toContain('entfernt');
+  });
+
   it('zeigt neue, entfernte und geänderte Übungen', async () => {
     const { plan } = await base();
     const file = parseAiAnswer(
@@ -111,12 +145,12 @@ describe('Auswertung speichern', () => {
   it('wird am Plan gespeichert, bleibt in der Sicherung und besteht die Prüfung', async () => {
     const { plan } = await base();
     await db.plans.put(plan);
-    const r = parseAiAnswer('```json\n' + EVAL_FORMAT_EXAMPLE + '\n```');
+    const r = parseAiAnswer('```json\n' + EVAL_ANSWER + '\n```');
     if (!r.ok || r.kind !== 'auswertung') throw new Error('keine Auswertung');
     expect(await saveEvaluation('p1', toStoredEvaluation(r.evaluation, 123))).toBe(true);
     expect(await saveEvaluation('gibt-es-nicht', toStoredEvaluation(r.evaluation, 123))).toBe(false);
     const stored = await db.plans.get('p1');
-    expect(stored?.evaluation?.summary).toContain('Kurzfazit');
+    expect(stored?.evaluation?.summary).toContain('Gutes Training');
     const backup = await buildBackup(db, false);
     const v = validateBackup(JSON.parse(JSON.stringify(backup)));
     expect(v.ok).toBe(true);

@@ -289,9 +289,9 @@ def({
   view: 'side',
   cues: ['Oberarme am Kopf', 'Nach oben strecken', 'Ellbogen zeigen nach vorn'],
   start: P(-90, [-10, 0.55], [88, 1], { elbow: 1 }),
-  end: P(-90, [-90, 1], [88, 1], { elbow: 1 }),
+  end: P(-90, [-90, 0.92], [88, 1], { elbow: 1 }),
   gear: [FLOOR(61), db],
-  arrow: { a: [6, -40], b: [6, -76] },
+  arrow: { a: [6, -40], b: [6, -70] },
 });
 def({
   id: 'skullcrusher',
@@ -641,13 +641,13 @@ const RULES: [RegExp, string][] = [
   [/kreuzheben/, 'kreuzheben'],
   [/handgelenk/, 'handgelenkcurl'],
   [/skullcrusher|stirndrücken/, 'skullcrusher'],
+  [/dips/, 'dips'],
   [/trizeps-ueberkopf|trizepsstrecken|overhead extension/, 'trizeps-ueberkopf'],
   [/trizeps|push down|pushdown/, 'trizepsdruecken'],
-  [/dips/, 'dips'],
   [/beinbeuger-liegend|beinbeuger liegend/, 'beinbeuger-liegend'],
   [/beinbeuger-stehend|beinbeuger stehend/, 'beinbeuger-stehend'],
   [/beinbeuger|leg-curl|leg curl/, 'beinbeuger-sitzend'],
-  [/scott|gymleco-biceps|konzentrationscurl/, 'scott-curl'],
+  [/scott|gymleco.*(bicep|curl)|(bicep|curl).*gymleco|konzentrationscurl/, 'scott-curl'],
   [/curl/, 'bizepscurl'],
   [/face-pull|face pull/, 'face-pull'],
   [/überzug|ueberzug|pullover|pull over/, 'ueberzug'],
@@ -655,10 +655,10 @@ const RULES: [RegExp, string][] = [
   [/latzug/, 'latzug'],
   [/brustrudern|brustauflage|2way-row|tbar/, 'rudern-brustauflage'],
   [/vorgebeugt.*rudern|rudern.*vorgebeugt|rudern-langhantel|rudern-kurzhantel|langhantelrudern|kurzhantelrudern|rudern-vorgebeugt|bent over row/, 'rudern-vorgebeugt'],
-  [/aufrechtes[- ]rudern/, 'aufrechtes-rudern'],
-  [/rudern|row/, 'rudern-sitzend'],
+  [/aufrecht(es)?[- ]rudern/, 'aufrechtes-rudern'],
+  [/rudern|\brow\b/, 'rudern-sitzend'],
   [/shrug/, 'shrugs'],
-  [/reverse|vorgebeugtes seitheben|seitheben-vorgebeugt|fliegende/, 'fliegende'],
+  [/reverse[- ](fly|butterfly|raise)|vorgebeugtes seitheben|seitheben-vorgebeugt|fliegende/, 'fliegende'],
   [/cross-over|crossover|cross over/, 'crossover'],
   [/butterfly|pec-dec|pec dec/, 'butterfly'],
   [/seitheben|lateral/, 'seitheben'],
@@ -673,15 +673,11 @@ const RULES: [RegExp, string][] = [
   [/schraegbank|schrägbank/, 'schraegbankdruecken'],
   [/bankdr|multipresse|power-smith|power smith/, 'bankdruecken'],
   [/brustpresse|brustdrücken|brustdruecken|chest press/, 'brustpresse'],
-  [/sissy/, 'sissy-squat'],
-  [/hackenschmidt|purekraft-beinpresse|pendulum-squat|pendel-kniebeuge/, 'hackenschmidt'],
-  [/belt-squat|belt squat/, 'belt-squat'],
   [/hip-press|hüftpresse|hueftpresse/, 'hueftpresse'],
   [/beinpresse/, 'beinpresse'],
-  [/ausfall|bulgarian/, 'ausfallschritt'],
   [/beinstrecker|leg-extension|leg extension/, 'beinstrecker'],
   [/hip-thrust|hip thrust/, 'hip-thrust'],
-  [/kick/, 'kickback'],
+  [/kickback|kickmaschine|\bkick\b/, 'kickback'],
   [/adduktoren/, 'adduktion'],
   [/abduktoren|gluteral/, 'abduktion'],
   [/donkey|vorgebeugt/, 'waden-vorgebeugt'],
@@ -691,6 +687,7 @@ const RULES: [RegExp, string][] = [
 
 /** Muster einer Übung: ausdrücklich gesetzte `motionId`, sonst nach Kennung und Name. */
 export function motionIdFor(ex: Pick<Exercise, 'id' | 'name'> & { motionId?: string }): string | undefined {
+  if (ex.motionId === 'none') return undefined; // ausdrücklich keine Skizze
   if (ex.motionId && MOTION_BY_ID[ex.motionId]) return ex.motionId;
   // Erst nach dem Namen suchen (er ist maßgeblich), dann nach der Kennung (manche Kennungen sind historisch vertauscht)
   for (const hay of [ex.name.toLowerCase(), ex.id.toLowerCase()]) {

@@ -163,6 +163,10 @@
 .summary-hero {
   background: var(--brand) !important;
   border: 1px solid var(--brand-edge) !important;
+  --muted: rgba(244, 246, 238, 0.72);
+  --text: #f4f6ee;
+  --line: rgba(244, 246, 238, 0.14);
+  --line-strong: rgba(244, 246, 238, 0.2);
   --label: #f4f6ee;
   --label-2: rgba(244, 246, 238, 0.72);
   --label-3: rgba(244, 246, 238, 0.45);
@@ -966,7 +970,7 @@ input[type='checkbox']:checked::after {
   animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .sheet.tall {
-  height: 90dvh;
+  height: min(90dvh, calc(100dvh - var(--top-inset, 0px) - 8px));
 }
 .sheet-handle {
   width: 40px;
@@ -1027,7 +1031,7 @@ input[type='checkbox']:checked::after {
 }
 .toasts {
   position: fixed;
-  top: calc(var(--safe-top) + 10px);
+  top: calc(var(--top-inset, var(--safe-top)) + 8px);
   left: 0;
   right: 0;
   z-index: 300;
@@ -1575,10 +1579,10 @@ input[type='checkbox']:checked::after {
   gap: 10px;
 }
 .up {
-  color: var(--ok);
+  color: var(--ok-text, var(--ok));
 }
 .down {
-  color: var(--warn);
+  color: var(--warn-text, var(--warn));
 }
 
 /* ------------------------------------------------------------------ Trainingsmodus */
@@ -1791,7 +1795,7 @@ input[type='checkbox']:checked::after {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 2px solid var(--line-strong);
+  border: 2px solid var(--label-3);
   color: var(--muted);
   flex: none;
   transition: transform 0.1s, background 0.15s;

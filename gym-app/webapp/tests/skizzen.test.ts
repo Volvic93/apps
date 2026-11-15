@@ -45,6 +45,8 @@ describe('Bewegungsskizzen', () => {
       'ex-panatta-donkey-calf': 'waden-vorgebeugt',
       'ex-trizeps-ueberkopf': 'trizeps-ueberkopf',
       'ex-aufrechtes-rudern': 'aufrechtes-rudern',
+      'ex-gymleco-biceps-curl': 'scott-curl',
+      'ex-dips': 'dips',
       'ex-rudern-kurzhantel-einarmig': 'rudern-vorgebeugt',
     };
     for (const [id, pattern] of Object.entries(expected)) {
@@ -57,6 +59,9 @@ describe('Bewegungsskizzen', () => {
   it('eine ausdrücklich gesetzte motionId hat Vorrang', () => {
     expect(motionIdFor({ id: 'eigen', name: 'Meine Übung', motionId: 'plank' } as never)).toBe('plank');
     expect(motionIdFor({ id: 'eigen', name: 'Meine Übung', motionId: 'gibt-es-nicht' } as never)).toBeUndefined();
+    expect(motionIdFor({ id: 'ex-dips', name: 'Dips (Barren)', motionId: 'none' } as never)).toBeUndefined();
+    expect(motionIdFor({ id: 'x', name: 'Trizeps-Dips' })).toBe('dips');
+    expect(motionIdFor({ id: 'x', name: 'Kickboxen' })).toBeUndefined();
   });
 
   it('alle Muster haben Start, Ende, Stichworte und eindeutige Kennungen', () => {

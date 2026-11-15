@@ -126,9 +126,12 @@ export function buildOrderMarkdown(kind: OrderKind, input: AiExportInput, basePl
 export type AiAnswer =
   | { ok: true; kind: 'plan'; plan: PlanFile; warnings: string[] }
   | { ok: true; kind: 'auswertung'; evaluation: EvaluationFile; warnings: string[] }
-  | { ok: false; errors: string[] };
+  | { ok: false; errors: string[]; kind?: 'plan' | 'auswertung' };
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Die Beispiele aus dem Auftrag selbst sind keine Antwort (sie kommen mit, wenn der ganze Auftrag eingefügt wird). */
+const isExample = (o: Record<string, unknown>) => o.explanation === 'Kurze Begründung der Auswahl und Aufteilung.' || o.summary === 'Zwei bis drei Sätze Kurzfazit.';
 
 function stringList(v: unknown, label: string, errors: string[]): string[] {
   if (v === undefined) return [];
@@ -151,7 +154,8 @@ export function validateEvaluationObject(o: Record<string, unknown>): { ok: true
   if (o.format !== EVAL_FORMAT) errors.push(`Unbekanntes Format „${String(o.format)}“ (erwartet: ${EVAL_FORMAT}).`);
   if (o.version !== undefined && (typeof o.version !== 'number' || o.version > EVAL_FORMAT_VERSION)) errors.push('Die Version des Auswertungsformats wird von dieser App-Version nicht unterstützt.');
   const summary = typeof o.summary === 'string' ? o.summary.trim().slice(0, 2000) : '';
-  if (!summary) errors.push('"summary" (Kurzfazit) fehlt.');
+  if (typeof o.summary !== 'string') errors.push(o.summary === undefined ? '"summary" (Kurzfazit) fehlt.' : '"summary" muss ein Text sein.');
+  else if (!summary) errors.push('"summary" (Kurzfazit) ist leer.');
   const wentWell = stringList(o.wentWell, 'wentWell', errors);
   const stalled = stringList(o.stalled, 'stalled', errors);
   const recommendations = stringList(o.recommendations, 'recommendations', errors);
@@ -199,6 +203,12 @@ export function parseAiAnswer(text: string): AiAnswer {
       parseError = true;
     }
   }
+  const real = found.filter((o) => !isExample(o));
+  if (found.length > 0 && real.length === 0) {
+    return { ok: false, errors: ['Das ist nur das Beispiel aus dem Auftrag, keine Antwort der KI. Füge die Antwort der KI ein (den Block, den sie geschrieben hat).'] };
+  }
+  found.length = 0;
+  found.push(...real);
   if (!found.length) {
     return {
       ok: false,
@@ -210,19 +220,26 @@ export function parseAiAnswer(text: string): AiAnswer {
     };
   }
   let lastErrors: string[] | undefined;
+  let lastKind: 'plan' | 'auswertung' | undefined;
   for (let i = found.length - 1; i >= 0; i--) {
     const o = found[i];
     if (o.format === EVAL_FORMAT || (o.format === undefined && o.summary !== undefined && !Array.isArray(o.workouts))) {
       const r = validateEvaluationObject({ ...o, format: EVAL_FORMAT });
       if (r.ok) return { ok: true, kind: 'auswertung', evaluation: r.evaluation, warnings: r.warnings };
-      lastErrors ??= r.errors;
+      if (!lastErrors) {
+        lastErrors = r.errors;
+        lastKind = 'auswertung';
+      }
     } else {
       const r = validatePlanObject(o);
       if (r.ok) return { ok: true, kind: 'plan', plan: r.plan, warnings: r.warnings };
-      lastErrors ??= r.errors;
+      if (!lastErrors) {
+        lastErrors = r.errors;
+        lastKind = 'plan';
+      }
     }
   }
-  return { ok: false, errors: lastErrors ?? ['In dem Text wurde keine gültige Antwort gefunden.'] };
+  return { ok: false, errors: lastErrors ?? ['In dem Text wurde keine gültige Antwort gefunden.'], kind: lastKind };
 }
 
 /** Kurzer Text, den man der KI zurückgeben kann, wenn ihre Antwort nicht übernommen werden konnte. */
@@ -256,16 +273,33 @@ const range = (a: number, b: number) => (a === b ? String(a) : `${a}–${b}`);
 export function diffPlanFile(old: Pick<Plan, 'workouts'>, file: PlanFile, resolve: (ref: string) => string | null, nameOf: (id: string) => string): string[] {
   const lines: string[] = [];
   const norm = (s: string) => s.trim().toLowerCase();
-  const oldByName = new Map(old.workouts.map((w) => [norm(w.name), w]));
-  const used = new Set<string>();
+  // 1. Durchgang: Einheiten mit gleichem Namen; 2. Durchgang: übrige nach Position (nur, wenn dort nichts Namensgleiches wartet)
+  const match = new Map<number, (typeof old.workouts)[number]>();
+  const taken = new Set<number>();
   file.workouts.forEach((w, wi) => {
-    const o = oldByName.get(norm(w.name)) ?? (old.workouts[wi] && !used.has(norm(old.workouts[wi].name)) ? old.workouts[wi] : undefined);
+    const oi = old.workouts.findIndex((o, k) => !taken.has(k) && norm(o.name) === norm(w.name));
+    if (oi >= 0) {
+      match.set(wi, old.workouts[oi]);
+      taken.add(oi);
+    }
+  });
+  file.workouts.forEach((_w, wi) => {
+    if (match.has(wi)) return;
+    const o = old.workouts[wi];
+    const sameNameLater = o && file.workouts.some((x) => norm(x.name) === norm(o.name));
+    if (o && !taken.has(wi) && !sameNameLater) {
+      match.set(wi, o);
+      taken.add(wi);
+    }
+  });
+  file.workouts.forEach((w, wi) => {
+    const o = match.get(wi);
     if (!o) {
       lines.push(`Neue Einheit „${w.name}“ (${w.items.length} Übungen)`);
       return;
     }
-    used.add(norm(o.name));
-    const oldItems = new Map(o.items.map((i) => [i.exerciseId, i]));
+    const oldItems = new Map<string, (typeof o.items)[number]>();
+    for (const i of o.items) if (!oldItems.has(i.exerciseId)) oldItems.set(i.exerciseId, i);
     const parts: string[] = [];
     const seen = new Set<string>();
     for (const it of w.items) {
@@ -275,10 +309,14 @@ export function diffPlanFile(old: Pick<Plan, 'workouts'>, file: PlanFile, resolv
       if (id) seen.add(id);
       if (!prev) parts.push(`neu: ${label}`);
       else if (prev.sets !== it.sets || prev.repMin !== it.repMin || prev.repMax !== it.repMax) parts.push(`geändert: ${label} (${prev.sets} × ${range(prev.repMin, prev.repMax)} → ${it.sets} × ${range(it.repMin, it.repMax)})`);
+      else if (prev.restSec !== it.restSec) parts.push(`Pause geändert: ${label} (${prev.restSec} s → ${it.restSec} s)`);
+      else if ((prev.targetWeight ?? 0) !== (it.targetWeight ?? 0)) parts.push(`Zielgewicht geändert: ${label}`);
     }
     for (const [id] of oldItems) if (!seen.has(id)) parts.push(`entfernt: ${nameOf(id)}`);
     lines.push(parts.length ? `„${w.name}“ – ${parts.join(' · ')}` : `„${w.name}“ – unverändert`);
   });
-  for (const o of old.workouts) if (!used.has(norm(o.name))) lines.push(`Einheit „${o.name}“ entfällt`);
+  old.workouts.forEach((o, k) => {
+    if (!taken.has(k)) lines.push(`Einheit „${o.name}“ entfällt`);
+  });
   return lines;
 }

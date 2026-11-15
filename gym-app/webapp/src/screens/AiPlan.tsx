@@ -30,7 +30,7 @@ export function AiPlan() {
   const [text, setText] = useState<string | undefined>(undefined);
 
   const list = plans ?? [];
-  const planId = planPick ?? (list.find((p) => p.status === 'aktiv') ?? [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0])?.id;
+  const planId = (planPick && list.some((p) => p.id === planPick) ? planPick : undefined) ?? (list.find((p) => p.status === 'aktiv') ?? [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0])?.id;
   const needsPlan = kind !== 'neu';
   useEffect(() => setText(undefined), [kind, planId, weeks, wishes, general]);
 
@@ -139,7 +139,7 @@ export function AiPlan() {
 
       <div className="section-label">2. Antwort der KI zurückbringen</div>
       <p className="muted small">Text einfügen oder die Antwortdatei wählen (.md, .txt, .json). Die App findet den JSON-Block auch in umgebendem Text.</p>
-      <ImportPanel placeholder="Antwort der KI hier einfügen – der JSON-Block wird auch in umgebendem Text gefunden." />
+      <ImportPanel placeholder="Antwort der KI hier einfügen – der JSON-Block wird auch in umgebendem Text gefunden." preferPlanId={needsPlan ? planId : undefined} />
     </div>
   );
 }

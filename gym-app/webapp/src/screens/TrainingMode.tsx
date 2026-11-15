@@ -83,10 +83,10 @@ function EntryHero({ ex, cat, started }: { ex: Exercise; cat: Catalog; started: 
             {images.length > 1 && <span className="hero2-more">{images.length} Bilder</span>}
           </button>
           {pattern && (
-            <button type="button" className="hero2-sketch" onClick={() => setSketchOpen(true)} aria-label="Bewegungsskizze vergrößern">
-              <ExerciseSketch ex={ex} compact />
+            <div role="button" tabIndex={0} className="hero2-sketch" onClick={() => setSketchOpen(true)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSketchOpen(true)} aria-label="Bewegungsskizze vergrößern">
+              <ExerciseSketch ex={ex} compact bare />
               <span className="hero2-more">Skizze</span>
-            </button>
+            </div>
           )}
         </div>
       )}
@@ -121,7 +121,13 @@ export function TrainingMode({ initial, onEnd }: { initial: Session; onEnd: (fin
   const [infoOpen, setInfoOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
-  const swapping = useRef(false); // vor dem frühen Return: Hooks dürfen nicht bedingt aufgerufen werden
+  const swapping = useRef(false);
+  const currentIdx = s.currentIndex ?? 0;
+  useEffect(() => {
+    // neue Übung: wieder nach oben (Foto, Name, „Letztes Mal“ sichtbar)
+    document.querySelector('.train-body')?.scrollTo(0, 0);
+  }, [currentIdx]);
+  // (Hooks stehen vor dem frühen Return)
 
   const idx = Math.max(0, Math.min(s.currentIndex ?? 0, Math.max(0, s.entries.length - 1)));
   const entry: Entry | undefined = s.entries[idx];

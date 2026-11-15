@@ -62,8 +62,10 @@ export function jsonCandidates(text: string): string[] {
     if (t.startsWith('{')) out.push(t);
   }
   // ausgeglichene Klammern, Zeichenketten beachten
+  let scans = 0; // Schutz gegen Müll-Eingaben mit sehr vielen offenen Klammern (sonst quadratische Laufzeit)
   for (let i = 0; i < text.length; i++) {
     if (text[i] !== '{') continue;
+    if (++scans > 400) break;
     let depth = 0;
     let inStr = false;
     for (let j = i; j < text.length; j++) {
@@ -388,7 +390,7 @@ export function aiContext(input: AiExportInput, basePlan?: Plan): { lines: strin
   out.push('', `# Verfügbare Übungen (${offered.length}) – Format: Kennung | Name | Hauptmuskeln | Gerät`);
   for (const e of offered) {
     const eq = e.equipmentId ? equipment.get(e.equipmentId) : undefined;
-    out.push(`${e.id} | ${e.name} | ${e.primaryMuscles.map((m) => MUSCLE_LABEL[m]).join(', ') || '–'} | ${eq ? eq.name : 'ohne Gerät'}${e.tracking === 'cardio' ? ' | Ausdauer' : e.tracking === 'zeit' ? ' | Zeit' : ''}`);
+    out.push(`${e.id} | ${e.name} | ${e.primaryMuscles.map((m) => MUSCLE_LABEL[m]).join(', ') || '–'} | ${eq ? eq.name : 'ohne Gerät'}${e.tracking === 'cardio' ? ' | Ausdauer' : e.tracking === 'zeit' ? ' | Zeit' : ''}${weightUnit(eq) === 'platte' ? ' | Plattennummer (Zahl auf der Platte, keine kg)' : ''}`);
   }
   out.push('', '# Bisheriger Plan');
   if (active) {

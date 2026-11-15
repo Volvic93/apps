@@ -196,7 +196,7 @@ export function validateBackup(raw: unknown): ValidationResult {
     if (!['entwurf', 'aktiv', 'archiv'].includes(r.status as string)) errors.push(`Plan "${String(r.name)}": ungültiger Status.`);
     if (r.evaluation !== undefined) {
       const ev = r.evaluation;
-      if (!isObj(ev) || typeof ev.summary !== 'string' || !strArr(ev.wentWell) || !strArr(ev.stalled) || !strArr(ev.recommendations) || !strArr(ev.nextPlanNotes)) errors.push(`Plan "${String(r.name)}": die Auswertung ist ungültig.`);
+      if (!isObj(ev) || typeof ev.summary !== 'string' || typeof ev.at !== 'number' || !strArr(ev.wentWell) || !strArr(ev.stalled) || !strArr(ev.recommendations) || !strArr(ev.nextPlanNotes)) errors.push(`Plan "${String(r.name)}": die Auswertung ist ungültig.`);
     }
     if (!Array.isArray(r.workouts)) {
       errors.push(`Plan "${String(r.name)}": Einheiten fehlen.`);

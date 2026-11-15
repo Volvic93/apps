@@ -17,7 +17,7 @@ const NEW = '__neu__';
  * Plan einfügen (Text oder Datei), prüfen, Übungen zuordnen, Vorschau mit Begründung – gespeichert wird erst nach Bestätigung.
  * Wird vom Plan-Import und von „Mit KI planen“ verwendet.
  */
-export function ImportPanel({ placeholder }: { placeholder?: string }) {
+export function ImportPanel({ placeholder, preferPlanId }: { placeholder?: string; preferPlanId?: string }) {
   const nav = useNavigate();
   const { toast } = useUi();
   const cat = useCatalog();
@@ -31,6 +31,8 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
   const plans = useLive(() => db.plans.toArray());
   const [evaluation, setEvaluation] = useState<EvaluationFile | undefined>(undefined);
   const [evalPlanId, setEvalPlanId] = useState('');
+  const [evalSaved, setEvalSaved] = useState(false);
+  const [errorKind, setErrorKind] = useState<'plan' | 'auswertung' | undefined>(undefined);
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const resultRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -49,16 +51,19 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
     const r = parseAiAnswer(value);
     if (!r.ok) {
       setErrors(r.errors);
+      setErrorKind(r.kind);
       setParsed(undefined);
       setEvaluation(undefined);
       return;
     }
     setErrors([]);
+    setEvalSaved(false);
     if (r.kind === 'auswertung') {
       setEvaluation(r.evaluation);
       const list = plans ?? [];
       const byName = r.evaluation.planName ? list.find((p) => p.name.toLowerCase() === r.evaluation.planName!.toLowerCase()) : undefined;
-      setEvalPlanId((byName ?? list.find((p) => p.status === 'aktiv') ?? [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0])?.id ?? '');
+      const preferred = list.find((p) => p.id === preferPlanId);
+      setEvalPlanId((preferred ?? byName ?? list.find((p) => p.status === 'aktiv') ?? [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0])?.id ?? '');
       if (r.evaluation.nextPlan) analyzePlan(r.evaluation.nextPlan, r.warnings);
       else setParsed(undefined);
     } else {
@@ -69,7 +74,7 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
 
   const copyCorrection = async () => {
     try {
-      await navigator.clipboard.writeText(correctionText(errors));
+      await navigator.clipboard.writeText(correctionText(errors, errorKind));
       toast('Korrekturtext kopiert – gib ihn der KI zurück');
     } catch {
       toast('Kopieren nicht möglich.', 'error');
@@ -82,7 +87,10 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
     try {
       const ok = await saveEvaluation(evalPlanId, toStoredEvaluation(evaluation, Date.now()));
       toast(ok ? 'Auswertung am Plan gespeichert' : 'Der Plan wurde nicht gefunden.', ok ? 'ok' : 'error');
-      if (ok) nav(`/plaene/${evalPlanId}`);
+      if (ok) {
+        setEvalSaved(true);
+        if (!parsed) nav(`/plaene/${evalPlanId}`); // mit Planvorschlag bleibt die Ansicht stehen, damit auch der Plan noch gespeichert werden kann
+      }
     } finally {
       setBusy(false);
     }
@@ -203,8 +211,8 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
               ))}
             </select>
           </label>
-          <button className="btn primary block" onClick={saveEval} disabled={busy || !evalPlanId}>
-            Auswertung speichern
+          <button className="btn primary block" onClick={saveEval} disabled={busy || !evalPlanId || evalSaved}>
+            {evalSaved ? 'Auswertung gespeichert' : 'Auswertung speichern'}
           </button>
         </section>
       )}
@@ -326,7 +334,7 @@ export function PlanImport() {
   return (
     <div className="screen">
       <ScreenHeader back={<BackButton to="/plaene" label="Pläne" />} title="Plan importieren" eyebrow="Pläne" />
-      <p className="muted">Füge einen Plan im Format „eisenzeit-plan“ ein oder wähle die exportierte Datei. Die App prüft ihn, ordnet die Übungen zu und zeigt eine Vorschau. Erst danach wird gespeichert.</p>
+      <p className="muted">Füge einen Plan im Format „eisenzeit-plan“ (oder eine Auswertung im Format „eisenzeit-auswertung“) ein oder wähle die Datei. Die App prüft ihn, ordnet die Übungen zu und zeigt eine Vorschau. Erst danach wird gespeichert.</p>
       <ImportPanel />
     </div>
   );

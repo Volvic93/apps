@@ -4,7 +4,7 @@
     <script>
       /* Als Home-Bildschirm-App oder in der iOS-Hülle: oberer Schutzbereich unter der Statusleiste (siehe apple.css) */
       try {
-        if (window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || location.protocol === 'capacitor:') document.documentElement.classList.add('standalone');
+        if (window.navigator.standalone === true || location.protocol === 'capacitor:') document.documentElement.classList.add('standalone');
       } catch (e) {}
     </script>
     <meta charset="UTF-8" />

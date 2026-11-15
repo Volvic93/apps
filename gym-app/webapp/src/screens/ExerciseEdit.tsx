@@ -137,6 +137,7 @@ export function ExerciseEdit() {
       <Field label="Muster" hint="Die gezeichnete Skizze zeigt, wie die Übung ausgeführt wird. „Automatisch“ wählt nach dem Namen.">
         <select className="input" value={ex.motionId ?? ''} onChange={(e) => patch({ motionId: e.target.value || undefined })}>
           <option value="">Automatisch{motionIdFor({ id: ex.id, name: ex.name }) ? ` (${MOTION_PATTERNS.find((p) => p.id === motionIdFor({ id: ex.id, name: ex.name }))?.name})` : ' (keine passende)'}</option>
+          <option value="none">Keine Skizze</option>
           {MOTION_PATTERNS.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { importPlanFile } from '../data/repo';
-import { matchAll, parsePlanText, type Match, type PlanFile } from '../logic/planio';
+import { db } from '../data/db';
+import { importPlanFile, saveEvaluation } from '../data/repo';
+import { correctionText, diffPlanFile, parseAiAnswer, toStoredEvaluation, type EvaluationFile } from '../logic/aiorder';
+import { matchAll, type Match, type PlanFile } from '../logic/planio';
 import { formatNumber, weightUnit } from '../logic/progression';
 import { platform } from '../platform';
 import { ExercisePicker, useCatalog } from '../ui/ExercisePicker';
 import { BackButton, ScreenHeader } from '../ui/Header';
+import { useLive } from '../ui/hooks';
 import { useUi } from '../ui/kit';
 
 const NEW = '__neu__';
@@ -25,24 +28,64 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
   const [choice, setChoice] = useState<Map<string, string>>(new Map()); // Referenz → Kennung | NEW
   const [pickFor, setPickFor] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
+  const plans = useLive(() => db.plans.toArray());
+  const [evaluation, setEvaluation] = useState<EvaluationFile | undefined>(undefined);
+  const [evalPlanId, setEvalPlanId] = useState('');
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const resultRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
 
-  const analyze = (value: string) => {
+  const analyzePlan = (plan: PlanFile, warnings: string[]) => {
     if (!cat) return;
-    const r = parsePlanText(value);
-    if (!r.ok) {
-      setErrors(r.errors);
-      setParsed(undefined);
-      return;
-    }
-    const m = matchAll(r.plan, cat.exercises);
-    setErrors([]);
-    setParsed({ plan: r.plan, warnings: r.warnings });
+    const m = matchAll(plan, cat.exercises);
+    setParsed({ plan, warnings });
     setMatches(m);
     setChoice(new Map([...m.entries()].map(([ref, mm]) => [ref, mm.exerciseId ?? NEW])));
     setConfirmed(new Set());
+  };
+
+  const analyze = (value: string) => {
+    if (!cat) return;
+    const r = parseAiAnswer(value);
+    if (!r.ok) {
+      setErrors(r.errors);
+      setParsed(undefined);
+      setEvaluation(undefined);
+      return;
+    }
+    setErrors([]);
+    if (r.kind === 'auswertung') {
+      setEvaluation(r.evaluation);
+      const list = plans ?? [];
+      const byName = r.evaluation.planName ? list.find((p) => p.name.toLowerCase() === r.evaluation.planName!.toLowerCase()) : undefined;
+      setEvalPlanId((byName ?? list.find((p) => p.status === 'aktiv') ?? [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0])?.id ?? '');
+      if (r.evaluation.nextPlan) analyzePlan(r.evaluation.nextPlan, r.warnings);
+      else setParsed(undefined);
+    } else {
+      setEvaluation(undefined);
+      analyzePlan(r.plan, r.warnings);
+    }
+  };
+
+  const copyCorrection = async () => {
+    try {
+      await navigator.clipboard.writeText(correctionText(errors));
+      toast('Korrekturtext kopiert – gib ihn der KI zurück');
+    } catch {
+      toast('Kopieren nicht möglich.', 'error');
+    }
+  };
+
+  const saveEval = async () => {
+    if (!evaluation || !evalPlanId) return;
+    setBusy(true);
+    try {
+      const ok = await saveEvaluation(evalPlanId, toStoredEvaluation(evaluation, Date.now()));
+      toast(ok ? 'Auswertung am Plan gespeichert' : 'Der Plan wurde nicht gefunden.', ok ? 'ok' : 'error');
+      if (ok) nav(`/plaene/${evalPlanId}`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Ergebnis bzw. Fehlermeldung in den Blick holen (liegt sonst unter dem Bildschirmrand)
@@ -58,7 +101,7 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
   };
 
   const pickFile = async () => {
-    const f = await platform.pickFile('application/json,.json,.txt,text/plain');
+    const f = await platform.pickFile('application/json,.json,.md,.txt,text/markdown,text/plain');
     if (!f) return;
     try {
       const t = await f.text();
@@ -94,14 +137,14 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
   return (
     <>
       <section className="card">
-        <div className="card-title">Plan einfügen</div>
+        <div className="card-title">Antwort der KI einfügen</div>
         <textarea
           className="input area"
           rows={6}
           value={text}
           placeholder={placeholder ?? 'Plan hier einfügen – auch mit umgebendem Text, der JSON-Block wird gefunden.'}
           onChange={(e) => setText(e.target.value)}
-          aria-label="Plan als Text"
+          aria-label="Antwort der KI (Plan oder Auswertung) als Text"
         />
         <div className="row gap">
           <button className="btn primary grow" disabled={!text.trim()} onClick={() => analyze(text)}>
@@ -119,9 +162,52 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
                 <li key={i}>{e}</li>
               ))}
             </ul>
+            <button className="btn small" onClick={copyCorrection}>
+              Korrekturtext für die KI kopieren
+            </button>
           </div>
         )}
       </section>
+
+      {evaluation && (
+        <section className="card" ref={parsed ? undefined : resultRef}>
+          <div className="card-title">Auswertung{evaluation.planName ? ` · ${evaluation.planName}` : ''}</div>
+          <p>{evaluation.summary}</p>
+          {(
+            [
+              ['Das lief gut', evaluation.wentWell],
+              ['Das stagniert', evaluation.stalled],
+              ['Empfehlungen', evaluation.recommendations],
+              ['Für den nächsten Plan', evaluation.nextPlanNotes],
+            ] as [string, string[]][]
+          )
+            .filter(([, l]) => l.length > 0)
+            .map(([title, l]) => (
+              <div key={title}>
+                <b>{title}</b>
+                <ul className="plain-list">
+                  {l.map((x, i) => (
+                    <li key={i}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          {evaluation.nextPlan && <p className="muted small">Die Auswertung enthält einen Planvorschlag – er steht unten zur Prüfung.</p>}
+          <label className="field">
+            <span className="field-label">Auswertung speichern bei Plan</span>
+            <select className="input" value={evalPlanId} onChange={(e) => setEvalPlanId(e.target.value)}>
+              {(plans ?? []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn primary block" onClick={saveEval} disabled={busy || !evalPlanId}>
+            Auswertung speichern
+          </button>
+        </section>
+      )}
 
       {parsed && (
         <>
@@ -142,6 +228,21 @@ export function ImportPanel({ placeholder }: { placeholder?: string }) {
                 {parsed.plan.explanation}
               </div>
             )}
+            {parsed.plan.basedOn && (() => {
+              const base = (plans ?? []).find((p) => p.name.toLowerCase() === parsed.plan.basedOn!.toLowerCase());
+              if (!base) return <p className="muted small">Ausgangsplan „{parsed.plan.basedOn}“ wurde nicht gefunden – es kann kein Vergleich gezeigt werden.</p>;
+              const lines = diffPlanFile(base, parsed.plan, (ref) => (choice.get(ref) && choice.get(ref) !== NEW ? (choice.get(ref) as string) : null), nameOf);
+              return (
+                <div className="notice">
+                  <b>Unterschiede zu „{base.name}“</b>
+                  <ul className="plain-list">
+                    {lines.map((l, i) => (
+                      <li key={i}>{l}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
           </section>
 
           {parsed.plan.workouts.map((w, wi) => (

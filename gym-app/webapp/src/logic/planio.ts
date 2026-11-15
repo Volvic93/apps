@@ -20,6 +20,8 @@ export interface PlanFile {
     items: { exercise: string; exerciseName?: string; sets: number; repMin: number; repMax: number; restSec: number; targetWeight?: number; supersetGroup?: number; note?: string }[];
   }[];
   explanation?: string;
+  /** Nur bei „Plan anpassen“: Name des Ausgangsplans (für die Vorschau der Unterschiede). */
+  basedOn?: string;
 }
 
 /** Plan im Austauschformat (Dateiexport und Antwortformat der KI). */
@@ -186,7 +188,7 @@ export function validatePlanObject(o: Record<string, unknown>): ParseResult {
   if (defaulted > 0) warnings.push(`Bei ${defaulted} ${defaulted === 1 ? 'Übung fehlten' : 'Übungen fehlten'} Angaben (Sätze, Wiederholungen oder Pause) – es wurden Standardwerte eingesetzt (3 Sätze, 8–12 Wdh., 90 s).`);
   return {
     ok: true,
-    plan: { format: PLAN_FORMAT, version: PLAN_FORMAT_VERSION, name, goal, plannedWeeks, workouts, ...(typeof o.explanation === 'string' && o.explanation.trim() ? { explanation: o.explanation.trim().slice(0, 4000) } : {}) },
+    plan: { format: PLAN_FORMAT, version: PLAN_FORMAT_VERSION, name, goal, plannedWeeks, workouts, ...(typeof o.explanation === 'string' && o.explanation.trim() ? { explanation: o.explanation.trim().slice(0, 4000) } : {}), ...(typeof o.basedOn === 'string' && o.basedOn.trim() ? { basedOn: o.basedOn.trim().slice(0, 80) } : {}) },
     warnings,
   };
 }
@@ -369,16 +371,13 @@ export function historySummary(input: Pick<AiExportInput, 'now' | 'exercises' | 
 }
 
 /** Der komplette Text für die KI („Mit KI planen“). */
-export function buildAiExportText(input: AiExportInput): string {
+/** Abschnitte „Profil“ bis „Verlauf“ für KI-Aufträge (Text und Markdown-Datei). `basePlan` ersetzt den aktiven Plan (Anpassen, Auswertung). */
+export function aiContext(input: AiExportInput, basePlan?: Plan): { lines: string[]; offered: Exercise[] } {
   const { settings, wishes, weeks, plans, exercises, equipment } = input;
   const exMap = new Map(exercises.map((e) => [e.id, e]));
-  const active = plans.find((p) => p.status === 'aktiv') ?? [...plans].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+  const active = basePlan ?? plans.find((p) => p.status === 'aktiv') ?? [...plans].sort((a, b) => b.updatedAt - a.updatedAt)[0];
   const offered = offeredExercises(exercises, equipment, input.includeGeneral);
   const out: string[] = [];
-  out.push('# Aufgabe');
-  out.push(
-    'Du bist ein erfahrener Krafttrainer. Erstelle mir einen neuen Trainingsplan für meine Gym-App „Eisenzeit“. Verwende ausschließlich Übungen aus der Liste unten und gib die Kennung (z. B. "ex-brustpresse-maschine") im Feld "exercise" an. Berücksichtige Ziel, Erfahrung, Trainingstage, bisherigen Plan und Verlauf. Ersetze stagnierende Übungen durch Varianten derselben Muskelgruppe, behalte gut laufende Grundübungen und wechsle einen Teil der Nebenübungen. Gib als Antwort NUR den JSON-Block im Format unten aus (in einem ```json-Block), danach nichts weiter – die Begründung gehört in das Feld "explanation".',
-  );
   out.push('', '# Profil');
   out.push(`- Ziel: ${GOAL_LABEL[settings.profile.goal]}`);
   out.push(`- Erfahrung: ${EXPERIENCE_LABEL[settings.profile.experience]}`);
@@ -403,6 +402,17 @@ export function buildAiExportText(input: AiExportInput): string {
     }
   } else out.push('Es gibt noch keinen Plan.');
   out.push('', '# Verlauf', ...historySummary(input));
+  return { lines: out, offered };
+}
+
+export function buildAiExportText(input: AiExportInput): string {
+  const { lines, offered } = aiContext(input);
+  const out: string[] = [];
+  out.push('# Aufgabe');
+  out.push(
+    'Du bist ein erfahrener Krafttrainer. Erstelle mir einen neuen Trainingsplan für meine Gym-App „Eisenzeit“. Verwende ausschließlich Übungen aus der Liste unten und gib die Kennung (z. B. "ex-brustpresse-maschine") im Feld "exercise" an. Berücksichtige Ziel, Erfahrung, Trainingstage, bisherigen Plan und Verlauf. Ersetze stagnierende Übungen durch Varianten derselben Muskelgruppe, behalte gut laufende Grundübungen und wechsle einen Teil der Nebenübungen. Gib als Antwort NUR den JSON-Block im Format unten aus (in einem ```json-Block), danach nichts weiter – die Begründung gehört in das Feld "explanation".',
+  );
+  out.push(...lines);
   out.push('', '# Antwortformat (JSON, Version 1)');
   out.push('Regeln: "exercise" ist die Kennung aus der Liste; "sets" 1–10; "repMin"/"repMax" ganze Zahlen (repMin ≤ repMax); "restSec" in Sekunden; "targetWeight" in kg ist optional (nur wenn aus dem Verlauf sinnvoll ableitbar); Cardio-Übungen mit sets 1, repMin 1, repMax 1. Einheiten in Trainingsreihenfolge, höchstens 14 Einheiten mit je höchstens 20 Übungen.');
   out.push('```json', offered[0] ? PLAN_FORMAT_EXAMPLE.replace('ex-brustpresse-maschine', offered.find((e) => e.tracking === 'gewicht_wdh')?.id ?? offered[0].id) : PLAN_FORMAT_EXAMPLE, '```');

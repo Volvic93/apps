@@ -14,6 +14,7 @@ export type HintAction =
   | { kind: 'deload'; label: string; planId: string }
   | { kind: 'plan'; label: string; planId: string; note?: string }
   | { kind: 'activate'; label: string; planId: string }
+  | { kind: 'evaluate'; label: string; planId: string }
   | { kind: 'backup'; label: string }
   | { kind: 'studio'; label: string }
   | { kind: 'equipment'; label: string; equipmentId: string }
@@ -28,6 +29,8 @@ export interface Hint {
   /** „Warum?“ – die Zahlen hinter der Empfehlung. */
   why: string;
   action: HintAction;
+  /** Zweite, gleichrangige Möglichkeit (z. B. „Auswertung per KI“). */
+  action2?: HintAction;
 }
 
 export const STALL_HINT_SESSIONS = 3;
@@ -154,6 +157,7 @@ export function computeHints(input: HintInput): Hint[] {
         title: 'Zeit für einen neuen Plan',
         why: `„${active.name}“ lief ${active.plannedWeeks} Wochen (jetzt Woche ${week}). Der Assistent berücksichtigt deinen bisherigen Verlauf.`,
         action: { kind: 'assistant', label: 'Neuen Plan erstellen' },
+        action2: { kind: 'evaluate', label: 'Auswertung per KI', planId: active.id },
       });
     } else if (end - now <= 7 * DAY && !active.returnToPlanId) {
       hints.push({

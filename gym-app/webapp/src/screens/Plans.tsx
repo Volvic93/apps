@@ -130,7 +130,7 @@ export function Plans() {
         <button className="list-row" onClick={() => nav('/plaene/ki')}>
           <div className="grow">
             <div className="row-title">Mit KI planen</div>
-            <div className="row-sub">Text für eine KI erzeugen und die Antwort importieren</div>
+            <div className="row-sub">Auftrag als Markdown-Datei für eine KI schreiben, Antwort importieren</div>
           </div>
           <IconChevronRight size={18} className="chev" />
         </button>

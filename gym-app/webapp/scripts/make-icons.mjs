@@ -1,51 +1,37 @@
-// Erzeugt die App-Symbole (PWA, Favicon, iOS) aus einer SVG-Vorlage.
+// Erzeugt alle App-Symbole (PWA, Favicon, iOS, Startseite) aus EINER SVG-Quelle: scripts/icon-designs.mjs, Entwurf A „Hantel-E“.
 // Aufruf: npm run icons
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { iconSvg } from './icon-designs.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const site = join(root, '..', '..', 'site');
 mkdirSync(join(root, 'public'), { recursive: true });
 mkdirSync(join(root, 'assets'), { recursive: true });
+mkdirSync(site, { recursive: true });
 
-/** Neongelbe Hantel auf Dunkelgrün (Kraftkultur-Palette). `inset` verkleinert das Motiv für die "maskable"-Sicherheitszone. */
-function svg({ rounded, inset = 0 }) {
-  const s = 1024;
-  const g = s * inset;
-  const k = (s - 2 * g) / s;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#054a31"/><stop offset="1" stop-color="#022416"/>
-    </linearGradient>
-    <linearGradient id="fire" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#eefb7a"/><stop offset="1" stop-color="#e0f84a"/>
-    </linearGradient>
-  </defs>
-  <rect width="${s}" height="${s}" ${rounded ? 'rx="230"' : ''} fill="url(#bg)"/>
-  <g transform="translate(${g} ${g}) scale(${k})">
-    <rect x="150" y="486" width="724" height="52" rx="26" fill="#c9d6b8"/>
-    <rect x="236" y="300" width="96" height="424" rx="34" fill="url(#fire)"/>
-    <rect x="352" y="352" width="72" height="320" rx="28" fill="url(#fire)" opacity="0.88"/>
-    <rect x="692" y="300" width="96" height="424" rx="34" fill="url(#fire)"/>
-    <rect x="600" y="352" width="72" height="320" rx="28" fill="url(#fire)" opacity="0.88"/>
-    <rect x="150" y="440" width="64" height="144" rx="26" fill="#f4f6ee"/>
-    <rect x="810" y="440" width="64" height="144" rx="26" fill="#f4f6ee"/>
-  </g>
-</svg>`;
+const VARIANT = 'a';
+const square = iconSvg(VARIANT, { rounded: false });
+const rounded = iconSvg(VARIANT, { rounded: true });
+
+async function png(file, size, svg) {
+  await sharp(Buffer.from(svg)).resize(size, size).png().toFile(file);
+  console.log(file.replace(join(root, '..', '..'), '.'), `${size}px`);
 }
 
-async function png(file, size, opts) {
-  await sharp(Buffer.from(svg(opts))).resize(size, size).png().toFile(file);
-  console.log(file.replace(root, '.'), `${size}px`);
-}
-
-await png(join(root, 'public', 'icon-192.png'), 192, { rounded: true });
-await png(join(root, 'public', 'icon-512.png'), 512, { rounded: true });
-await png(join(root, 'public', 'icon-maskable-512.png'), 512, { rounded: false, inset: 0.12 });
-await png(join(root, 'public', 'apple-touch-icon.png'), 180, { rounded: false });
-await png(join(root, 'public', 'favicon.png'), 64, { rounded: true });
-// iOS-Symbol: 1024 × 1024, ohne Transparenz und ohne eigene Rundung (iOS rundet selbst).
-await sharp(Buffer.from(svg({ rounded: false }))).resize(1024, 1024).flatten({ background: '#033220' }).png().toFile(join(root, 'assets', 'icon-1024.png'));
-console.log('./assets/icon-1024.png 1024px');
+// PWA und Browser
+await png(join(root, 'public', 'icon-192.png'), 192, rounded);
+await png(join(root, 'public', 'icon-512.png'), 512, rounded);
+// „maskable“: volle Fläche, das Zeichen liegt in der mittleren Sicherheitszone (< 60 % der Fläche)
+await png(join(root, 'public', 'icon-maskable-512.png'), 512, square);
+// iOS-Startbildschirm (180 px) ohne eigene Rundung – iOS rundet selbst
+await png(join(root, 'public', 'apple-touch-icon.png'), 180, square);
+await png(join(root, 'public', 'favicon.png'), 64, rounded);
+// iOS-App-Symbol der .ipa: 1024 × 1024, ohne Transparenz und ohne eigene Rundung
+await sharp(Buffer.from(square)).resize(1024, 1024).flatten({ background: '#033220' }).png().toFile(join(root, 'assets', 'icon-1024.png'));
+console.log('./gym-app/webapp/assets/icon-1024.png 1024px');
+// Startseite der Web-Adresse (GitHub Pages)
+await png(join(site, 'icon.png'), 180, square);
+await png(join(site, 'favicon.png'), 64, rounded);

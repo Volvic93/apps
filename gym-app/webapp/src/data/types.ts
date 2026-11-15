@@ -172,6 +172,16 @@ export interface Workout {
   items: PlanItem[];
 }
 
+/** Auswertung eines Plans durch eine KI (Datei-Austausch), gespeichert am Plan. */
+export interface AiEvaluation {
+  at: number;
+  summary: string;
+  wentWell: string[];
+  stalled: string[];
+  recommendations: string[];
+  nextPlanNotes: string[];
+}
+
 export interface Plan extends Record_ {
   name: string;
   goal: string;
@@ -182,6 +192,8 @@ export interface Plan extends Record_ {
   origin: PlanOrigin;
   /** Nur bei Entlastungsplänen: der Plan, zu dem nach der Entlastungswoche zurückgekehrt wird. */
   returnToPlanId?: string;
+  /** Letzte Auswertung durch eine KI (optional). */
+  evaluation?: AiEvaluation;
   workouts: Workout[];
 }
 

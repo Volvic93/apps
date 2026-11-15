@@ -42,6 +42,7 @@ export function HintCards() {
       toast('Plan wieder aktiv');
       nav('/heute');
     }
+    else if (a.kind === 'evaluate') nav(`/plaene/ki?art=auswertung&plan=${a.planId}`);
     else if (a.kind === 'backup') nav('/einstellungen');
     else if (a.kind === 'studio') nav('/uebungen/studio');
     else if (a.kind === 'equipment') nav(`/uebungen/geraet-bearbeiten/${a.equipmentId}`);
@@ -86,6 +87,11 @@ export function HintCards() {
             <button className="btn small primary" onClick={() => go(h)}>
               {h.action.label}
             </button>
+            {h.action2 && (
+              <button className="btn small" onClick={() => go({ ...h, action: h.action2! })}>
+                {h.action2.label}
+              </button>
+            )}
             <button className="btn small" onClick={() => dismiss(h, 'later')}>
               Später
             </button>

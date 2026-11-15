@@ -1,3 +1,4 @@
+import { EvaluationCard } from '../ui/EvaluationCard';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../data/db';
@@ -217,6 +218,10 @@ export function ProgressOverview() {
           </>
         )}
       </section>
+
+      {data.plans.filter((p) => p.evaluation).map((p) => (
+        <EvaluationCard key={p.id} evaluation={p.evaluation!} title={`Auswertung · ${p.name}`} />
+      ))}
 
       <section className="card">
         <div className="card-title">Planvergleich</div>

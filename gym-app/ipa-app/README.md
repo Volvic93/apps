@@ -21,7 +21,7 @@ ipa-app/
 Der Workflow `.github/workflows/gym-app-ios.yml` läuft auf einem macOS-Runner und archiviert **ohne Signierung**. Er startet bewusst nicht bei jedem Push:
 
 1. **Von Hand:** GitHub → *Actions* → „Gym-App iOS (unsignierte IPA)“ → *Run workflow*. Ergebnis: Artefakt `eisenzeit-ios-ipa-…` am Lauf (30 Tage abrufbar, Anmeldung nötig).
-2. **Mit einem Tag:** `git tag gym-app-v<Version> && git push origin gym-app-v<Version>` (z. B. `gym-app-v0.3.2`; der Tag darf noch nicht existieren). Zusätzlich zum Artefakt entsteht ein **Release** mit `Eisenzeit-<Version>.ipa` zum Download ohne Anmeldung. Die Versionsnummer der `.ipa` wird aus dem Tag übernommen; die Anzeige in der App kommt aus `APP_VERSION` (`webapp/src/logic/backup.ts`) – vor einem Tag beides und die beiden `package.json` auf dieselbe Nummer setzen.
+2. **Mit einem Tag:** `git tag gym-app-v<Version> && git push origin gym-app-v<Version>` (z. B. `gym-app-v0.4.0`; der Tag darf noch nicht existieren). Zusätzlich zum Artefakt entsteht ein **Release** mit `Eisenzeit-<Version>.ipa` zum Download ohne Anmeldung. Die Versionsnummer der `.ipa` wird aus dem Tag übernommen; die Anzeige in der App kommt aus `APP_VERSION` (`webapp/src/logic/backup.ts`) – vor einem Tag beides und die beiden `package.json` auf dieselbe Nummer setzen.
 
 Der Lauf dauert etwa 10 bis 15 Minuten.
 

@@ -70,6 +70,14 @@ export async function activatePlan(id: string): Promise<void> {
   });
 }
 
+/** Speichert die Auswertung einer KI am Plan. */
+export async function saveEvaluation(planId: string, evaluation: import('./types').AiEvaluation): Promise<boolean> {
+  const p = await db.plans.get(planId);
+  if (!p) return false;
+  await db.plans.put({ ...p, evaluation, updatedAt: now() });
+  return true;
+}
+
 export async function setPlanStatus(id: string, status: Plan['status']): Promise<void> {
   const p = await db.plans.get(id);
   if (!p) return;

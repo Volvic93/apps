@@ -10,6 +10,7 @@ import { platform } from '../platform';
 import { EquipmentThumb } from '../ui/EquipmentCard';
 import { ExercisePicker, useCatalog, type Catalog } from '../ui/ExercisePicker';
 import { MissingPhotos } from '../ui/MissingPhotos';
+import { EvaluationCard } from '../ui/EvaluationCard';
 import { BackButton, ScreenHeader } from '../ui/Header';
 import { useLive } from '../ui/hooks';
 import { IconArrowDown, IconArrowUp, IconCopy, IconDots, IconPlay, IconPlus, IconTrash } from '../ui/Icons';
@@ -118,6 +119,8 @@ export function PlanEditor() {
           </button>
         )}
       </section>
+
+      {plan.evaluation && <EvaluationCard evaluation={plan.evaluation} title="Auswertung durch KI" />}
 
       <MissingPhotos plan={plan} cat={cat} />
 

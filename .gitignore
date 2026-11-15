@@ -6,3 +6,6 @@ _site/
 .DS_Store
 *.local
 .claude/
+
+# Flimmerfrei: der Ordner video-app/ios ist Quelltext (kein erzeugtes Capacitor-Projekt)
+!video-app/ios/

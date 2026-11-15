@@ -1,0 +1,68 @@
+import Foundation
+import WebKit
+
+/// Schwacher Zwischenhändler für den Nachrichtenkanal: verhindert den Retain-Zyklus
+/// WKUserContentController -> Handler -> Ansicht -> WKWebView -> WKUserContentController.
+final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
+    private weak var target: WKScriptMessageHandler?
+
+    init(target: WKScriptMessageHandler) {
+        self.target = target
+        super.init()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        target?.userContentController(userContentController, didReceive: message)
+    }
+}
+
+/// Baut die Konfiguration der Web-Ansicht laut Konzept 5.
+enum WebViewFactory {
+    static let messageName = "flimmerfrei"
+
+    static func makeConfiguration(messageHandler: WKScriptMessageHandler, contentRuleList: WKContentRuleList?) -> WKWebViewConfiguration {
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = WKWebsiteDataStore.default()
+        config.allowsInlineMediaPlayback = true
+        config.mediaTypesRequiringUserActionForPlayback = []
+        config.allowsPictureInPictureMediaPlayback = true
+        config.allowsAirPlayForMediaPlayback = true
+        config.preferences.isElementFullscreenEnabled = true
+        // Google soll die Ansicht wie Safari behandeln; die Kennung der App steht nicht im User-Agent.
+        config.applicationNameForUserAgent = "Version/18.0 Mobile/15E148 Safari/604.1"
+
+        let controller = config.userContentController
+        controller.add(WeakScriptMessageHandler(target: messageHandler), name: messageName)
+        installScripts(into: controller)
+        if let list = contentRuleList {
+            controller.add(list)
+        }
+        return config
+    }
+
+    /// (Neu) einsetzen: erst die Einstellungen, dann der Kern aus dem App-Paket.
+    /// Fehlt der Kern im Paket, startet die Ansicht ohne Skript.
+    static func installScripts(into controller: WKUserContentController) {
+        controller.removeAllUserScripts()
+
+        let settings = AppSettings.shared
+        let adblock = settings.adblock ? "true" : "false"
+        let background = settings.background ? "true" : "false"
+        let configSource = "window.__FLIMMERFREI_CONFIG__ = { adblock: " + adblock + ", background: " + background + ", pipFix: true, host: 'ios' };"
+        controller.addUserScript(WKUserScript(source: configSource, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
+
+        if let url = Bundle.main.url(forResource: "flimmerfrei.inject", withExtension: "js"),
+           let source = try? String(contentsOf: url, encoding: .utf8),
+           !source.isEmpty {
+            controller.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: .page))
+        }
+    }
+
+    /// JavaScript, der die Einstellungen im laufenden Betrieb setzt.
+    static func setConfigScript() -> String {
+        let settings = AppSettings.shared
+        let adblock = settings.adblock ? "true" : "false"
+        let background = settings.background ? "true" : "false"
+        return "window.__flimmerfrei && window.__flimmerfrei.setConfig({ adblock: " + adblock + ", background: " + background + ", pipFix: true });"
+    }
+}

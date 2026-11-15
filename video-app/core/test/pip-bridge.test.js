@@ -80,14 +80,13 @@ test('airplay(): Auswahl öffnen oder false', () => {
   assert.equal(showAirplay(win, docOf([])), false);
 });
 
-test('prepareVideo: Sperren entfernen, Attribute setzen, aus = nichts tun', () => {
+test('prepareVideo: Bild-in-Bild-Sperre weg, playsinline gesetzt, Fernwiedergabe unberührt; aus = nichts tun', () => {
   const v = fakeVideo({ attrs: { disablepictureinpicture: '', disableremoteplayback: '' } });
   prepareVideo(v, () => true);
   assert.equal('disablepictureinpicture' in v.attrs, false);
-  assert.equal('disableremoteplayback' in v.attrs, false);
+  assert.equal('disableremoteplayback' in v.attrs, true);
   assert.equal(v.attrs.playsinline, '');
-  assert.equal(v.attrs['webkit-playsinline'], '');
-  assert.equal(v.attrs['x-webkit-airplay'], 'allow');
+  assert.equal('x-webkit-airplay' in v.attrs, false);
   const w = fakeVideo({ attrs: { disablepictureinpicture: '' } });
   prepareVideo(w, () => false);
   assert.equal('disablepictureinpicture' in w.attrs, true);
@@ -98,7 +97,7 @@ test('Zustand: Titel ohne Suffix, Zähler, pip', () => {
   const adState = createAdState();
   adState.adsBlocked = 4;
   const s = collectState({ innerWidth: 400, innerHeight: 800, location: { href: 'https://m.youtube.com/watch?v=1' } }, docOf([v]), adState);
-  assert.deepEqual(s, { hasVideo: true, playing: true, pip: true, title: 'Titel', url: 'https://m.youtube.com/watch?v=1', adsBlocked: 4, menuButton: false, videoId: '1', listId: '', currentTime: 0 });
+  assert.deepEqual(s, { hasVideo: true, playing: true, pip: true, title: 'Titel', url: 'https://m.youtube.com/watch?v=1', adsBlocked: 4, menuButton: false, airplayMode: false, videoId: '1', listId: '', currentTime: 0 });
   assert.equal(isPipActive({}, null), false);
   const none = collectState({ location: { href: 'u' } }, docOf([]), null);
   assert.equal(none.hasVideo, false);

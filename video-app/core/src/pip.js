@@ -1,6 +1,7 @@
 // Bild-in-Bild und AirPlay: Sperren der Seite aufheben, Video finden, umschalten.
 import { makeNativeLike, safeCall } from './config.js';
 
+const PIP_ATTRS = ['disablepictureinpicture'];
 const BLOCK_ATTRS = ['disablepictureinpicture', 'disableremoteplayback'];
 
 export function hasSource(v) {
@@ -86,59 +87,62 @@ export function showAirplay(win, doc) {
   }
 }
 
-// Eigenschaften eines Videos so setzen, dass Bild-in-Bild/AirPlay erlaubt sind.
-export function prepareVideo(v, isOn) {
+// Standard: nur Bild-in-Bild freigeben und playsinline setzen. disableremoteplayback bleibt unberührt
+// (WebKit verlangt es für ManagedMediaSource). Im AirPlay-Modus zusätzlich Fernwiedergabe/AirPlay erlauben.
+export function prepareVideo(v, isOn, airplayMode) {
   try {
     if (!isOn() || !v || typeof v.setAttribute !== 'function') return;
-    for (const a of BLOCK_ATTRS) {
+    const attrs = airplayMode ? BLOCK_ATTRS : PIP_ATTRS;
+    for (const a of attrs) {
       if (v.hasAttribute(a)) v.removeAttribute(a);
     }
     safeCall(() => {
       v.disablePictureInPicture = false;
     });
-    safeCall(() => {
-      v.disableRemotePlayback = false;
-    });
     if (v.getAttribute('playsinline') === null) v.setAttribute('playsinline', '');
-    if (v.getAttribute('webkit-playsinline') === null) v.setAttribute('webkit-playsinline', '');
-    if (v.getAttribute('x-webkit-airplay') !== 'allow') v.setAttribute('x-webkit-airplay', 'allow');
+    if (airplayMode) {
+      safeCall(() => {
+        v.disableRemotePlayback = false;
+      });
+      if (v.getAttribute('x-webkit-airplay') !== 'allow') v.setAttribute('x-webkit-airplay', 'allow');
+    }
   } catch (e) {
     /* ignorieren */
   }
 }
 
-export function scanVideos(doc, isOn) {
+export function scanVideos(doc, isOn, airplayMode) {
   safeCall(() => {
-    for (const v of Array.from(doc.querySelectorAll('video'))) prepareVideo(v, isOn);
+    for (const v of Array.from(doc.querySelectorAll('video'))) prepareVideo(v, isOn, airplayMode);
   });
 }
 
 // Neue <video>-Elemente per MutationObserver (und Wiedergabe-Ereignissen) vorbereiten.
-export function installVideoObserver(win, doc, isOn) {
+export function installVideoObserver(win, doc, isOn, airplayMode) {
   let scheduled = false;
   const scan = function () {
     scheduled = false;
-    scanVideos(doc, isOn);
+    scanVideos(doc, isOn, airplayMode);
   };
   const MO = win.MutationObserver;
   if (typeof MO === 'function') {
     const mo = new MO(function (muts) {
       for (const m of muts) {
         if (m.type === 'attributes') {
-          prepareVideo(m.target, isOn);
+          prepareVideo(m.target, isOn, airplayMode);
         } else if (!scheduled) {
           scheduled = true;
           win.setTimeout(scan, 200);
         }
       }
     });
-    mo.observe(doc, { childList: true, subtree: true, attributes: true, attributeFilter: BLOCK_ATTRS });
+    mo.observe(doc, { childList: true, subtree: true, attributes: true, attributeFilter: airplayMode ? BLOCK_ATTRS : PIP_ATTRS });
   }
   const onMedia = function (e) {
-    if (e && e.target && String(e.target.tagName).toUpperCase() === 'VIDEO') prepareVideo(e.target, isOn);
+    if (e && e.target && String(e.target.tagName).toUpperCase() === 'VIDEO') prepareVideo(e.target, isOn, airplayMode);
   };
   for (const t of ['loadstart', 'loadedmetadata', 'play']) safeCall(() => doc.addEventListener(t, onMedia, true));
-  scanVideos(doc, isOn);
+  scanVideos(doc, isOn, airplayMode);
   return scan;
 }
 

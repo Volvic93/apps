@@ -70,5 +70,6 @@ enum WebViewFactory {
             + ", pipFix: true, look: true"
             + ", playerButtons: " + flag(settings.playerButtons)
             + ", menuButton: true"
+            + ", airplayMode: " + flag(settings.airplayMode)
     }
 }

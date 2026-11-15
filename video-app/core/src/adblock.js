@@ -164,14 +164,18 @@ export function cleanData(root, limits) {
 // Zähler für entfernte/übersprungene Werbung.
 export function createAdState() {
   return {
-    adsBlocked: 0,
+    adsBlocked: 0, // Summe für die Schnittstelle
+    dataRemoved: 0, // aus Daten entfernt
+    adsSkipped: 0, // laufende Werbung übersprungen
     onChange: null,
   };
 }
 
-export function addBlocked(state, n) {
+export function addBlocked(state, n, kind) {
   if (!state || !(n > 0)) return;
   state.adsBlocked += n;
+  if (kind === 'skip') state.adsSkipped += n;
+  else state.dataRemoved += n;
   if (typeof state.onChange === 'function') safeCall(state.onChange);
 }
 
@@ -254,7 +258,7 @@ const SKIP_SELECTORS = [
 ];
 
 export function createSkipMemo() {
-  return { inAd: false, mutedByUs: false, prevMuted: false, video: null };
+  return { inAd: false, mutedByUs: false, prevMuted: false, prevRate: 1, video: null };
 }
 
 // Ein Schritt des Notausgangs. Rückgabe: 'new' (Werbung beginnt), 'active' (läuft), 'idle'.
@@ -264,6 +268,7 @@ export function skipAdStep(doc, memo) {
     if (memo.mutedByUs && memo.video) {
       try {
         memo.video.muted = memo.prevMuted;
+        memo.video.playbackRate = memo.prevRate;
       } catch (e) {
         /* ignorieren */
       }
@@ -282,11 +287,13 @@ export function skipAdStep(doc, memo) {
   if (v) {
     if (!memo.mutedByUs) {
       memo.prevMuted = !!v.muted;
+      memo.prevRate = typeof v.playbackRate === 'number' && v.playbackRate > 0 ? v.playbackRate : 1;
       memo.mutedByUs = true;
       memo.video = v;
     }
     try {
       v.muted = true;
+      v.playbackRate = 16;
       const d = v.duration;
       if (typeof d === 'number' && isFinite(d) && d > 0 && v.currentTime < d - 0.1) v.currentTime = d - 0.05;
     } catch (e) {
@@ -313,12 +320,12 @@ export function installAdSkipper(win, doc, isOn, state) {
         if (memo.inAd || memo.mutedByUs) skipAdStep({ querySelector: () => null }, memo);
         return;
       }
-      if (skipAdStep(doc, memo) === 'new') addBlocked(state, 1);
+      if (skipAdStep(doc, memo) === 'new') addBlocked(state, 1, 'skip');
     } catch (e) {
       /* ignorieren */
     }
   };
-  win.setInterval(tick, 400);
+  win.setInterval(tick, 150);
   return tick;
 }
 

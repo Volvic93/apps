@@ -16,6 +16,7 @@ final class AppSettings {
         static let appearance = "appearance"
         static let playerButtons = "playerButtons"
         static let alwaysShowButton = "alwaysShowButton"
+        static let airplayMode = "airplayMode"
     }
 
     private init() {
@@ -28,7 +29,8 @@ final class AppSettings {
             Key.buttonY: 0.72,
             Key.appearance: 0,
             Key.playerButtons: true,
-            Key.alwaysShowButton: false
+            Key.alwaysShowButton: false,
+            Key.airplayMode: false
         ])
     }
 
@@ -60,6 +62,12 @@ final class AppSettings {
     var alwaysShowButton: Bool {
         get { return defaults.bool(forKey: Key.alwaysShowButton) }
         set { defaults.set(newValue, forKey: Key.alwaysShowButton) }
+    }
+
+    /// AirPlay-Modus: wirkt nur beim Laden der Seite (Seite danach neu laden)
+    var airplayMode: Bool {
+        get { return defaults.bool(forKey: Key.airplayMode) }
+        set { defaults.set(newValue, forKey: Key.airplayMode) }
     }
 
     /// Darstellung: 0 = automatisch, 1 = hell, 2 = dunkel

@@ -7,7 +7,7 @@ import vm from 'node:vm';
 const here = dirname(fileURLToPath(import.meta.url));
 
 // Feste Reihenfolge: Abhängigkeiten zuerst.
-export const MODULES = ['config', 'adblock', 'background', 'pip', 'bridge', 'look', 'index'];
+export const MODULES = ['config', 'adblock', 'background', 'pip', 'bridge', 'look', 'diag', 'index'];
 
 export const UPDATE_URL = 'https://volvic93.github.io/apps/video-app/flimmerfrei.user.js';
 
@@ -152,6 +152,7 @@ function attempt(nonce) {
   if (!tryPage(nonce)) {
     // Rückfall: eingeschränkter Modus im Kontext des Userscripts
     try {
+      window.__FLIMMERFREI_CONFIG__ = { limited: true };
       CORE();
     } catch (e) {
       /* Seite nie brechen */

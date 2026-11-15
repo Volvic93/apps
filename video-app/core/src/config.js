@@ -1,6 +1,6 @@
 // Gemeinsame Grundlagen: Einstellungen, Nutzeraktivität, kleine Hilfen.
 
-export const VERSION = '0.1.1';
+export const VERSION = '0.1.2';
 
 export const DEFAULT_CONFIG = Object.freeze({
   adblock: true,
@@ -9,10 +9,12 @@ export const DEFAULT_CONFIG = Object.freeze({
   look: true,
   playerButtons: true,
   menuButton: true,
+  limited: false, // vom Lader gesetzt: Kern läuft im Kontext des Userscripts
+  airplayMode: false, // wirkt nur beim Start der Seite
   host: 'userscript',
 });
 
-const BOOL_KEYS = ['adblock', 'background', 'pipFix', 'look', 'playerButtons', 'menuButton'];
+const BOOL_KEYS = ['adblock', 'background', 'pipFix', 'look', 'playerButtons', 'menuButton', 'limited', 'airplayMode'];
 
 // Rohwerte (von der Hülle gesetzt) mit dem Standard zusammenführen; unbekannte/falsche Typen fallen auf die Basis zurück.
 export function normalizeConfig(raw, base = DEFAULT_CONFIG) {
@@ -36,7 +38,14 @@ export function createConfigStore(raw) {
       return cfg;
     },
     set(part) {
-      cfg = normalizeConfig(part, cfg);
+      // airplayMode und limited gelten nur beim Start, nicht im Betrieb
+      let p = part;
+      if (p && typeof p === 'object') {
+        p = Object.assign({}, p);
+        delete p.airplayMode;
+        delete p.limited;
+      }
+      cfg = normalizeConfig(p, cfg);
       for (const fn of listeners.slice()) {
         try {
           fn(cfg);
@@ -122,4 +131,43 @@ export function isYouTubeHost(hostname) {
     if (h.length > d.length && h.slice(-(d.length + 1)) === '.' + d) return true;
   }
   return false;
+}
+
+export const AIRPLAY_KEY = 'flimmerfrei.airplayMode';
+
+// AirPlay-Modus beim Start: Einstellung der Hülle, im Userscript zusätzlich der gemerkte Schalter.
+export function resolveAirplayMode(raw, win) {
+  if (raw && typeof raw === 'object' && raw.airplayMode === true) return true;
+  const host = raw && typeof raw === 'object' && raw.host === 'ios' ? 'ios' : 'userscript';
+  if (host === 'userscript') {
+    try {
+      return win.localStorage.getItem(AIRPLAY_KEY) === '1';
+    } catch (e) {
+      /* kein Speicher: aus */
+    }
+  }
+  return false;
+}
+
+// ManagedMediaSource vor der Seite verbergen, damit YouTube auf die AirPlay-fähige Übertragung ausweicht.
+export function hideManagedMediaSource(win) {
+  const names = ['ManagedMediaSource', 'ManagedSourceBuffer'];
+  let hidden = false;
+  for (const n of names) {
+    try {
+      if (!(n in win) || win[n] === undefined) continue;
+      try {
+        delete win[n];
+      } catch (e) {
+        /* weiter mit defineProperty */
+      }
+      if (n in win && win[n] !== undefined) {
+        Object.defineProperty(win, n, { value: undefined, configurable: true, writable: true });
+      }
+      hidden = true;
+    } catch (e) {
+      /* Original bleibt */
+    }
+  }
+  return hidden;
 }

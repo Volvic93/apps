@@ -1,6 +1,6 @@
 {
   "name": "flimmerfrei-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "Skript-Kern von Flimmerfrei (Werbeblocker, Hintergrundwiedergabe, Bild-in-Bild, AirPlay)",

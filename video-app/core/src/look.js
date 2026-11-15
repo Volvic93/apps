@@ -100,6 +100,8 @@ export function postToApp(win, msg) {
   return false;
 }
 
+export const LONG_PRESS_MS = 700;
+
 function makeButton(doc, o) {
   const b = doc.createElement('button');
   b.className = o.className;
@@ -107,10 +109,40 @@ function makeButton(doc, o) {
   b.setAttribute('aria-label', o.label);
   b.setAttribute('style', o.style);
   b.appendChild(buildIcon(doc, o.icon));
-  for (const t of ['click', 'touchstart', 'touchend', 'pointerdown', 'pointerup']) {
+  // Langer Druck (>= 700 ms): eigene Aktion, danach kein normaler Klick
+  let timer = null;
+  let fired = false;
+  const cancel = function () {
+    if (timer !== null) {
+      const id = timer;
+      timer = null;
+      safeCall(() => o.win.clearTimeout(id));
+    }
+  };
+  const press = function () {
+    cancel();
+    fired = false;
+    timer = o.win.setTimeout(function () {
+      timer = null;
+      fired = true;
+      safeCall(o.longPress);
+    }, LONG_PRESS_MS);
+  };
+  const events = ['click', 'touchstart', 'touchend', 'touchcancel', 'pointerdown', 'pointerup', 'pointercancel'];
+  for (const t of events) {
     b.addEventListener(t, function (e) {
       if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-      if (t === 'click') safeCall(o.action);
+      if (o.longPress && o.win) {
+        if (t === 'touchstart' || t === 'pointerdown') safeCall(press);
+        else if (t !== 'click') cancel();
+      }
+      if (t === 'click') {
+        if (fired) {
+          fired = false;
+          return;
+        }
+        safeCall(o.action);
+      }
     });
   }
   return b;
@@ -171,11 +203,11 @@ export function ensurePlayerButtons(win, doc, o) {
   const cls = 'flimmerfrei-player-button';
   const list = [];
   if (o.host === 'ios') list.push({ className: cls, label: 'Auf Fernseher übertragen', icon: 'cast', action: () => postToApp(win, { type: 'cast' }) });
-  list.push({ className: cls, label: 'Bild-in-Bild', icon: 'pip', action: o.pip });
-  if (hasAirplaySupport(win)) list.push({ className: cls, label: 'AirPlay', icon: 'airplay', action: o.airplay });
+  list.push({ className: cls, label: 'Bild-in-Bild', icon: 'pip', action: o.pip, longPress: o.diagnostics });
+  if (hasAirplaySupport(win)) list.push({ className: cls, label: 'AirPlay', icon: 'airplay', action: o.airplay, longPress: o.airplayOff });
   const first = box.firstChild || null;
   for (const spec of list) {
-    const b = makeButton(doc, Object.assign({ style: PLAYER_STYLE }, spec));
+    const b = makeButton(doc, Object.assign({ style: PLAYER_STYLE, win: win }, spec));
     if (first) box.insertBefore(b, first);
     else box.appendChild(b);
   }
@@ -209,7 +241,7 @@ export function installLook(win, doc, store, actions) {
       else removeTopbarButtons(doc);
     });
     safeCall(() => {
-      if (cfg.playerButtons) ensurePlayerButtons(win, doc, { host: cfg.host, pip: actions.pip, airplay: actions.airplay });
+      if (cfg.playerButtons) ensurePlayerButtons(win, doc, { host: cfg.host, pip: actions.pip, airplay: actions.airplay, diagnostics: actions.diagnostics, airplayOff: actions.airplayOff });
       else removePlayerButtons(doc);
     });
     const now = isMenuButtonPresent(doc);

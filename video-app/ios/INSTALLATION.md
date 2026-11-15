@@ -93,7 +93,7 @@ Neue `.ipa` laden und mit **derselben Apple-ID** über die alte installieren (Al
 - **Menü der App:** Es öffnet sich als Auswahlblatt von unten – über das Menü-Symbol in der oberen Leiste, durch **Schütteln** des iPhones oder über den **Ersatzknopf**. Es enthält: Auf Fernseher übertragen, Bild-in-Bild, AirPlay, Neu laden, Link teilen, In Safari öffnen, Mit Google anmelden, Zurück, Startseite, Einstellungen. Bild-in-Bild und AirPlay sind ausgegraut, solange kein Video da ist.
 - **Ersatzknopf:** Ein kleiner grauer, halbtransparenter Knopf mit drei Punkten. Er erscheint nur, wenn das Menü-Symbol in der Leiste fehlt (z. B. auf der Anmelde-Seite oder wenn YouTube umgebaut hat), oder immer, wenn du *Schwebenden Knopf immer anzeigen* einschaltest. Du kannst ihn mit dem Finger verschieben; er rastet am Rand ein.
 - **Bild-in-Bild:** Video starten, Menü → **„Bild-in-Bild“** (oder das Symbol im Player). Das Video läuft in einem kleinen Fenster über anderen Apps weiter.
-- **AirPlay:** Menü oder Player-Symbol → **„AirPlay“** öffnet die Geräteauswahl (Apple TV, AirPlay-Fernseher, Lautsprecher).
+- **AirPlay:** Menü oder Player-Symbol → **„AirPlay“** öffnet die Geräteauswahl (Apple TV, AirPlay-Fernseher, Lautsprecher). AirPlay braucht den **AirPlay-Modus** (*Einstellungen → AirPlay-Modus (Versuch)*): Ist er aus, fragt die App beim Antippen, ob sie ihn einschalten soll; danach lädt die Seite neu und du tippst AirPlay noch einmal an. Im AirPlay-Modus überträgt YouTube das Video auf andere Art, die Auflösung kann geringer sein. Wer AirPlay nicht braucht, lässt ihn aus, damit Videos schnell starten.
 - **Aktualisieren:** Auf Startseite, Abos und Listen nach unten ziehen (nicht im Player und nicht in Shorts).
 - **Hintergrundwiedergabe:** Ton läuft weiter, wenn du die App verlässt oder das iPhone sperrt. Läuft er doch einmal nicht weiter, in der Sperrbildschirm-Steuerung auf Wiedergabe tippen.
 - **Einstellungen:**
@@ -140,6 +140,7 @@ Hinweise: Auf dem Fernseher spielt dessen YouTube-App – **Werbung dort kann di
 | App startet nicht mehr | Die 7 Tage sind abgelaufen: erneuern (Abschnitt 2 bzw. 3). Die Anmeldung bleibt erhalten. |
 | Anmeldung mit der Apple-ID scheitert | Zwei-Faktor-Code prüfen; bei einigen Konten ein **App-spezifisches Passwort** erzeugen (appleid.apple.com → Anmelden und Sicherheit) und statt des normalen Passworts verwenden. |
 | „Maximale Zahl an Apps erreicht“ | Mit einer kostenlosen Apple-ID sind nur wenige Apps gleichzeitig erlaubt: eine andere Test-App entfernen oder eine zweite Apple-ID verwenden. |
+| Etwas verhält sich seltsam (Werbung, Ton, Knöpfe fehlen) | *Einstellungen → Diagnose* öffnen, **„Kopieren“** tippen und den Text mitschicken. |
 | Es erscheint doch Werbung | YouTube ändert seine Seite laufend; der Werbeblocker kann zeitweise ausfallen, bis die App aktualisiert wird. Seite neu laden hilft manchmal. |
 | Ton stoppt im Hintergrund | In den Einstellungen prüfen, ob *Hintergrundwiedergabe* an ist; Video einmal in der App starten. Nach einem Anruf ggf. Wiedergabe neu starten. |
 | Bild-in-Bild geht nicht | Es muss ein Video laufen (Menüpunkt nicht ausgegraut). Manche Videos sperren es; dann das Video-Vollbild versuchen und von dort das Bild-in-Bild-Symbol des Players nutzen. |

@@ -38,7 +38,7 @@ export function parseVideoIds(href) {
 }
 
 // Zustand laut Konzept 3.3/3.4 (ohne type). menuButtonFn liefert, ob der Menü-Knopf in der Seite hängt.
-export function collectState(win, doc, adState, menuButtonFn) {
+export function collectState(win, doc, adState, menuButtonFn, airplayModeFn) {
   const v = safeCall(() => findActiveVideo(doc, { width: win.innerWidth, height: win.innerHeight }), null);
   let title = '';
   let url = '';
@@ -57,6 +57,7 @@ export function collectState(win, doc, adState, menuButtonFn) {
     url: url,
     adsBlocked: adState ? adState.adsBlocked : 0,
     menuButton: !!safeCall(() => menuButtonFn && menuButtonFn(), false),
+    airplayMode: !!safeCall(() => airplayModeFn && airplayModeFn(), false),
     videoId: ids.videoId,
     listId: ids.listId,
     currentTime: v && typeof v.currentTime === 'number' && isFinite(v.currentTime) ? v.currentTime : 0,
@@ -98,14 +99,14 @@ const BRIDGE_EVENTS = [
 ];
 
 // Meldet Änderungen, wenn window.webkit.messageHandlers.flimmerfrei existiert. Gibt notify() zurück.
-export function installBridge(win, doc, adState, menuButtonFn) {
+export function installBridge(win, doc, adState, menuButtonFn, airplayModeFn) {
   const handlerOf = () => win.webkit?.messageHandlers?.flimmerfrei;
   let lastKey = '';
   const emit = function () {
     try {
       const h = handlerOf();
       if (!h || typeof h.postMessage !== 'function') return;
-      const s = collectState(win, doc, adState, menuButtonFn);
+      const s = collectState(win, doc, adState, menuButtonFn, airplayModeFn);
       // currentTime allein löst keine Meldung aus
       const key = JSON.stringify(Object.assign({}, s, { currentTime: 0 }));
       if (key === lastKey) return;
@@ -127,4 +128,24 @@ export function installBridge(win, doc, adState, menuButtonFn) {
   if (adState) adState.onChange = notify;
   notify();
   return notify;
+}
+
+// Adresse zum Neuladen an der aktuellen Stelle: bei /watch wird t=<Sekunden>s gesetzt bzw. ersetzt.
+export function buildReloadUrl(href, seconds) {
+  if (typeof href !== 'string') return href;
+  const hashAt = href.indexOf('#');
+  const hash = hashAt === -1 ? '' : href.slice(hashAt);
+  const base = hashAt === -1 ? href : href.slice(0, hashAt);
+  const q = base.indexOf('?');
+  const head = q === -1 ? base : base.slice(0, q);
+  const query = q === -1 ? '' : base.slice(q + 1);
+  // nur /watch bekommt t=<Sekunden>s, alles andere wird unverändert neu geladen
+  const path = head.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]*/i, '');
+  if (path !== '/watch' && path !== '/watch/') return href;
+  const parts = query === '' ? [] : query.split('&').filter(function (p) {
+    return p !== '' && p.split('=')[0] !== 't' && p.split('=')[0] !== 'start';
+  });
+  const n = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (n > 0) parts.push('t=' + n + 's');
+  return head + (parts.length ? '?' + parts.join('&') : '') + hash;
 }

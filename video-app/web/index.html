@@ -97,7 +97,7 @@
       <dt>Übertragen auf Chromecast und Fernseher</dt>
       <dd>In der iPhone-App enthalten. Die App findet Chromecast, Google TV und Android TV im WLAN oder verbindet sich per TV-Code (in der YouTube-App des Fernsehers unter „Mit TV-Code verknüpfen“). Der Fernseher spielt das Video selbst, das iPhone ist nur Fernbedienung; das Video läuft also auch bei gesperrtem iPhone weiter. Das nutzt eine inoffizielle Schnittstelle von YouTube und kann jederzeit brechen. Auf dem Fernseher kann Werbung laufen, denn dort greift der Werbeblocker der App nicht.</dd>
       <dt>AirPlay</dt>
-      <dd>Wiedergabe auf Apple TV, HomePod und andere AirPlay-Geräte.</dd>
+      <dd>Wiedergabe auf Apple TV, HomePod und andere AirPlay-Geräte. Dafür braucht es den AirPlay-Modus: Safari spielt YouTube normalerweise über eine Technik (ManagedMediaSource), die AirPlay ausschließt. Der Modus weicht auf eine andere Übertragungsart des Videos aus, eventuell mit geringerer Auflösung. Er wird über den AirPlay-Knopf im Player eingeschaltet; die Seite lädt dann an der aktuellen Stelle neu. Ein langer Druck (ab 0,7 Sekunden) auf den AirPlay-Knopf schaltet ihn im Userscript wieder aus. Noch nicht an echten Geräten erprobt.</dd>
     </dl>
   </section>
 
@@ -132,6 +132,7 @@
     <p><strong>Wie das Skript in die Seite kommt.</strong> YouTube und Safari blockieren das direkte Einschleusen von Skripten. Das Userscript bringt seinen Kern deshalb über einen eigenen Lader in die Seite. Gelingt das nicht, läuft es im eingeschränkten Modus: Werbung wird dann nicht vorab aus den Daten entfernt, sondern erst übersprungen, wenn sie läuft; Stil, Knöpfe im Player und die Wiederaufnahme nach einer Pause arbeiten weiter.</p>
     <p><strong>Nach einem Update</strong> das Skript in der Erweiterung neu laden bzw. aktualisieren und youtube.com neu öffnen.</p>
     <p><strong>Banner „In der YouTube-App öffnen“:</strong> Es kommt von Safari selbst, nicht von der Seite. Das Skript versucht, den Auslöser zu entfernen; sicher verschwindet das Banner nur, wenn die YouTube-App nicht installiert ist. In der Flimmerfrei-App erscheint es gar nicht.</p>
+    <p><strong>Diagnose:</strong> Ein langer Druck (ab 0,7 Sekunden) auf den Bild-in-Bild-Knopf im Player zeigt einen Bericht mit Modus, Zählern, Videostart-Zeiten und AirPlay-Zustand. Das hilft, wenn Videos langsam starten oder etwas nicht geht.</p>
     <p class="note">Das Skript läuft nur auf <code>youtube.com</code> und aktualisiert sich über dieselbe Adresse, sofern der Skript-Manager Aktualisierungen unterstützt.</p>
   </section>
 

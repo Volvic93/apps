@@ -22,6 +22,7 @@ final class BrowserViewController: UIViewController {
     private var webView: WKWebView?
     private var contentRuleList: WKContentRuleList?
     private var appliedAdblock = false
+    private var appliedAirplayMode = false
     private var pendingURL: URL?
     private var failedURL: URL?
     private var cameFromLogin = false
@@ -148,6 +149,7 @@ final class BrowserViewController: UIViewController {
         guard webView == nil else { return }
         let settings = AppSettings.shared
         appliedAdblock = settings.adblock
+        appliedAirplayMode = settings.airplayMode
 
         let config = WebViewFactory.makeConfiguration(
             messageHandler: self,
@@ -439,6 +441,19 @@ final class BrowserViewController: UIViewController {
         settings.onDataCleared = { [weak self] in
             self?.dataWasCleared()
         }
+        settings.onRequestDiagnostics = { [weak self] completion in
+            guard let self = self, let wv = self.webView else {
+                completion("Skript nicht geladen")
+                return
+            }
+            wv.evaluateJavaScript("window.__flimmerfrei ? window.__flimmerfrei.diagnostics() : 'Skript nicht geladen'") { result, _ in
+                if let text = result as? String {
+                    completion(text)
+                } else {
+                    completion("Skript nicht geladen")
+                }
+            }
+        }
         let nav = UINavigationController(rootViewController: settings)
         topPresenter().present(nav, animated: true, completion: nil)
     }
@@ -469,6 +484,25 @@ final class BrowserViewController: UIViewController {
             sheet.detents = [.medium(), .large()]
         }
         present(controller, animated: true, completion: nil)
+    }
+
+    // MARK: - AirPlay-Modus
+
+    /// Der Kern meldet: AirPlay wurde angetippt, der Modus ist aber aus.
+    private func askForAirplayMode() {
+        if presentedViewController != nil { return }
+        if AppSettings.shared.airplayMode { return }
+        let alert = UIAlertController(
+            title: "AirPlay-Modus einschalten?",
+            message: "AirPlay braucht den AirPlay-Modus. Die Seite wird neu geladen; danach AirPlay erneut antippen.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Einschalten", style: .default) { [weak self] _ in
+            AppSettings.shared.airplayMode = true
+            self?.applySettings()
+        })
+        present(alert, animated: true, completion: nil)
     }
 
     // MARK: - Menü (Auswahlblatt)
@@ -595,6 +629,12 @@ final class BrowserViewController: UIViewController {
             needsReload = true
         }
 
+        // Der AirPlay-Modus wirkt nur beim Laden der Seite
+        if settings.airplayMode != appliedAirplayMode {
+            appliedAirplayMode = settings.airplayMode
+            needsReload = true
+        }
+
         // Für die aktuelle Seite
         runScript(WebViewFactory.setConfigScript())
 
@@ -652,6 +692,8 @@ extension BrowserViewController: WKScriptMessageHandler {
             presentMenuSheet()
         case "cast":
             showCastSheet()
+        case "needAirplayMode":
+            askForAirplayMode()
         default:
             // Unbekannte Typen werden ignoriert.
             break

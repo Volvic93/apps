@@ -6,6 +6,8 @@ import WebKit
 final class SettingsViewController: UITableViewController {
     var onSettingsChanged: (() -> Void)?
     var onDataCleared: (() -> Void)?
+    /// Liefert den Diagnose-Text der Seite (Antwort auf dem Hauptthread).
+    var onRequestDiagnostics: ((@escaping (String) -> Void) -> Void)?
 
     private enum Section: Int, CaseIterable {
         case appearance
@@ -22,6 +24,7 @@ final class SettingsViewController: UITableViewController {
         case autoPip
         case playerButtons
         case alwaysShowButton
+        case airplayMode
     }
 
     private let appearanceTitles = ["Automatisch", "Hell", "Dunkel"]
@@ -68,7 +71,7 @@ final class SettingsViewController: UITableViewController {
         case .statistics: return 2
         case .cast: return 1
         case .data: return 1
-        case .about: return 1
+        case .about: return 2
         }
     }
 
@@ -88,7 +91,9 @@ final class SettingsViewController: UITableViewController {
         guard let kind = Section(rawValue: section) else { return nil }
         switch kind {
         case .playback:
-            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu. Der Ersatzknopf erscheint sonst nur, wenn die Seite ihren Menü-Knopf nicht zeigt."
+            return "Bild-in-Bild beim Verlassen ist ein Versuch: iOS erlaubt es nicht in jeder Lage. Die Änderung des Werbeblockers lädt die Seite neu. Der Ersatzknopf erscheint sonst nur, wenn die Seite ihren Menü-Knopf nicht zeigt.
+
+AirPlay-Modus (Versuch): Nötig für AirPlay. YouTube überträgt das Video dann auf andere Art; die Auflösung kann geringer sein. Aus lassen, wenn AirPlay nicht gebraucht wird."
         case .statistics:
             if let error = ContentBlocker.lastError {
                 return "Sperrliste nicht geladen: " + error
@@ -141,6 +146,9 @@ final class SettingsViewController: UITableViewController {
             case .alwaysShowButton:
                 content.text = "Schwebenden Knopf immer anzeigen"
                 toggle.isOn = AppSettings.shared.alwaysShowButton
+            case .airplayMode:
+                content.text = "AirPlay-Modus (Versuch)"
+                toggle.isOn = AppSettings.shared.airplayMode
             }
             cell.contentConfiguration = content
             cell.accessoryView = toggle
@@ -176,8 +184,14 @@ final class SettingsViewController: UITableViewController {
 
         case .about:
             var content = UIListContentConfiguration.valueCell()
-            content.text = "Version"
-            content.secondaryText = versionText()
+            if indexPath.row == 0 {
+                content.text = "Version"
+                content.secondaryText = versionText()
+            } else {
+                content.text = "Diagnose"
+                cell.accessoryType = .disclosureIndicator
+                cell.selectionStyle = .default
+            }
             cell.contentConfiguration = content
         }
         return cell
@@ -195,6 +209,10 @@ final class SettingsViewController: UITableViewController {
             navigationController?.pushViewController(CastLogViewController(), animated: true)
         case .data:
             confirmClearData()
+        case .about:
+            if indexPath.row == 1 {
+                showDiagnostics()
+            }
         default:
             break
         }
@@ -210,6 +228,7 @@ final class SettingsViewController: UITableViewController {
         case .autoPip: AppSettings.shared.autoPip = sender.isOn
         case .playerButtons: AppSettings.shared.playerButtons = sender.isOn
         case .alwaysShowButton: AppSettings.shared.alwaysShowButton = sender.isOn
+        case .airplayMode: AppSettings.shared.airplayMode = sender.isOn
         }
         onSettingsChanged?()
     }
@@ -237,6 +256,27 @@ final class SettingsViewController: UITableViewController {
                 done.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self?.present(done, animated: true, completion: nil)
             }
+        }
+    }
+
+    private func showDiagnostics() {
+        guard let request = onRequestDiagnostics else { return }
+        request { [weak self] pageText in
+            guard let self = self else { return }
+            let blocker = "Sperrliste: " + (ContentBlocker.isLoaded ? "aktiv" : "nicht geladen")
+            var text = pageText + "
+" + blocker + "
+App-Version: " + self.versionText()
+            if let error = ContentBlocker.lastError {
+                text += "
+Sperrliste-Fehler: " + error
+            }
+            let alert = UIAlertController(title: "Diagnose", message: text, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Kopieren", style: .default) { _ in
+                UIPasteboard.general.string = text
+            })
+            alert.addAction(UIAlertAction(title: "Schließen", style: .cancel, handler: nil))
+            self.present(alert, animated: true, completion: nil)
         }
     }
 

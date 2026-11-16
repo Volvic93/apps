@@ -20,12 +20,21 @@
       "iconURL": "https://raw.githubusercontent.com/Volvic93/apps/main/video-app/ios/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "tintColor": "#2DD4BF",
       "category": "entertainment",
-      "version": "0.1.3",
-      "versionDate": "2026-11-16T16:45:43Z",
-      "versionDescription": "Übertragen per TV-Code im Userscript; in der App keine sichtbare Änderung.",
-      "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.3/Flimmerfrei-0.1.3.ipa",
-      "size": 183485,
+      "version": "0.1.4",
+      "versionDate": "2026-11-16T19:53:33Z",
+      "versionDescription": "Korrekturen nach dem ersten Test auf dem iPhone: App greift nicht mehr in die Tonausgabe ein (Shorts, Bild-in-Bild), Wiedergabe wird im Hintergrund wieder angestoßen, YouTubes künstliche Wartezeit wird verkürzt, Untertitel standardmäßig aus.",
+      "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.4/Flimmerfrei-0.1.4.ipa",
+      "size": 188070,
       "versions": [
+        {
+          "version": "0.1.4",
+          "buildVersion": "13",
+          "date": "2026-11-16T19:53:33Z",
+          "localizedDescription": "Korrekturen nach dem ersten Test auf dem iPhone: App greift nicht mehr in die Tonausgabe ein (Shorts, Bild-in-Bild), Wiedergabe wird im Hintergrund wieder angestoßen, YouTubes künstliche Wartezeit wird verkürzt, Untertitel standardmäßig aus.",
+          "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.4/Flimmerfrei-0.1.4.ipa",
+          "size": 188070,
+          "minOSVersion": "16.0"
+        },
         {
           "version": "0.1.3",
           "buildVersion": "11",

@@ -17,6 +17,7 @@ final class AppSettings {
         static let playerButtons = "playerButtons"
         static let alwaysShowButton = "alwaysShowButton"
         static let airplayMode = "airplayMode"
+        static let captionsOff = "captionsOff"
     }
 
     private init() {
@@ -30,7 +31,8 @@ final class AppSettings {
             Key.appearance: 0,
             Key.playerButtons: true,
             Key.alwaysShowButton: false,
-            Key.airplayMode: false
+            Key.airplayMode: false,
+            Key.captionsOff: true
         ])
     }
 
@@ -68,6 +70,12 @@ final class AppSettings {
     var airplayMode: Bool {
         get { return defaults.bool(forKey: Key.airplayMode) }
         set { defaults.set(newValue, forKey: Key.airplayMode) }
+    }
+
+    /// Untertitel standardmäßig aus
+    var captionsOff: Bool {
+        get { return defaults.bool(forKey: Key.captionsOff) }
+        set { defaults.set(newValue, forKey: Key.captionsOff) }
     }
 
     /// Darstellung: 0 = automatisch, 1 = hell, 2 = dunkel

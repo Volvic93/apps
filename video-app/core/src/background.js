@@ -119,6 +119,50 @@ export function createResumeGuard(deps) {
   };
 }
 
+// Entscheidung für resumeAfterBackground: 'resumed' oder kurzer Grund.
+export function decideResume(i) {
+  if (!i.enabled) return 'off';
+  if (!i.video || i.video.isConnected === false) return 'no-video';
+  if (!i.video.paused) return 'not-paused';
+  if (i.video.ended) return 'ended';
+  if (i.userPause) return 'user-pause';
+  if (i.now - i.lastPlayingAt > (i.staleMs || 10000)) return 'stale';
+  return 'resumed';
+}
+
+// Merkt, welches Video zuletzt lief und wann, und ob die letzte Pause vom Nutzer kam.
+export function createPlaybackMemory(deps) {
+  const m = { video: null, lastPlayingAt: 0, userPause: false, attempts: 0, last: '', hiddenPauses: 0 };
+  return {
+    onPlaying(v) {
+      m.video = v;
+      m.lastPlayingAt = deps.now();
+      m.userPause = false;
+    },
+    // gedrosselt (höchstens einmal je Sekunde)
+    onTimeUpdate(v) {
+      if (v.paused) return;
+      const t = deps.now();
+      if (!m.video) m.video = v;
+      if (m.video === v && t - m.lastPlayingAt >= 1000) m.lastPlayingAt = t;
+    },
+    onPause(v) {
+      if (m.video !== v) return;
+      const user = deps.sinceUser() < (deps.userWindowMs || 1500);
+      m.userPause = user;
+      if (!user && deps.isRealHidden()) m.hiddenPauses++;
+    },
+    resume(play) {
+      m.attempts++;
+      const r = decideResume({ enabled: deps.isEnabled(), video: m.video, now: deps.now(), lastPlayingAt: m.lastPlayingAt, userPause: m.userPause, staleMs: 10000 });
+      if (r === 'resumed') safeCall(() => play(m.video));
+      m.last = r;
+      return r;
+    },
+    stats: () => ({ attempts: m.attempts, last: m.last, hiddenPauses: m.hiddenPauses }),
+  };
+}
+
 // Media-Session-Handler einwickeln, damit Sperrbildschirm-Aktionen als Nutzeraktion zählen.
 export function installMediaSessionWatch(win, activity) {
   const proto = win.MediaSession && win.MediaSession.prototype;
@@ -139,6 +183,13 @@ export function installMediaSessionWatch(win, activity) {
   Object.defineProperty(proto, 'setActionHandler', { value: fn, writable: true, configurable: true, enumerable: d.enumerable });
 }
 
+export function playVideoQuietly(v) {
+  const p = safeCall(() => v.play());
+  if (p && typeof p.catch === 'function') p.catch(function () {});
+}
+
+
+
 export function installBackground(win, doc, isOn, activity) {
   const proto = getDocumentProto(win, doc);
   const real = captureRealVisibility(proto, doc);
@@ -152,10 +203,7 @@ export function installBackground(win, doc, isOn, activity) {
     isRealHidden: () => real.isHidden(),
     sinceUser: () => activity.sinceUser(),
     schedule: (fn) => win.setTimeout(fn, 100 + Math.floor(Math.random() * 200)),
-    play: (v) => {
-      const p = safeCall(() => v.play());
-      if (p && typeof p.catch === 'function') p.catch(function () {});
-    },
+    play: playVideoQuietly,
   });
   const isVideo = (e) => e && e.target && String(e.target.tagName).toUpperCase() === 'VIDEO';
   safeCall(() =>
@@ -168,5 +216,19 @@ export function installBackground(win, doc, isOn, activity) {
       if (isVideo(e)) guard.onPlaying();
     }, true)
   );
-  return { real, guard };
+  const memory = createPlaybackMemory({
+    now: () => Date.now(),
+    isEnabled: isOn,
+    isRealHidden: () => real.isHidden(),
+    sinceUser: () => activity.sinceUser(),
+  });
+  for (const t of ['playing', 'timeupdate', 'pause']) {
+    safeCall(() =>
+      doc.addEventListener(t, (e) => {
+        if (!isVideo(e)) return;
+        safeCall(() => (t === 'playing' ? memory.onPlaying(e.target) : t === 'timeupdate' ? memory.onTimeUpdate(e.target) : memory.onPause(e.target)));
+      }, true)
+    );
+  }
+  return { real, guard, memory };
 }

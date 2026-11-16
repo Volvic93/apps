@@ -29,6 +29,10 @@ final class BrowserViewController: UIViewController {
 
     private var playerState = PlayerState()
     private var lastReportedAds = 0
+    private var lastPlayingAt: Date?
+    private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    private var resumeAttempts = 0
+    private var lastBackgroundResume = "-"
 
     private var observations: [NSKeyValueObservation] = []
     private var statusStyle: UIStatusBarStyle = .default
@@ -78,11 +82,7 @@ final class BrowserViewController: UIViewController {
 
         let center = NotificationCenter.default
         center.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
-        center.addObserver(self, selector: #selector(appDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
-
-        AudioSessionManager.shared.onShouldResume = { [weak self] in
-            self?.runScript("(function(){var v=document.querySelector('video');if(v&&v.paused&&!v.ended){v.play();}})();")
-        }
+        center.addObserver(self, selector: #selector(appDidEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
 
         // Übertragen: die App liefert das aktuelle Video und hält es an, sobald es am Fernseher läuft.
         CastManager.shared.currentVideoProvider = { [weak self] completion in
@@ -446,12 +446,17 @@ final class BrowserViewController: UIViewController {
                 completion("Skript nicht geladen")
                 return
             }
-            wv.evaluateJavaScript("window.__flimmerfrei ? window.__flimmerfrei.diagnostics() : 'Skript nicht geladen'") { result, _ in
-                if let text = result as? String {
-                    completion(text)
-                } else {
-                    completion("Skript nicht geladen")
+            wv.evaluateJavaScript("window.__flimmerfrei ? window.__flimmerfrei.diagnostics() : 'Skript nicht geladen'") { [weak self] result, _ in
+                var text = "Skript nicht geladen"
+                if let pageText = result as? String {
+                    text = pageText
                 }
+                if let self = self {
+                    text += "\nAudio-Sitzung: " + AudioSessionManager.shared.categoryDescription
+                    text += "\nHintergrund-Fortsetzen (App): " + String(self.resumeAttempts) + " Versuche, zuletzt: " + self.lastBackgroundResume
+                    text += "\nUser-Agent-Zusatz: " + WebViewFactory.userAgentSuffix
+                }
+                completion(text)
             }
         }
         let nav = UINavigationController(rootViewController: settings)
@@ -581,10 +586,9 @@ final class BrowserViewController: UIViewController {
     // MARK: - Zustand und Einstellungen
 
     private func apply(state newState: PlayerState) {
-        let wasPlaying = playerState.playing
         playerState = newState
-        if newState.playing && !wasPlaying {
-            AudioSessionManager.shared.activate()
+        if newState.playing {
+            lastPlayingAt = Date()
         }
         countBlockedAds(newState.adsBlocked)
         updateFloatingButtonVisibility()
@@ -656,8 +660,54 @@ final class BrowserViewController: UIViewController {
         togglePip()
     }
 
-    @objc private func appDidBecomeActive() {
-        AudioSessionManager.shared.activate()
+    /// Beim Wechsel in den Hintergrund: Wiedergabe von der App aus anstoßen (die Seite pausiert dabei oft).
+    @objc private func appDidEnterBackground() {
+        let settings = AppSettings.shared
+        guard settings.background, !playerState.pip else { return }
+        var wasPlaying = playerState.playing
+        if !wasPlaying, let last = lastPlayingAt, Date().timeIntervalSince(last) <= 3.0 {
+            wasPlaying = true
+        }
+        guard wasPlaying else { return }
+
+        if backgroundTask != .invalid { return }
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "flimmerfrei-resume") { [weak self] in
+            self?.endBackgroundTaskNow()
+        }
+        resumeAttempts = 0
+        lastBackgroundResume = "-"
+
+        let delays: [Double] = [0.3, 1.0, 2.0]
+        for delay in delays {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.tryResumeAfterBackground()
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { [weak self] in
+            self?.endBackgroundTaskNow()
+        }
+    }
+
+    private func tryResumeAfterBackground() {
+        guard let wv = webView else { return }
+        resumeAttempts += 1
+        let source = "window.__flimmerfrei && window.__flimmerfrei.resumeAfterBackground ? window.__flimmerfrei.resumeAfterBackground() : 'no-api'"
+        wv.evaluateJavaScript(source) { [weak self] result, error in
+            if let text = result as? String {
+                self?.lastBackgroundResume = text
+            } else if let error = error {
+                self?.lastBackgroundResume = "Fehler: " + error.localizedDescription
+            } else {
+                self?.lastBackgroundResume = "keine Antwort"
+            }
+        }
+    }
+
+    private func endBackgroundTaskNow() {
+        if backgroundTask != .invalid {
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
     }
 
     // MARK: - Fehler

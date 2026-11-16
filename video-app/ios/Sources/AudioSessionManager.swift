@@ -1,12 +1,11 @@
 import AVFoundation
 import Foundation
 
-/// Hält die Audio-Sitzung auf „Wiedergabe“, damit der Ton im Hintergrund weiterläuft.
+/// Setzt beim Start einmalig die Audio-Kategorie „Wiedergabe“ (nötig für Hintergrundton).
+/// Bewusst KEIN setActive(true) und kein Beobachter für Unterbrechungen: WebKit spielt Medien in einem
+/// eigenen Prozess mit eigener Audio-Sitzung; eine zusätzlich aktivierte Sitzung der App würde sie stören.
 final class AudioSessionManager {
     static let shared = AudioSessionManager()
-
-    /// Wird aufgerufen, wenn eine Unterbrechung (z. B. Anruf) endet und iOS Fortsetzen empfiehlt.
-    var onShouldResume: (() -> Void)?
 
     private var started = false
 
@@ -15,38 +14,17 @@ final class AudioSessionManager {
     func start() {
         guard !started else { return }
         started = true
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleInterruption(_:)),
-            name: AVAudioSession.interruptionNotification,
-            object: nil
-        )
-        activate()
-    }
-
-    /// Kategorie setzen und Sitzung aktivieren (bei Start und bei jedem Wiedergabe-Beginn).
-    func activate() {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .moviePlayback, options: [])
-            try session.setActive(true, options: [])
         } catch {
-            // Ohne Audio-Sitzung läuft die App weiter, nur ohne Hintergrundton.
+            // Ohne diese Kategorie läuft die App weiter, nur evtl. ohne Hintergrundton.
         }
     }
 
-    @objc private func handleInterruption(_ notification: Notification) {
-        guard let info = notification.userInfo,
-              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
-        if type == .ended {
-            activate()
-            if let optionValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
-                let options = AVAudioSession.InterruptionOptions(rawValue: optionValue)
-                if options.contains(.shouldResume) {
-                    onShouldResume?()
-                }
-            }
-        }
+    /// Aktuelle Kategorie und Modus als Text (für die Diagnose).
+    var categoryDescription: String {
+        let session = AVAudioSession.sharedInstance()
+        return session.category.rawValue + " / " + session.mode.rawValue
     }
 }

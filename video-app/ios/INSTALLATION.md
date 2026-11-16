@@ -141,6 +141,7 @@ Hinweise: Auf dem Fernseher spielt dessen YouTube-App – **Werbung dort kann di
 | Anmeldung mit der Apple-ID scheitert | Zwei-Faktor-Code prüfen; bei einigen Konten ein **App-spezifisches Passwort** erzeugen (appleid.apple.com → Anmelden und Sicherheit) und statt des normalen Passworts verwenden. |
 | „Maximale Zahl an Apps erreicht“ | Mit einer kostenlosen Apple-ID sind nur wenige Apps gleichzeitig erlaubt: eine andere Test-App entfernen oder eine zweite Apple-ID verwenden. |
 | Etwas verhält sich seltsam (Werbung, Ton, Knöpfe fehlen) | *Einstellungen → Diagnose* öffnen, **„Kopieren“** tippen und den Text mitschicken. |
+| Anmeldung mit Passkey oder Sicherheitsschlüssel klappt nicht | Passkeys funktionieren in der App nicht. Auf **„Andere Option wählen“** tippen und Kennwort, Bestätigung am Handy oder einen Code verwenden. |
 | Es erscheint doch Werbung | YouTube ändert seine Seite laufend; der Werbeblocker kann zeitweise ausfallen, bis die App aktualisiert wird. Seite neu laden hilft manchmal. |
 | Ton stoppt im Hintergrund | In den Einstellungen prüfen, ob *Hintergrundwiedergabe* an ist; Video einmal in der App starten. Nach einem Anruf ggf. Wiedergabe neu starten. |
 | Bild-in-Bild geht nicht | Es muss ein Video laufen (Menüpunkt nicht ausgegraut). Manche Videos sperren es; dann das Video-Vollbild versuchen und von dort das Bild-in-Bild-Symbol des Players nutzen. |

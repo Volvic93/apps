@@ -167,6 +167,7 @@ export function createAdState() {
     adsBlocked: 0, // Summe für die Schnittstelle
     dataRemoved: 0, // aus Daten entfernt
     adsSkipped: 0, // laufende Werbung übersprungen
+    delaysShortened: 0, // künstliche Wartezeiten verkürzt
     onChange: null,
   };
 }
@@ -419,4 +420,44 @@ export function installInitialDataSetters(win, isOn, state) {
       /* Originalverhalten */
     }
   }
+}
+
+// ---- YouTubes künstliche Wartezeit (uBlock: adjust-setTimeout / nano-stb) ----
+
+const FN_TO_STRING = Function.prototype.toString;
+
+// Soll dieser Zeitgeber verkürzt werden? a) 17000 ms mit nativem Rückruf, b) Rückruf, dessen Quelltext auf das Muster "resolve" mit Argument 1 passt.
+export function shouldShortenTimeout(cb, delay) {
+  if (typeof cb !== 'function') return false;
+  const n = Number(delay);
+  if (!(n > 1)) return false;
+  let src;
+  try {
+    src = FN_TO_STRING.call(cb);
+  } catch (e) {
+    return false;
+  }
+  if (n === 17000 && src.indexOf('[native code]') !== -1) return true;
+  return src.length <= 1000 && /resolve\(1\)/.test(src);
+}
+
+export function installTimeoutHook(win, isOn, state) {
+  const orig = win.setTimeout;
+  if (typeof orig !== 'function') return false;
+  const wrapped = function setTimeout(cb, delay) {
+    let args = null;
+    try {
+      if (isOn() && shouldShortenTimeout(cb, delay)) {
+        args = Array.prototype.slice.call(arguments);
+        args[1] = Math.max(1, Number(delay) * 0.001);
+        state.delaysShortened++;
+      }
+    } catch (e) {
+      args = null;
+    }
+    return Reflect.apply(orig, this, args || arguments);
+  };
+  makeNativeLike(wrapped, 'setTimeout');
+  Object.defineProperty(win, 'setTimeout', { value: wrapped, writable: true, configurable: true, enumerable: true });
+  return true;
 }

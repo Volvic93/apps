@@ -1,6 +1,6 @@
 // Gemeinsame Grundlagen: Einstellungen, Nutzeraktivität, kleine Hilfen.
 
-export const VERSION = '0.1.3';
+export const VERSION = '0.1.4';
 
 export const DEFAULT_CONFIG = Object.freeze({
   adblock: true,
@@ -9,12 +9,13 @@ export const DEFAULT_CONFIG = Object.freeze({
   look: true,
   playerButtons: true,
   menuButton: true,
+  captionsOff: true, // Untertitel standardmäßig aus
   limited: false, // vom Lader gesetzt: Kern läuft im Kontext des Userscripts
   airplayMode: false, // wirkt nur beim Start der Seite
   host: 'userscript',
 });
 
-const BOOL_KEYS = ['adblock', 'background', 'pipFix', 'look', 'playerButtons', 'menuButton', 'limited', 'airplayMode'];
+const BOOL_KEYS = ['adblock', 'background', 'pipFix', 'look', 'playerButtons', 'menuButton', 'captionsOff', 'limited', 'airplayMode'];
 
 // Rohwerte (von der Hülle gesetzt) mit dem Standard zusammenführen; unbekannte/falsche Typen fallen auf die Basis zurück.
 export function normalizeConfig(raw, base = DEFAULT_CONFIG) {

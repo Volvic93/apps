@@ -65,6 +65,10 @@ export function buildDiagnostics(i) {
     'Übertragen: ' + (i.cast || 'nicht verbunden'),
     'Hintergrund: ' + onoff(i.background) + ' · Bild-in-Bild-Hilfe: ' + onoff(i.pipFix) + ' · Aussehen: ' + onoff(i.look),
     'Letzte Videostarts: ' + starts,
+    'Wartezeiten verkürzt: ' + (i.delaysShortened || 0),
+    'Untertitel-Automatik: ' + onoff(i.captionsAuto) + ' (' + (i.captionsTurnedOff || 0) + '-mal ausgeschaltet)',
+    'Fortsetzen im Hintergrund: ' + (i.resumeAttempts || 0) + ' Versuche, zuletzt: ' + (i.resumeLast || '–'),
+    'Pausen ohne Nutzeraktion (verborgen): ' + (i.hiddenPauses || 0),
     'Video: ' + video,
     'Adresse: ' + (i.path || '-'),
   ].join('\n');

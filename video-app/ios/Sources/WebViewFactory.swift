@@ -20,6 +20,12 @@ final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 enum WebViewFactory {
     static let messageName = "flimmerfrei"
 
+    /// Zusatz im User-Agent, gekoppelt an die echte iOS-Hauptversion.
+    static var userAgentSuffix: String {
+        let major = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        return "Version/" + String(major) + ".0 Mobile/15E148 Safari/604.1"
+    }
+
     static func makeConfiguration(messageHandler: WKScriptMessageHandler, contentRuleList: WKContentRuleList?) -> WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = WKWebsiteDataStore.default()
@@ -31,7 +37,7 @@ enum WebViewFactory {
         // Auch auf dem iPad die mobile Seite laden (wie die YouTube-App).
         config.defaultWebpagePreferences.preferredContentMode = .mobile
         // Google soll die Ansicht wie Safari behandeln; die Kennung der App steht nicht im User-Agent.
-        config.applicationNameForUserAgent = "Version/18.0 Mobile/15E148 Safari/604.1"
+        config.applicationNameForUserAgent = userAgentSuffix
 
         let controller = config.userContentController
         controller.add(WeakScriptMessageHandler(target: messageHandler), name: messageName)
@@ -71,5 +77,6 @@ enum WebViewFactory {
             + ", playerButtons: " + flag(settings.playerButtons)
             + ", menuButton: true"
             + ", airplayMode: " + flag(settings.airplayMode)
+            + ", captionsOff: " + flag(settings.captionsOff)
     }
 }

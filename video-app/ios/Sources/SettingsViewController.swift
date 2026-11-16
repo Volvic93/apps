@@ -25,6 +25,7 @@ final class SettingsViewController: UITableViewController {
         case playerButtons
         case alwaysShowButton
         case airplayMode
+        case captionsOff
     }
 
     private let appearanceTitles = ["Automatisch", "Hell", "Dunkel"]
@@ -144,6 +145,9 @@ final class SettingsViewController: UITableViewController {
             case .alwaysShowButton:
                 content.text = "Schwebenden Knopf immer anzeigen"
                 toggle.isOn = AppSettings.shared.alwaysShowButton
+            case .captionsOff:
+                content.text = "Untertitel standardmäßig aus"
+                toggle.isOn = AppSettings.shared.captionsOff
             case .airplayMode:
                 content.text = "AirPlay-Modus (Versuch)"
                 toggle.isOn = AppSettings.shared.airplayMode
@@ -227,6 +231,7 @@ final class SettingsViewController: UITableViewController {
         case .playerButtons: AppSettings.shared.playerButtons = sender.isOn
         case .alwaysShowButton: AppSettings.shared.alwaysShowButton = sender.isOn
         case .airplayMode: AppSettings.shared.airplayMode = sender.isOn
+        case .captionsOff: AppSettings.shared.captionsOff = sender.isOn
         }
         onSettingsChanged?()
     }

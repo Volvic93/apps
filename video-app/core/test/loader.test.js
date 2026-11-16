@@ -98,7 +98,7 @@ function setup(o) {
 
 test('Kopf: inject-into content', () => {
   assert.match(userCode, /^\/\/ @inject-into {2}content$/m);
-  assert.match(userCode, /^\/\/ @version {6}0\.1\.3$/m);
+  assert.match(userCode, /^\/\/ @version {6}0\.1\.4$/m);
 });
 
 test('Fall A: Seite lässt Skripte zu -> Kern läuft in der Seiten-Welt, genau einmal', () => {
@@ -108,7 +108,7 @@ test('Fall A: Seite lässt Skripte zu -> Kern läuft in der Seiten-Welt, genau e
   assert.equal(e.log.scripts[0].nonce, 'abc123');
   assert.equal(e.log.scripts[0].attrs.nonce, 'abc123');
   assert.equal(e.log.scripts[0].parentNode, null, 'Skript wieder entfernt');
-  assert.equal(e.attrs['data-flimmerfrei'], '0.1.3');
+  assert.equal(e.attrs['data-flimmerfrei'], '0.1.4');
   assert.ok(e.page.__flimmerfrei);
   assert.equal(e.loader.__flimmerfrei, undefined, 'kein zweiter Start im Userscript-Kontext');
   assert.equal(e.log.styles.length, 2, 'Stil-Elemente (Werbung, Aussehen) nur einmal');
@@ -122,7 +122,7 @@ test('Fall B: blockiert (Zeichenkette wirft) -> Rückfall im Userscript-Kontext'
   e.run();
   assert.equal(e.page.__flimmerfrei, undefined);
   assert.ok(e.loader.__flimmerfrei);
-  assert.equal(e.loader.__flimmerfrei.version, '0.1.3');
+  assert.equal(e.loader.__flimmerfrei.version, '0.1.4');
   assert.equal(e.log.styles.length, 2);
   assert.equal(JSON.stringify(e.loader.__FLIMMERFREI_CONFIG__), '{"limited":true}');
   assert.ok(e.loader.__flimmerfrei.diagnostics().includes('Modus: eingeschränkt (Skript-Kontext)'));
@@ -215,7 +215,7 @@ test('Marke wird vom Kern gesetzt (auch ohne Lader)', () => {
   win.location = { href: 'https://www.youtube.com/', hostname: 'www.youtube.com' };
   win.addEventListener = () => {};
   vm.runInContext(inject, ctx);
-  assert.equal(e.attrs['data-flimmerfrei'], '0.1.3');
+  assert.equal(e.attrs['data-flimmerfrei'], '0.1.4');
   assert.ok(win.__flimmerfrei);
 });
 
@@ -241,5 +241,5 @@ test('Marke: fehlt documentElement noch, wird sie nachgeholt', () => {
   assert.equal('data-flimmerfrei' in attrs, false);
   doc.documentElement = { setAttribute: (k, v) => { attrs[k] = v; }, appendChild() {} };
   listeners.DOMContentLoaded.forEach((f) => f());
-  assert.equal(attrs['data-flimmerfrei'], '0.1.3');
+  assert.equal(attrs['data-flimmerfrei'], '0.1.4');
 });

@@ -1,13 +1,14 @@
 // Einstieg: Module einhängen und window.__flimmerfrei bereitstellen.
 import { VERSION, isYouTubeHost, resolveAirplayMode, hideManagedMediaSource, AIRPLAY_KEY, createConfigStore, createUserActivity, installActivityTracking, safeCall } from './config.js';
-import { createAdState, installAdSkipper, installAdStyle, installInitialDataSetters, installJsonHooks } from './adblock.js';
-import { installBackground } from './background.js';
+import { createAdState, installAdSkipper, installAdStyle, installInitialDataSetters, installJsonHooks, installTimeoutHook } from './adblock.js';
+import { installBackground, playVideoQuietly } from './background.js';
 import { createPipState, installPipGuards, installVideoObserver, pauseActive, scanVideos, showAirplay, togglePip } from './pip.js';
-import { buildReloadUrl, collectState, installBridge } from './bridge.js';
+import { buildReloadUrl, collectState, installBridge, parseVideoIds } from './bridge.js';
 import { installLook, postToApp } from './look.js';
 import { buildDiagnostics, createDiagState, installVideoTiming, sourceKind } from './diag.js';
 import { findActiveVideo } from './pip.js';
 import { installCast } from './castui.js';
+import { createCaptionsState, installCaptions } from './captions.js';
 
 // Marke im Dokument (für den Lader des Userscripts): zeigt, dass der Kern gestartet ist.
 function setPresenceMark(doc) {
@@ -56,6 +57,8 @@ export function runFlimmerfrei(win, doc) {
 
   let notify = null;
   let look = null;
+  let bg = null;
+  const captions = createCaptionsState();
   let cast = null; // nur im Userscript (host 'userscript')
 
   // Userscript: AirPlay-Modus ein-/ausschalten (merkt sich den Schalter, lädt an der aktuellen Stelle neu)
@@ -89,6 +92,12 @@ export function runFlimmerfrei(win, doc) {
       skipped: adState.adsSkipped,
       mms: mmsHidden ? 'verborgen (AirPlay-Modus)' : mmsPresent ? 'vorhanden' : 'nicht vorhanden',
       airplayMode: airplayMode,
+      delaysShortened: adState.delaysShortened,
+      captionsAuto: c.captionsOff && !captions.wanted,
+      captionsTurnedOff: captions.turnedOff,
+      resumeAttempts: bg ? bg.memory.stats().attempts : 0,
+      resumeLast: bg ? bg.memory.stats().last : '',
+      hiddenPauses: bg ? bg.memory.stats().hiddenPauses : 0,
       cast: cast ? cast.status() : c.host === 'ios' ? 'über die App' : 'nicht verbunden',
       background: c.background,
       pipFix: c.pipFix,
@@ -112,6 +121,10 @@ export function runFlimmerfrei(win, doc) {
       }
       safeCall(() => askAirplayMode(true));
       return false;
+    },
+    // Von der App angestoßen: nach dem Wechsel in den Hintergrund pausiertes Video fortsetzen
+    resumeAfterBackground() {
+      return safeCall(() => (bg ? bg.memory.resume(playVideoQuietly) : 'off'), 'off');
     },
     diagnostics() {
       return safeCall(() => makeDiagnostics(), 'Diagnose nicht verfügbar');
@@ -138,9 +151,11 @@ export function runFlimmerfrei(win, doc) {
   safeCall(() => installActivityTracking(doc, activity));
   safeCall(() => installJsonHooks(win, adOn, adState));
   safeCall(() => installInitialDataSetters(win, adOn, adState));
+  safeCall(() => installTimeoutHook(win, adOn, adState));
   const style = safeCall(() => installAdStyle(doc, adOn), null);
   safeCall(() => installAdSkipper(win, doc, adOn, adState));
-  safeCall(() => installBackground(win, doc, bgOn, activity));
+  bg = safeCall(() => installBackground(win, doc, bgOn, activity), null);
+  safeCall(() => installCaptions(win, doc, () => store.get().captionsOff, captions, () => parseVideoIds(String(win.location.href)).videoId));
   look = safeCall(() => installLook(win, doc, store, { pip: () => api.pip(), airplay: () => api.airplay(), onChange: () => notify && notify(), diagnostics: () => win.alert(api.diagnostics()), airplayOff: airplayOff, castOpen: store.get().host === 'userscript' ? () => cast && cast.open() : undefined, castConnected: () => !!cast && cast.lounge.isConnected() }), null);
   safeCall(() => installVideoTiming(doc, diag));
   if (store.get().host === 'userscript') {

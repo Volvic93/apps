@@ -10,7 +10,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
 test('package.json: Version, Modultyp, Skripte, keine Abhängigkeiten', () => {
-  assert.equal(pkg.version, '0.1.3');
+  assert.equal(pkg.version, '0.1.4');
   assert.equal(pkg.type, 'module');
   assert.ok(pkg.scripts.build && pkg.scripts.test);
   assert.equal(pkg.dependencies, undefined);
@@ -19,7 +19,7 @@ test('package.json: Version, Modultyp, Skripte, keine Abhängigkeiten', () => {
 });
 
 test('Einstellungen: Standard, Teilangaben, falsche Typen', () => {
-  assert.deepEqual(normalizeConfig(undefined), { adblock: true, background: true, pipFix: true, look: true, playerButtons: true, menuButton: true, limited: false, airplayMode: false, host: 'userscript' });
+  assert.deepEqual(normalizeConfig(undefined), { adblock: true, background: true, pipFix: true, look: true, playerButtons: true, menuButton: true, captionsOff: true, limited: false, airplayMode: false, host: 'userscript' });
   assert.deepEqual(normalizeConfig({ background: false, host: 'ios' }), { ...DEFAULT_CONFIG, background: false, host: 'ios' });
   assert.deepEqual(normalizeConfig({ adblock: 'nein', host: 5 }), { ...DEFAULT_CONFIG });
   assert.deepEqual(normalizeConfig('x'), { ...DEFAULT_CONFIG });
@@ -42,12 +42,12 @@ test('setConfig im Betrieb: Teiländerung, Beobachter', () => {
 });
 
 test('Userscript-Kopf laut Konzept 3.1', () => {
-  const h = userscriptHeader('0.1.3');
+  const h = userscriptHeader('0.1.4');
   assert.ok(h.startsWith('// ==UserScript==\n'));
   assert.ok(h.trimEnd().endsWith('// ==/UserScript=='));
   const get = (k) => (h.match(new RegExp('^// @' + k + '\\s+(.*)$', 'm')) || [])[1];
   assert.equal(get('name'), 'Flimmerfrei');
-  assert.equal(get('version'), '0.1.3');
+  assert.equal(get('version'), '0.1.4');
   assert.equal(get('match'), 'https://*.youtube.com/*');
   assert.equal(get('run-at'), 'document-start');
   assert.equal(get('grant'), 'none');
@@ -59,9 +59,9 @@ test('Userscript-Kopf laut Konzept 3.1', () => {
 test('Bündelung: doppelte Namen und fehlende Importe werden erkannt', () => {
   const src = {};
   for (const m of MODULES) src[m] = readFileSync(join(root, 'src', m + '.js'), 'utf8');
-  assert.doesNotThrow(() => bundleModules(src, '0.1.3'));
-  assert.throws(() => bundleModules({ ...src, pip: src.pip + '\nfunction hasSource() {}\n' }, '0.1.3'), /Doppelter Name/);
-  assert.throws(() => bundleModules({ ...src, bridge: "import { gibtEsNicht } from './x.js';\n" + src.bridge }, '0.1.3'), /nirgends/);
+  assert.doesNotThrow(() => bundleModules(src, '0.1.4'));
+  assert.throws(() => bundleModules({ ...src, pip: src.pip + '\nfunction hasSource() {}\n' }, '0.1.4'), /Doppelter Name/);
+  assert.throws(() => bundleModules({ ...src, bridge: "import { gibtEsNicht } from './x.js';\n" + src.bridge }, '0.1.4'), /nirgends/);
 });
 
 // ---- Regeldatei ----

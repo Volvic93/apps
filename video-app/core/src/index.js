@@ -7,6 +7,7 @@ import { buildReloadUrl, collectState, installBridge } from './bridge.js';
 import { installLook, postToApp } from './look.js';
 import { buildDiagnostics, createDiagState, installVideoTiming, sourceKind } from './diag.js';
 import { findActiveVideo } from './pip.js';
+import { installCast } from './castui.js';
 
 // Marke im Dokument (für den Lader des Userscripts): zeigt, dass der Kern gestartet ist.
 function setPresenceMark(doc) {
@@ -55,6 +56,7 @@ export function runFlimmerfrei(win, doc) {
 
   let notify = null;
   let look = null;
+  let cast = null; // nur im Userscript (host 'userscript')
 
   // Userscript: AirPlay-Modus ein-/ausschalten (merkt sich den Schalter, lädt an der aktuellen Stelle neu)
   const askAirplayMode = function (enable) {
@@ -87,6 +89,7 @@ export function runFlimmerfrei(win, doc) {
       skipped: adState.adsSkipped,
       mms: mmsHidden ? 'verborgen (AirPlay-Modus)' : mmsPresent ? 'vorhanden' : 'nicht vorhanden',
       airplayMode: airplayMode,
+      cast: cast ? cast.status() : c.host === 'ios' ? 'über die App' : 'nicht verbunden',
       background: c.background,
       pipFix: c.pipFix,
       look: c.look,
@@ -138,8 +141,12 @@ export function runFlimmerfrei(win, doc) {
   const style = safeCall(() => installAdStyle(doc, adOn), null);
   safeCall(() => installAdSkipper(win, doc, adOn, adState));
   safeCall(() => installBackground(win, doc, bgOn, activity));
-  look = safeCall(() => installLook(win, doc, store, { pip: () => api.pip(), airplay: () => api.airplay(), onChange: () => notify && notify(), diagnostics: () => win.alert(api.diagnostics()), airplayOff: airplayOff }), null);
+  look = safeCall(() => installLook(win, doc, store, { pip: () => api.pip(), airplay: () => api.airplay(), onChange: () => notify && notify(), diagnostics: () => win.alert(api.diagnostics()), airplayOff: airplayOff, castOpen: store.get().host === 'userscript' ? () => cast && cast.open() : undefined, castConnected: () => !!cast && cast.lounge.isConnected() }), null);
   safeCall(() => installVideoTiming(doc, diag));
+  if (store.get().host === 'userscript') {
+    cast = safeCall(() => installCast(win, doc, { getState: () => api.state(), pause: () => api.pause(), onChange: () => look && look.refresh() }), null);
+    if (look) safeCall(look.refresh);
+  }
   safeCall(() => installPipGuards(win, doc, pipOn, activity, pipState));
   safeCall(() => installVideoObserver(win, doc, pipOn, airplayMode));
   notify = safeCall(() => installBridge(win, doc, adState, () => !!look && look.menuButtonPresent(), () => airplayMode), null);

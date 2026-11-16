@@ -203,6 +203,7 @@ export function ensurePlayerButtons(win, doc, o) {
   const cls = 'flimmerfrei-player-button';
   const list = [];
   if (o.host === 'ios') list.push({ className: cls, label: 'Auf Fernseher übertragen', icon: 'cast', action: () => postToApp(win, { type: 'cast' }) });
+  else if (typeof o.castOpen === 'function') list.push({ className: cls + ' flimmerfrei-cast-player', label: 'Auf Fernseher übertragen', icon: 'cast', action: o.castOpen });
   list.push({ className: cls, label: 'Bild-in-Bild', icon: 'pip', action: o.pip, longPress: o.diagnostics });
   if (hasAirplaySupport(win)) list.push({ className: cls, label: 'AirPlay', icon: 'airplay', action: o.airplay, longPress: o.airplayOff });
   const first = box.firstChild || null;
@@ -212,6 +213,16 @@ export function ensurePlayerButtons(win, doc, o) {
     else box.appendChild(b);
   }
   return true;
+}
+
+// Übertragen-Knopf im Player hervorheben, solange verbunden (Userscript).
+export function setCastConnected(doc, connected) {
+  safeCall(() => {
+    for (const b of Array.from(doc.querySelectorAll('.flimmerfrei-cast-player'))) {
+      b.setAttribute('aria-pressed', connected ? 'true' : 'false');
+      b.setAttribute('style', connected ? PLAYER_STYLE.replace('color:#fff', 'color:#2DD4BF') : PLAYER_STYLE);
+    }
+  });
 }
 
 export function removePlayerButtons(doc) {
@@ -241,9 +252,10 @@ export function installLook(win, doc, store, actions) {
       else removeTopbarButtons(doc);
     });
     safeCall(() => {
-      if (cfg.playerButtons) ensurePlayerButtons(win, doc, { host: cfg.host, pip: actions.pip, airplay: actions.airplay, diagnostics: actions.diagnostics, airplayOff: actions.airplayOff });
+      if (cfg.playerButtons) ensurePlayerButtons(win, doc, { host: cfg.host, pip: actions.pip, airplay: actions.airplay, diagnostics: actions.diagnostics, airplayOff: actions.airplayOff, castOpen: actions.castOpen });
       else removePlayerButtons(doc);
     });
+    if (actions.castConnected) setCastConnected(doc, !!safeCall(actions.castConnected, false));
     const now = isMenuButtonPresent(doc);
     if (now !== lastMenu) {
       lastMenu = now;

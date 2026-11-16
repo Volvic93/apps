@@ -145,11 +145,11 @@ test('Diagnose: Videostarts (letzte 5, Werbung ausgenommen) und Bericht', () => 
   assert.equal(sourceKind({}), 'leer');
 
   const text = buildDiagnostics({
-    version: '0.1.2', limited: true, host: 'userscript', dataRemoved: 4, skipped: 2, mms: 'verborgen (AirPlay-Modus)', airplayMode: true,
+    version: '0.1.3', limited: true, host: 'userscript', dataRemoved: 4, skipped: 2, mms: 'verborgen (AirPlay-Modus)', airplayMode: true,
     background: true, pipFix: false, look: true, starts: [400, 6200, 500], video: { disableRemotePlayback: 'true', source: 'blob' }, path: '/watch',
   });
   for (const line of [
-    'Flimmerfrei 0.1.2',
+    'Flimmerfrei 0.1.3',
     'Modus: eingeschränkt (Skript-Kontext)',
     'Hülle: userscript',
     'Werbung aus Daten entfernt: 4',

@@ -128,7 +128,7 @@
       <li>Den Knopf „Userscript installieren“ öffnen und die Installation bestätigen.</li>
       <li>youtube.com neu laden.</li>
     </ol>
-    <p><strong>Übertragen geht im Userscript nicht.</strong> Chromecast und Fernseher gibt es nur in der iPhone-App; das Userscript bietet Werbeblocker, Hintergrundwiedergabe, Bild-in-Bild und AirPlay, ohne eigene Symbole in der oberen Leiste.</p>
+    <p><strong>Übertragen per TV-Code.</strong> Im Player gibt es einen Übertragen-Knopf. Er öffnet ein Blatt, in das der TV-Code vom Fernseher eingegeben wird (in der YouTube-App des Fernsehers unter „Einstellungen → Mit TV-Code verknüpfen“). Das geht mit Fernsehern, auf denen die YouTube-App läuft: Smart-TV, Android TV und Google TV, Fire TV, Spielkonsole. Das gekoppelte Gerät wird gemerkt („Erneut verbinden“). Die Suche nach Geräten im WLAN gibt es weiterhin nur in der iPhone-App. Auf dem Fernseher kann Werbung laufen, und die Funktion ist noch nicht an einem echten Gerät erprobt. Die obere Leiste bleibt im Userscript unverändert.</p>
     <p><strong>Wie das Skript in die Seite kommt.</strong> YouTube und Safari blockieren das direkte Einschleusen von Skripten. Das Userscript bringt seinen Kern deshalb über einen eigenen Lader in die Seite. Gelingt das nicht, läuft es im eingeschränkten Modus: Werbung wird dann nicht vorab aus den Daten entfernt, sondern erst übersprungen, wenn sie läuft; Stil, Knöpfe im Player und die Wiederaufnahme nach einer Pause arbeiten weiter.</p>
     <p><strong>Nach einem Update</strong> das Skript in der Erweiterung neu laden bzw. aktualisieren und youtube.com neu öffnen.</p>
     <p><strong>Banner „In der YouTube-App öffnen“:</strong> Es kommt von Safari selbst, nicht von der Seite. Das Skript versucht, den Auslöser zu entfernen; sicher verschwindet das Banner nur, wenn die YouTube-App nicht installiert ist. In der Flimmerfrei-App erscheint es gar nicht.</p>
@@ -139,7 +139,7 @@
   <section id="grenzen">
     <h2>Grenzen</h2>
     <ul>
-      <li><strong>Übertragen ist eine Eigenbau-Lösung.</strong> Sie beruht auf einer inoffiziellen Schnittstelle von YouTube und konnte noch nicht an echten Geräten erprobt werden. Im Userscript gibt es sie nicht; dort bleibt AirPlay.</li>
+      <li><strong>Übertragen ist eine Eigenbau-Lösung.</strong> Sie beruht auf einer inoffiziellen Schnittstelle von YouTube und konnte noch nicht an echten Geräten erprobt werden. Im Userscript gibt es nur die Kopplung per TV-Code.</li>
       <li><strong>YouTube kann Dinge ändern.</strong> Werbeblocker und Hintergrundwiedergabe können dadurch zeitweise ausfallen, bis der Kern angepasst ist.</li>
       <li><strong>Erster echter Test auf dem iPhone.</strong> Die App lässt sich nicht auf dem Entwicklungsrechner starten; Fehler sind daher möglich.</li>
       <li><strong>Passkeys und Sicherheitsschlüssel</strong> funktionieren in eingebetteten Ansichten nicht zuverlässig. Bei der Anmeldung dann „Andere Option wählen“ und Kennwort, Bestätigung am Handy oder Code benutzen. Google kann die Anmeldung in eingebetteten Ansichten jederzeit strenger behandeln.</li>

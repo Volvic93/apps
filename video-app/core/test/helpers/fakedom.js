@@ -45,6 +45,7 @@ export class FakeEl {
     if (i === -1) this.childNodes.push(n); else this.childNodes.splice(i, 0, n);
     return n;
   }
+  removeChild(n) { n.remove(); return n; }
   remove() {
     if (!this.parentNode) return;
     const p = this.parentNode;
@@ -82,6 +83,7 @@ export function makeDoc() {
     querySelector: (s) => root.querySelector(s),
     querySelectorAll: (s) => root.querySelectorAll(s),
     addEventListener() {},
+    removeEventListener() {},
   };
   return { doc, root };
 }

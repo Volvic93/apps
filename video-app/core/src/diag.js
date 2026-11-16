@@ -62,6 +62,7 @@ export function buildDiagnostics(i) {
     'Laufende Werbung übersprungen: ' + i.skipped,
     'ManagedMediaSource: ' + i.mms,
     'AirPlay-Modus: ' + onoff(i.airplayMode),
+    'Übertragen: ' + (i.cast || 'nicht verbunden'),
     'Hintergrund: ' + onoff(i.background) + ' · Bild-in-Bild-Hilfe: ' + onoff(i.pipFix) + ' · Aussehen: ' + onoff(i.look),
     'Letzte Videostarts: ' + starts,
     'Video: ' + video,

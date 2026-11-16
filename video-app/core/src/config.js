@@ -1,6 +1,6 @@
 // Gemeinsame Grundlagen: Einstellungen, Nutzeraktivität, kleine Hilfen.
 
-export const VERSION = '0.1.2';
+export const VERSION = '0.1.3';
 
 export const DEFAULT_CONFIG = Object.freeze({
   adblock: true,

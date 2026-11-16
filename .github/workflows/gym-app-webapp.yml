@@ -12,6 +12,7 @@ on:
       - 'video-app/core/**'
       - 'video-app/web/**'
       - 'site/**'
+      - 'source.json'
       - '.github/workflows/gym-app-webapp.yml'
   workflow_dispatch:
 
@@ -66,6 +67,9 @@ jobs:
           mkdir -p _site/video-app
           cp -R video-app/web/. _site/video-app/
           cp video-app/core/dist/flimmerfrei.user.js _site/video-app/
+          # AltStore-Quelle unter kurzer Adresse: …/apps/source.json (vorher auf gültiges JSON prüfen)
+          node -e "JSON.parse(require('fs').readFileSync('source.json','utf8'))"
+          cp source.json _site/source.json
           cp site/index.html site/icon.png site/favicon.png _site/
           touch _site/.nojekyll
           # Jede frühere Version bleibt erreichbar (…/gym-app-archiv/<Version>/) und in versionen.html verlinkt

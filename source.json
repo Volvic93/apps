@@ -20,12 +20,21 @@
       "iconURL": "https://raw.githubusercontent.com/Volvic93/apps/main/video-app/ios/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "tintColor": "#2DD4BF",
       "category": "entertainment",
-      "version": "0.1.2",
-      "versionDate": "2026-11-15T22:27:17Z",
-      "versionDescription": "Schnellerer Videostart in Safari und in der App, AirPlay-Modus als Einstellung, Diagnose-Anzeige, laufende Werbung wird schneller übersprungen.",
-      "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.2/Flimmerfrei-0.1.2.ipa",
-      "size": 177639,
+      "version": "0.1.3",
+      "versionDate": "2026-11-16T16:45:43Z",
+      "versionDescription": "Übertragen per TV-Code im Userscript; in der App keine sichtbare Änderung.",
+      "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.3/Flimmerfrei-0.1.3.ipa",
+      "size": 183485,
       "versions": [
+        {
+          "version": "0.1.3",
+          "buildVersion": "11",
+          "date": "2026-11-16T16:45:43Z",
+          "localizedDescription": "Übertragen per TV-Code im Userscript; in der App keine sichtbare Änderung.",
+          "downloadURL": "https://github.com/Volvic93/apps/releases/download/video-app-v0.1.3/Flimmerfrei-0.1.3.ipa",
+          "size": 183485,
+          "minOSVersion": "16.0"
+        },
         {
           "version": "0.1.2",
           "buildVersion": "9",

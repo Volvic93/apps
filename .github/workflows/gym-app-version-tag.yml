@@ -1,0 +1,23 @@
+name: Gym-App Versions-Tag (Web-Archiv aktualisieren)
+
+# Nach einem neuen Tag gym-app-v1.2.3 wird die Web-Seite neu gebaut, damit die Version im Web-Archiv und in versionen.html
+# erscheint. Der Seitenbau läuft dabei auf main (die Pages-Umgebung lässt nur main zu), deshalb wird er hier nur angestoßen.
+# Die .ipa derselben Version baut das private Repository Volvic93/Apps-IPA-Dateien (dort denselben Tag setzen).
+on:
+  push:
+    tags:
+      - 'gym-app-v*'
+
+permissions:
+  actions: write
+
+jobs:
+  anstossen:
+    name: Seitenbau anstoßen
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Web-Seite neu bauen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run gym-app-webapp.yml --ref main --repo "$GITHUB_REPOSITORY"

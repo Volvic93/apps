@@ -16,7 +16,7 @@ Stand: 15.11.2026 · Status: Konzept vom Nutzer freigegeben, **Stufen 1 bis 4 um
 | Geräte/Fotos | Start mit allgemeinem Katalog. Fotos können in der App selbst aufgenommen werden. Gelieferte Fotos werden **erkannt** (Hersteller, Modell, Gerätetyp), als Gerät mit Namen, Übungen und **Gerätegrafik** angelegt und fest eingebaut. Fotos kommen nach und nach – siehe Abschnitt 4a. |
 | Umfang | Gerätetraining, Freihanteln & Körpergewicht, Cardio, Körperwerte, Pausentimer. |
 | Hosting Web-Version | (Überholt, siehe Abschnitt 18: GitHub Pages.) Vorerst keins – Web-Version läuft lokal am PC. Aufs iPhone kommt zunächst die Sideloading-Version. Hosting später entscheidbar (Cloudflare Pages oder öffentliches Repo + GitHub Pages). |
-| Ablage | Eigenes Repository `Volvic93/apps` (öffentlich), Ordner `gym-app/` mit den Unterordnern `webapp/` (die App) und `ipa-app/` (iOS-Hülle). Vorher Unterordner im Repo `Volvic93/3d-druckdateien`, Branch `gym-app` (siehe Abschnitt 18). |
+| Ablage | Eigenes Repository `Volvic93/apps` (öffentlich), Ordner `gym-app/` mit dem Unterordner `webapp/` (die App). Die iOS-Hülle `ipa-app/`, der Workflow `gym-app-ios.yml` und alle `.ipa`-Versionen liegen seit dem 17.11.2026 im privaten Repository `Volvic93/Apps-IPA-Dateien` (gleicher Pfad `gym-app/ipa-app/`); wo dieses Dokument `ipa-app/` oder `gym-app-ios.yml` nennt, ist seither das private Repository gemeint. Dessen Workflow holt `webapp/` beim Bau von hier (gleicher Tag `gym-app-vX.Y.Z`, sonst `main`). Vorher Unterordner im Repo `Volvic93/3d-druckdateien`, Branch `gym-app` (siehe Abschnitt 18). |
 | Sprache | Oberfläche und Übungstexte auf Deutsch, Einheiten kg / km. |
 
 ---

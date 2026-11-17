@@ -2,17 +2,17 @@ name: Gym-App Web-App (GitHub Pages)
 
 # Baut gym-app/webapp und veröffentlicht sie unter https://volvic93.github.io/apps/gym-app/
 # (dazu eine kleine Startseite unter https://volvic93.github.io/apps/).
-# Läuft bei jeder Änderung an der Web-App auf main, nach jedem neuen Versions-Tag (angestoßen vom iOS-Workflow) und lässt sich
-# von Hand starten. Frühere Versionen werden mitgebaut und bleiben unter /gym-app-archiv/<Version>/ erhalten (siehe versionen.html).
+# Läuft bei jeder Änderung an der Web-App auf main, nach jedem neuen Versions-Tag gym-app-v… (angestoßen von
+# gym-app-version-tag.yml) und lässt sich von Hand starten. Frühere Versionen werden mitgebaut und bleiben unter
+# /gym-app-archiv/<Version>/ erhalten (siehe versionen.html).
+# Die iPhone-App (.ipa) entsteht nicht hier, sondern im privaten Repository Volvic93/Apps-IPA-Dateien.
 on:
   push:
     branches: [main]
     paths:
       - 'gym-app/webapp/**'
-      - 'video-app/core/**'
-      - 'video-app/web/**'
       - 'site/**'
-      - 'source.json'
+      - '.github/scripts/**'
       - '.github/workflows/gym-app-webapp.yml'
   workflow_dispatch:
 
@@ -53,23 +53,10 @@ jobs:
         working-directory: gym-app/webapp
         run: npm run build
 
-      - name: Flimmerfrei – Skript-Kern testen und bauen
-        working-directory: video-app/core
-        run: |
-          node build.mjs
-          node --test test/*.test.js
-
       - name: Seite zusammenstellen
         run: |
           mkdir -p _site/gym-app
           cp -R gym-app/webapp/dist/. _site/gym-app/
-          # Flimmerfrei: Infoseite und Userscript unter …/apps/video-app/
-          mkdir -p _site/video-app
-          cp -R video-app/web/. _site/video-app/
-          cp video-app/core/dist/flimmerfrei.user.js _site/video-app/
-          # AltStore-Quelle unter kurzer Adresse: …/apps/source.json (vorher auf gültiges JSON prüfen)
-          node -e "JSON.parse(require('fs').readFileSync('source.json','utf8'))"
-          cp source.json _site/source.json
           cp site/index.html site/icon.png site/favicon.png _site/
           touch _site/.nojekyll
           # Jede frühere Version bleibt erreichbar (…/gym-app-archiv/<Version>/) und in versionen.html verlinkt

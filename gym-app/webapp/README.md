@@ -32,7 +32,7 @@ Zum Testen im Handy-Format: Entwicklerwerkzeuge des Browsers → Geräteansicht 
 webapp/
 ├─ INSTALLATION.md, README.md
 ├─ package.json, vite.config.ts, tsconfig.json
-├─ assets/            App-Symbol 1024 px (wird von ../ipa-app für die iOS-App verwendet)
+├─ assets/            App-Symbol 1024 px (wird von der iOS-Hülle ipa-app im privaten Repository verwendet)
 ├─ geraete-fotos/     eingang/ (neue Originale) · verarbeitet/ (erledigte Originale) – lokal, nicht im Repository
 ├─ public/            Icons, geraete/ (zugeschnittene, fest eingebaute Gerätefotos)
 ├─ scripts/           Foto- und Icon-Werkzeuge
@@ -51,7 +51,7 @@ Die Originalfotos aus dem Studio (mit teils sichtbaren Personen im Hintergrund) 
 
 - **Datenmodell ändern:** `DB_SCHEMA_VERSION` in `src/data/db.ts` erhöhen, einen Schritt in `src/data/migrations.ts` ergänzen (und bei neuen Indizes eine neue `db.version(n)` anlegen), Test ergänzen. Sicherungsdateien aus älteren Versionen werden damit automatisch hochgezogen.
 - **Katalog ändern** (`katalog.ts`, `studio-geraete.ts`, `studio-lieferung3.ts`): `CATALOG_VERSION` erhöhen – dann spielt die App den Katalog beim nächsten Start ein. Eigene Änderungen des Nutzers (Namen, Notizen, ausgeblendet, eigene Einstellwerte, Fotos) bleiben dabei erhalten.
-- **Bundle-Kennung `de.eisenzeit.app`** (in `../ipa-app/capacitor.config.json` und `../ipa-app/scripts/ios-prepare.sh`) nie ändern, sonst startet die iPhone-App mit leerem Speicher.
+- **Bundle-Kennung `de.eisenzeit.app`** (in `gym-app/ipa-app/capacitor.config.json` und `gym-app/ipa-app/scripts/ios-prepare.sh` im privaten Repository `Volvic93/Apps-IPA-Dateien`) nie ändern, sonst startet die iPhone-App mit leerem Speicher.
 - **Hooks vor jedem frühen `return`** (React-Regel; abgesichert durch `tests/hooks-order.test.ts`).
 - **Neue Gerätefotos:** Originale nach `geraete-fotos/eingang/`, Erkennung und Einbau nach Abschnitt 4a des Konzepts.
 

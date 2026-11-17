@@ -4,7 +4,7 @@ Die Web-App läuft im Browser, lässt sich aber wie eine richtige App auf den Ho
 
 **Adresse der Web-App:** <https://volvic93.github.io/apps/gym-app/>
 
-> Wer lieber die echte iPhone-App (`.ipa`) möchte, findet die Anleitung unter [../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md). Die Web-App ist der einfachere Einstieg und hat im Kern denselben Funktionsumfang. Nur die iPhone-App (`.ipa`) kann Vibration, Mitteilungen/Erinnerungen, die automatische Sicherung in „Dateien“ und (optional) die Live-Aktivität; ein paar Kleinigkeiten (siehe unten) sind dort ebenfalls zuverlässiger.
+> Die echte iPhone-App (`.ipa`) wird nicht mehr öffentlich angeboten; sie liegt mit ihrer Anleitung im privaten Repository `Volvic93/Apps-IPA-Dateien` (`gym-app/ipa-app/INSTALLATION.md`). Die Web-App ist der einfachere Einstieg und hat im Kern denselben Funktionsumfang. Nur die iPhone-App (`.ipa`) kann Vibration, Mitteilungen/Erinnerungen, die automatische Sicherung in „Dateien“ und (optional) die Live-Aktivität; ein paar Kleinigkeiten (siehe unten) sind dort ebenfalls zuverlässiger.
 
 ---
 
@@ -33,11 +33,11 @@ Der Kurzbefehl öffnet die Seite in Safari. Für das Erlebnis ohne Browser-Rahme
 
 ## Kann ich die App als Datei auf dem iPhone ablegen und per Shortcut starten?
 
-Nein, das geht nicht zuverlässig. Die App besteht aus vielen Dateien und braucht für Speicher, Offline-Betrieb und die Home-Bildschirm-Funktion eine HTTPS-Adresse. Eine lokal abgelegte `index.html` öffnet Safari ohne diese Funktionen; ein Kurzbefehl kann sie nicht als App starten. Nimm stattdessen die Web-App über **„Zum Home-Bildschirm“** (Abschnitt 1) oder die `.ipa` ([../ipa-app/INSTALLATION.md](../ipa-app/INSTALLATION.md)).
+Nein, das geht nicht zuverlässig. Die App besteht aus vielen Dateien und braucht für Speicher, Offline-Betrieb und die Home-Bildschirm-Funktion eine HTTPS-Adresse. Eine lokal abgelegte `index.html` öffnet Safari ohne diese Funktionen; ein Kurzbefehl kann sie nicht als App starten. Nimm stattdessen die Web-App über **„Zum Home-Bildschirm“** (Abschnitt 1) oder die `.ipa` (privates Repository, siehe oben).
 
 ## Ältere Version der Web-App
 
-Die Hauptadresse zeigt immer die neueste Version. Die neuesten drei Versionen bleiben unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/` erreichbar (ältere nur noch als `.ipa` im Release); die Übersicht aller Versionen steht unter <https://volvic93.github.io/apps/versionen.html>. Ältere Versionen teilen sich den Speicher mit der neuesten (gleiche Server-Adresse) – vor dem Wechsel in der App *Einstellungen → Sicherung exportieren*. Als eigenes Symbol auf dem Home-Bildschirm funktioniert eine ältere Version wie in Abschnitt 1 beschrieben, sie sollte aber nicht zusätzlich zur neuesten benutzt werden.
+Die Hauptadresse zeigt immer die neueste Version. Die neuesten drei Versionen bleiben unter `https://volvic93.github.io/apps/gym-app-archiv/<Version>/` erreichbar (ältere nur noch als `.ipa` im privaten Repository); die Übersicht aller Versionen steht unter <https://volvic93.github.io/apps/versionen.html>. Ältere Versionen teilen sich den Speicher mit der neuesten (gleiche Server-Adresse) – vor dem Wechsel in der App *Einstellungen → Sicherung exportieren*. Als eigenes Symbol auf dem Home-Bildschirm funktioniert eine ältere Version wie in Abschnitt 1 beschrieben, sie sollte aber nicht zusätzlich zur neuesten benutzt werden.
 
 ## 3. Wichtig zu wissen
 
